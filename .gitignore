@@ -1,0 +1,7 @@
+﻿node_modules/
+electron/node_modules/
+.env
+*.db
+dist/
+.DS_Store
+server/prisma/dev.db

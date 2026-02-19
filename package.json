@@ -1,0 +1,24 @@
+{
+    "name": "south-new-system",
+    "version": "1.0.0",
+    "description": "Comprehensive ERP System for South New Company",
+    "scripts": {
+        "start": "concurrently \"npm run server\" \"npm run client\"",
+        "server": "cd server && npm run dev",
+        "client": "cd client && npm run dev",
+        "install:all": "npm install && cd server && npm install && cd ../client && npm install && cd ../electron && npm install",
+        "electron": "cd electron && npm start",
+        "electron:build": "cd electron && npm run build"
+    },
+    "keywords": [
+        "erp",
+        "pos",
+        "accounting",
+        "hr"
+    ],
+    "author": "Antigravity",
+    "license": "ISC",
+    "devDependencies": {
+        "concurrently": "^9.2.1"
+    }
+}

@@ -1,0 +1,382 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. Authentication
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  logs      ActivityLog[]
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  details   String?
+  entity    String?
+  entityId  Int?
+  createdAt DateTime @default(now())
+}
+
+// 2. Partners
+model Partner {
+  id           Int       @id @default(autoincrement())
+  name         String
+  type         String
+  vatNumber    String?   @unique
+  address      String?
+  phone        String?
+  email        String?
+  balance      Float     @default(0.0)
+  creditLimit  Float?
+  
+  invoices     Invoice[]
+  quotes       Quote[]
+  payments     Payment[]
+  projects     Project[]
+  contracts    RealEstateContract[]
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// 9. Quotes
+model Quote {
+  id            Int       @id @default(autoincrement())
+  quoteNumber   String    @unique
+  date          DateTime  @default(now())
+  validUntil    DateTime?
+  
+  status        String    @default("DRAFT") // DRAFT, SENT, ACCEPTED, REJECTED, INVOICED
+  
+  partnerId     Int?
+  partner       Partner?  @relation(fields: [partnerId], references: [id])
+  
+  subtotal      Float
+  taxAmount     Float
+  discount      Float     @default(0)
+  total         Float
+  
+  notes         String?
+  
+  items         QuoteItem[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model QuoteItem {
+  id          Int       @id @default(autoincrement())
+  quoteId     Int
+  quote       Quote     @relation(fields: [quoteId], references: [id])
+  productId   Int?
+  product     Product?  @relation(fields: [productId], references: [id])
+  description String?
+  quantity    Float
+  unitPrice   Float
+  taxRate     Float     @default(0.15)
+  total       Float
+}
+
+
+// 3. Accounting
+model Account {
+  id            Int       @id @default(autoincrement())
+  code          String    @unique
+  name          String
+  type          String
+  parentId      Int?
+  parent        Account?  @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children      Account[] @relation("AccountHierarchy")
+  balance       Float     @default(0.0)
+  entries       JournalEntry[]
+  isActive      Boolean   @default(true)
+}
+
+model Transaction {
+  id            Int       @id @default(autoincrement())
+  date          DateTime  @default(now())
+  description   String?
+  reference     String?
+  type          String
+  entries       JournalEntry[]
+  createdAt     DateTime  @default(now())
+}
+
+model JournalEntry {
+  id            Int       @id @default(autoincrement())
+  transactionId Int
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  accountId     Int
+  account       Account     @relation(fields: [accountId], references: [id])
+  debit         Float       @default(0.0)
+  credit        Float       @default(0.0)
+  description   String?
+}
+
+// 4. Inventory
+model Warehouse {
+  id          Int       @id @default(autoincrement())
+  name        String
+  location    String?
+  stocks      Stock[]
+  movements   StockMovement[]
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  products    Product[]
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  sku         String?   @unique
+  barcode     String?   @unique
+  categoryId  Int?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  description String?
+  price       Float
+  cost        Float
+  taxRate     Float     @default(0.15)
+  unit        String    @default("PCS")
+  
+  stocks      Stock[]
+  movements   StockMovement[]
+  invoiceItems InvoiceItem[]
+  quoteItems  QuoteItem[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Stock {
+  id          Int       @id @default(autoincrement())
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id])
+  warehouseId Int
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  quantity    Float     @default(0)
+
+  @@unique([productId, warehouseId])
+}
+
+model StockMovement {
+  id          Int       @id @default(autoincrement())
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id])
+  warehouseId Int
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  quantity    Float
+  type        String
+  reference   String?
+  date        DateTime  @default(now())
+}
+
+// 5. Invoices
+model Invoice {
+  id            Int       @id @default(autoincrement())
+  invoiceNumber String    @unique
+  uuid          String    @unique
+  date          DateTime  @default(now())
+  dueDate       DateTime?
+  
+  type          String
+  status        String    @default("DRAFT")
+  
+  partnerId     Int?
+  partner       Partner?  @relation(fields: [partnerId], references: [id])
+  
+  subtotal      Float
+  taxAmount     Float
+  discount      Float     @default(0)
+  total         Float
+
+  hash          String?
+  previousHash  String?
+  zatcaStatus   String?
+  qrCode        String?
+  xmlContent    String?
+
+  items         InvoiceItem[]
+  payments      Payment[]
+  
+  projectId     Int?
+  project       Project?  @relation(fields: [projectId], references: [id])
+  
+  contractId    Int?
+  contract      RealEstateContract? @relation(fields: [contractId], references: [id])
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model InvoiceItem {
+  id          Int       @id @default(autoincrement())
+  invoiceId   Int
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id])
+  productId   Int?
+  product     Product?  @relation(fields: [productId], references: [id])
+  description String?
+  quantity    Float
+  unitPrice   Float
+  taxRate     Float     @default(0.15)
+  total       Float
+}
+
+// 6. Projects
+model Project {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  location    String?
+  startDate   DateTime?
+  endDate     DateTime?
+  status      String    @default("PLANNED")
+  
+  clientId    Int
+  client      Partner   @relation(fields: [clientId], references: [id])
+  
+  contractValue Float
+  expenses      Float     @default(0)
+  
+  invoices    Invoice[]
+  tasks       Task[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  status      String    @default("TODO") // TODO, IN_PROGRESS, DONE, BLOCKED
+  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  dueDate     DateTime?
+  
+  projectId   Int?
+  project     Project?  @relation(fields: [projectId], references: [id])
+  
+  assignedTo  String?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+
+// 7. Real Estate
+model Property {
+  id          Int       @id @default(autoincrement())
+  name        String
+  code        String?   @unique
+  type        String
+  address     String?
+  units       Unit[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Unit {
+  id          Int       @id @default(autoincrement())
+  propertyId  Int
+  property    Property  @relation(fields: [propertyId], references: [id])
+  unitNumber  String
+  floor       String?
+  type        String
+  status      String    @default("VACANT")
+  
+  contracts   RealEstateContract[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model RealEstateContract {
+  id          Int       @id @default(autoincrement())
+  contractNumber String @unique
+  unitId      Int
+  unit        Unit      @relation(fields: [unitId], references: [id])
+  tenantId    Int
+  tenant      Partner   @relation(fields: [tenantId], references: [id])
+  
+  startDate   DateTime
+  endDate     DateTime
+  rentAmount  Float
+  paymentFrequency String
+  
+  status      String    @default("ACTIVE")
+  payments    Payment[]
+  invoices    Invoice[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// 8. Payments
+model Payment {
+  id            Int       @id @default(autoincrement())
+  date          DateTime  @default(now())
+  amount        Float
+  type          String
+  method        String
+  reference     String?
+  
+  partnerId     Int?
+  partner       Partner?  @relation(fields: [partnerId], references: [id])
+  
+  invoiceId     Int?
+  invoice       Invoice?  @relation(fields: [invoiceId], references: [id])
+  
+  contractId    Int?
+  contract      RealEstateContract? @relation(fields: [contractId], references: [id])
+  
+  notes         String?
+  createdAt     DateTime  @default(now())
+}
+
+// 10. HR
+model Employee {
+  id          Int       @id @default(autoincrement())
+  employeeId  String    @unique
+  name        String
+  jobTitle    String
+  department  String?
+  phone       String?
+  email       String?
+  salary      Float
+  status      String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED
+  joinDate    DateTime?
+  
+  salaries    SalaryRecord[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model SalaryRecord {
+  id          Int       @id @default(autoincrement())
+  employeeId  Int
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  month       Int
+  year        Int
+  baseSalary  Float
+  allowances  Float     @default(0)
+  deductions  Float     @default(0)
+  netSalary   Float
+  paymentDate DateTime  @default(now())
+  status      String    @default("PAID")
+}
+
