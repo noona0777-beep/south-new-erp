@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Building2, Home, User, Calendar, Plus, ChevronLeft, LayoutGrid, List } from 'lucide-react';
+import API_URL from '../../config';
 
 const RealEstatePage = () => {
     const [properties, setProperties] = useState([]);
@@ -26,7 +27,7 @@ const RealEstatePage = () => {
 
     const fetchProperties = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/properties');
+            const res = await axios.get(`${API_URL}/properties`);
             setProperties(res.data);
             setLoading(false);
         } catch (err) {
@@ -36,7 +37,7 @@ const RealEstatePage = () => {
 
     const fetchPartners = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/partners');
+            const res = await axios.get(`${API_URL}/partners`);
             setPartners(res.data);
         } catch (err) {
             console.error('Error fetching partners', err);
@@ -45,7 +46,7 @@ const RealEstatePage = () => {
 
     const fetchUnits = async (propId) => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/properties/${propId}/units`);
+            const res = await axios.get(`${API_URL}/properties/${propId}/units`);
             setUnits(res.data);
             setView('UNITS');
         } catch (err) {
@@ -56,7 +57,7 @@ const RealEstatePage = () => {
     const handleCreateProperty = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/properties', propData);
+            await axios.post(`${API_URL}/properties`, propData);
             setShowPropForm(false);
             setPropData({ name: '', type: 'RESIDENTIAL', address: '' });
             fetchProperties();
@@ -66,7 +67,7 @@ const RealEstatePage = () => {
     const handleCreateUnit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/units', { ...unitData, propertyId: selectedProperty.id });
+            await axios.post(`${API_URL}/units`, { ...unitData, propertyId: selectedProperty.id });
             setShowUnitForm(false);
             setUnitData({ unitNumber: '', floor: '', type: 'APARTMENT' });
             fetchUnits(selectedProperty.id);
@@ -76,7 +77,7 @@ const RealEstatePage = () => {
     const handleCreateContract = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/contracts', contractData);
+            await axios.post(`${API_URL}/contracts`, contractData);
             setView('UNITS');
             fetchUnits(selectedProperty.id);
             alert('تم إنشاء العقد بنجاح');

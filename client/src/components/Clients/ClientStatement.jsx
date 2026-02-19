@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Printer, ChevronRight, User, FileText, Calendar, DollarSign } from 'lucide-react';
+import API_URL from '../../config';
 
 const ClientStatement = () => {
     const { id } = useParams();
@@ -9,7 +10,7 @@ const ClientStatement = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        axios.get(`http://localhost:5000/api/partners/${id}`)
+        axios.get(`${API_URL}/partners/${id}`)
             .then(res => {
                 setClient(res.data);
                 setLoading(false);

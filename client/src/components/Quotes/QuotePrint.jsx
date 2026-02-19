@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Printer, ChevronRight } from 'lucide-react';
 import QRCode from 'qrcode.react';
+import API_URL from '../../config';
 
 const QuotePrint = () => {
     const { id } = useParams();
@@ -11,22 +12,12 @@ const QuotePrint = () => {
     const [qrContent, setQrContent] = useState('');
 
     useEffect(() => {
-        axios.get(`http://localhost:5000/api/quotes/${id}`)
+        axios.get(`${API_URL}/quotes/${id}`)
             .then(res => setQuote(res.data))
             .catch(err => alert('خطأ في تحميل عرض السعر'));
 
-        // Resolve QR Link to use local IP for mobile access
-        axios.get('http://localhost:5000/api/status')
-            .then(res => {
-                const ip = res.data.localIp;
-                const currentPath = window.location.pathname;
-                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                    setQrContent(`http://${ip}:5173${currentPath}`);
-                } else {
-                    setQrContent(window.location.href);
-                }
-            })
-            .catch(() => setQrContent(window.location.href));
+        // Set QR content to current URL for online version
+        setQrContent(window.location.href);
     }, [id]);
 
     if (!quote) return <div style={{ textAlign: 'center', padding: '50px', fontFamily: 'Cairo' }}>جاري تحميل عرض السعر...</div>;

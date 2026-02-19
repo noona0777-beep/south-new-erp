@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import API_URL from '../config';
 
 const Login = ({ onSuccess }) => {
     const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -16,7 +17,7 @@ const Login = ({ onSuccess }) => {
         setLoading(true);
 
         try {
-            const res = await axios.post('http://localhost:5000/api/login', credentials);
+            const res = await axios.post(`${API_URL}/login`, credentials);
 
             // Save Token & User Info
             localStorage.setItem('token', res.data.token);

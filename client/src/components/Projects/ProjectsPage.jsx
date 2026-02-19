@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Briefcase, Calendar, MapPin, User, CheckSquare, Clock, AlertCircle } from 'lucide-react';
+import API_URL from '../../config';
 
 const ProjectsPage = () => {
     const [projects, setProjects] = useState([]);
@@ -40,7 +41,7 @@ const ProjectsPage = () => {
 
     const fetchProjects = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/projects');
+            const res = await axios.get(`${API_URL}/projects`);
             setProjects(res.data);
             setLoading(false);
         } catch (err) {
@@ -50,7 +51,7 @@ const ProjectsPage = () => {
 
     const fetchPartners = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/partners');
+            const res = await axios.get(`${API_URL}/partners`);
             setPartners(res.data);
         } catch (err) {
             console.error('Error fetching partners', err);
@@ -59,7 +60,7 @@ const ProjectsPage = () => {
 
     const fetchTasks = async (projectId) => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/projects/${projectId}/tasks`);
+            const res = await axios.get(`${API_URL}/projects/${projectId}/tasks`);
             setTasks(res.data);
         } catch (err) {
             console.error('Error fetching tasks', err);
@@ -69,7 +70,7 @@ const ProjectsPage = () => {
     const handleCreateProject = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/projects', projectData);
+            await axios.post(`${API_URL}/projects`, projectData);
             fetchProjects();
             setShowForm(false);
             setProjectData({
@@ -85,7 +86,7 @@ const ProjectsPage = () => {
     const handleCreateTask = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/tasks', {
+            await axios.post(`${API_URL}/tasks`, {
                 ...taskData,
                 projectId: selectedProject.id
             });
@@ -99,7 +100,7 @@ const ProjectsPage = () => {
 
     const updateTaskStatus = async (taskId, status) => {
         try {
-            await axios.patch(`http://localhost:5000/api/tasks/${taskId}/status`, { status });
+            await axios.patch(`${API_URL}/tasks/${taskId}/status`, { status });
             fetchTasks(selectedProject.id);
         } catch (err) {
             console.error('Error updating task', err);

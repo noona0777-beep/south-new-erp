@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Users, UserCircle, Briefcase, DollarSign, Phone, Mail, Calendar, TrendingUp, Edit, Trash2, Eye, X } from 'lucide-react';
+import API_URL from '../../config';
 
 const HRPage = () => {
     const [employees, setEmployees] = useState([]);
@@ -28,7 +29,7 @@ const HRPage = () => {
 
     const fetchEmployees = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/employees');
+            const res = await axios.get(`${API_URL}/employees`);
             setEmployees(res.data);
             setLoading(false);
         } catch (err) {
@@ -40,10 +41,10 @@ const HRPage = () => {
         e.preventDefault();
         try {
             if (isEdit) {
-                await axios.put(`http://localhost:5000/api/employees/${selectedEmployee.id}`, employeeData);
+                await axios.put(`${API_URL}/employees/${selectedEmployee.id}`, employeeData);
                 alert('تم تحديث بيانات الموظف بنجاح');
             } else {
-                await axios.post('http://localhost:5000/api/employees', employeeData);
+                await axios.post(`${API_URL}/employees`, employeeData);
                 alert('تم إضافة الموظف بنجاح');
             }
             fetchEmployees();
@@ -56,7 +57,7 @@ const HRPage = () => {
     const handleDelete = async (id) => {
         if (window.confirm('هل أنت متأكد من حذف هذا الموظف؟')) {
             try {
-                await axios.delete(`http://localhost:5000/api/employees/${id}`);
+                await axios.delete(`${API_URL}/employees/${id}`);
                 fetchEmployees();
             } catch (err) {
                 alert('فشل الحذف');

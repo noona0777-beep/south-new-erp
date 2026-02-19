@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Search, AlertTriangle, TrendingUp, Package, Move, Edit, Trash2, X, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import API_URL from '../../config';
 
 const InventoryPage = () => {
     const [products, setProducts] = useState([]);
@@ -25,7 +26,7 @@ const InventoryPage = () => {
 
     const fetchProducts = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/products');
+            const res = await axios.get(`${API_URL}/products`);
             setProducts(res.data);
             setLoading(false);
         } catch (err) {
@@ -38,9 +39,9 @@ const InventoryPage = () => {
         e.preventDefault();
         try {
             if (isEdit) {
-                await axios.put(`http://localhost:5000/api/products/${selectedProduct.id}`, productData);
+                await axios.put(`${API_URL}/products/${selectedProduct.id}`, productData);
             } else {
-                await axios.post('http://localhost:5000/api/products', productData);
+                await axios.post(`${API_URL}/products`, productData);
             }
             fetchProducts();
             closeForm();
@@ -52,7 +53,7 @@ const InventoryPage = () => {
     const handleDelete = async (id) => {
         if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟ سيتم حذف سجلات المخزون المرتبطة به أيضاً.')) {
             try {
-                await axios.delete(`http://localhost:5000/api/products/${id}`);
+                await axios.delete(`${API_URL}/products/${id}`);
                 fetchProducts();
             } catch (err) {
                 alert('فشل الحذف');
@@ -63,7 +64,7 @@ const InventoryPage = () => {
     const handleAdjust = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(`http://localhost:5000/api/products/${selectedProduct.id}/adjust`, adjustData);
+            await axios.post(`${API_URL}/products/${selectedProduct.id}/adjust`, adjustData);
             fetchProducts();
             setShowAdjust(false);
         } catch (err) {

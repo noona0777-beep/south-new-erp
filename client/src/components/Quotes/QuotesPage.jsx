@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Printer, Trash2, Edit, FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
+import API_URL from '../../config';
 
 const QuotesPage = () => {
     const [quotes, setQuotes] = useState([]);
@@ -26,7 +27,7 @@ const QuotesPage = () => {
 
     const fetchQuotes = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/quotes');
+            const res = await axios.get(`${API_URL}/quotes`);
             setQuotes(res.data);
             setLoading(false);
         } catch (err) {
@@ -37,8 +38,8 @@ const QuotesPage = () => {
     const fetchMasterData = async () => {
         try {
             const [pRes, prodRes] = await Promise.all([
-                axios.get('http://localhost:5000/api/partners'),
-                axios.get('http://localhost:5000/api/products')
+                axios.get(`${API_URL}/partners`),
+                axios.get(`${API_URL}/products`)
             ]);
             setPartners(pRes.data);
             setProducts(prodRes.data);
@@ -100,7 +101,7 @@ const QuotesPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/quotes', quoteData);
+            await axios.post(`${API_URL}/quotes`, quoteData);
             fetchQuotes();
             handleResetForm();
         } catch (err) {
@@ -110,7 +111,7 @@ const QuotesPage = () => {
 
     const updateStatus = async (id, status) => {
         try {
-            await axios.patch(`http://localhost:5000/api/quotes/${id}/status`, { status });
+            await axios.patch(`${API_URL}/quotes/${id}/status`, { status });
             fetchQuotes();
         } catch (err) {
             console.error('Error updating status', err);
