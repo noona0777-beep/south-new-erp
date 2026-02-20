@@ -192,6 +192,47 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// --- User Management Routes ---
+
+// Get All Users
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: { id: true, name: true, email: true, role: true, createdAt: true },
+            orderBy: { createdAt: 'asc' }
+        });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create New User
+app.post('/api/users', async (req, res) => {
+    const { name, email, password, role } = req.body;
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await prisma.user.create({
+            data: { name, email, password: hashedPassword, role: role || 'USER' },
+            select: { id: true, name: true, email: true, role: true, createdAt: true }
+        });
+        res.json(user);
+    } catch (error) {
+        if (error.code === 'P2002') return res.status(400).json({ error: 'هذا البريد الإلكتروني مسجل مسبقاً' });
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete User
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        await prisma.user.delete({ where: { id: parseInt(req.params.id) } });
+        res.json({ message: 'User deleted' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- Master Data Routes (Partners & Products) ---
 
 // Get All Partners (Customers)
@@ -254,10 +295,53 @@ app.get('/api/partners/:id', async (req, res) => {
 // Get All Products
 app.get('/api/products', async (req, res) => {
     try {
+        const { categoryId } = req.query;
+        const where = categoryId ? { categoryId: parseInt(categoryId) } : {};
         const products = await prisma.product.findMany({
-            include: { stocks: true }
+            where,
+            include: { stocks: true, category: true },
+            orderBy: { name: 'asc' }
         });
         res.json(products);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get All Categories
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await prisma.category.findMany({
+            include: { _count: { select: { products: true } } },
+            orderBy: { name: 'asc' }
+        });
+        res.json(categories);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create Category
+app.post('/api/categories', async (req, res) => {
+    try {
+        const { name, description } = req.body;
+        const category = await prisma.category.create({ data: { name, description } });
+        res.json(category);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete Category
+app.delete('/api/categories/:id', async (req, res) => {
+    try {
+        // Unlink products first
+        await prisma.product.updateMany({
+            where: { categoryId: parseInt(req.params.id) },
+            data: { categoryId: null }
+        });
+        await prisma.category.delete({ where: { id: parseInt(req.params.id) } });
+        res.json({ message: 'Category deleted' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -266,14 +350,16 @@ app.get('/api/products', async (req, res) => {
 // Update Product
 app.put('/api/products/:id', async (req, res) => {
     try {
-        const { name, price, cost } = req.body;
+        const { name, price, cost, categoryId } = req.body;
         const product = await prisma.product.update({
             where: { id: parseInt(req.params.id) },
             data: {
                 name,
                 price: parseFloat(price),
-                cost: parseFloat(cost)
-            }
+                cost: parseFloat(cost),
+                categoryId: categoryId ? parseInt(categoryId) : null
+            },
+            include: { stocks: true, category: true }
         });
         res.json(product);
     } catch (error) {
@@ -293,12 +379,23 @@ app.delete('/api/products/:id', async (req, res) => {
     }
 });
 
+// Helper: Get or create default warehouse
+async function getOrCreateWarehouse() {
+    let warehouse = await prisma.warehouse.findFirst();
+    if (!warehouse) {
+        warehouse = await prisma.warehouse.create({
+            data: { name: 'المستودع الرئيسي', location: 'المقر الرئيسي' }
+        });
+    }
+    return warehouse;
+}
+
 // Stock Adjustment
 app.post('/api/products/:id/adjust', async (req, res) => {
     try {
         const productId = parseInt(req.params.id);
         const { quantity, type } = req.body;
-        const warehouse = await prisma.warehouse.findFirst();
+        const warehouse = await getOrCreateWarehouse();
         const currentStock = await prisma.stock.findFirst({
             where: { productId, warehouseId: warehouse.id }
         });
@@ -319,8 +416,8 @@ app.post('/api/products/:id/adjust', async (req, res) => {
 app.post('/api/products', async (req, res) => {
     const { name, price, cost, quantity } = req.body;
     try {
-        // Get Default Warehouse (Assuming ID 1 exists from seed)
-        const warehouse = await prisma.warehouse.findFirst();
+        // Get or create default warehouse
+        const warehouse = await getOrCreateWarehouse();
 
         const product = await prisma.product.create({
             data: {
@@ -444,7 +541,7 @@ app.get('/api/projects', async (req, res) => {
     try {
         const projects = await prisma.project.findMany({
             include: {
-                partner: true,
+                client: true,
                 tasks: true,
                 _count: { select: { tasks: true } }
             },
@@ -462,7 +559,7 @@ app.get('/api/projects/:id', async (req, res) => {
         const project = await prisma.project.findUnique({
             where: { id: parseInt(req.params.id) },
             include: {
-                partner: true,
+                client: true,
                 tasks: { orderBy: { createdAt: 'desc' } },
                 invoices: { orderBy: { date: 'desc' } }
             }

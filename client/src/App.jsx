@@ -8,11 +8,12 @@ import InventoryPage from './components/Inventory/InventoryPage';
 import ClientsPage from './components/Clients/ClientsPage';
 import QuotesPage from './components/Quotes/QuotesPage';
 import QuotePrint from './components/Quotes/QuotePrint';
-
 import ProjectsPage from './components/Projects/ProjectsPage';
 import HRPage from './components/HR/HRPage';
 import RealEstatePage from './components/RealEstate/RealEstatePage';
 import ClientStatement from './components/Clients/ClientStatement';
+import ReportsPage from './components/Reports/ReportsPage';
+import SettingsPage from './components/Settings/SettingsPage';
 import API_URL from './config';
 
 
@@ -513,8 +514,8 @@ const Layout = ({ user, onLogout }) => {
                         <Route path="/projects" element={<ProjectsPage />} />
                         <Route path="/hr" element={<HRPage />} />
                         <Route path="/real-estate" element={<RealEstatePage />} />
-                        <Route path="/reports" element={<Placeholder title="التقارير المالية" icon={<FileBarChart2 />} />} />
-                        <Route path="/users" element={<Placeholder title="المستخدمين والإعدادات" icon={<Settings />} />} />
+                        <Route path="/reports" element={<ReportsPage />} />
+                        <Route path="/users" element={<SettingsPage />} />
                     </Routes>
                 </main>
             </div>
