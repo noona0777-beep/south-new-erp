@@ -72,18 +72,22 @@ export default function InventoryPage() {
 
     const fetchAll = async () => {
         setLoading(true);
+        // Fetch independently so one failure doesn't block the other
         try {
-            const [prod, cats] = await Promise.all([
-                axios.get(`${API_URL}/products`, { headers: authHeaders() }),
-                axios.get(`${API_URL}/categories`, { headers: authHeaders() })
-            ]);
+            const prod = await axios.get(`${API_URL}/products`, { headers: authHeaders() });
             setProducts(prod.data || []);
+        } catch (e) {
+            console.error('Products fetch error:', e.message);
+            setProducts([]);
+        }
+        try {
+            const cats = await axios.get(`${API_URL}/categories`, { headers: authHeaders() });
             setCategories(cats.data || []);
         } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
+            console.error('Categories fetch error:', e.message);
+            setCategories([]);
         }
+        setLoading(false);
     };
 
     // ===== Products CRUD =====
