@@ -1164,6 +1164,19 @@ app.post('/api/journal', async (req, res) => {
     }
 });
 
+// Get All Journal Entries
+app.get('/api/journal', async (req, res) => {
+    try {
+        const transactions = await prisma.transaction.findMany({
+            include: { entries: { include: { account: true } } },
+            orderBy: { date: 'desc' }
+        });
+        res.json(transactions);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);
