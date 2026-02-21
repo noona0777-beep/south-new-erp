@@ -182,7 +182,7 @@ const Login = ({ onSuccess }) => {
                                     tabIndex={-1}
                                     style={{
                                         position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                                        background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8',
+                                        background: 'none', border: 'none', cursor: 'pointer',
                                         padding: 2, display: 'flex', transition: 'color 0.2s',
                                         color: showPass ? '#2563eb' : '#94a3b8',
                                     }}>
