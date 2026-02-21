@@ -613,8 +613,6 @@ app.post('/api/invoices', async (req, res) => {
 
     // Calculate Totals
     let subtotal = 0;
-    let taxAmount = 0;
-
     const invoiceItemsData = items.map(item => {
         const lineTotal = Number(item.quantity) * Number(item.unitPrice);
         subtotal += lineTotal;
@@ -628,17 +626,16 @@ app.post('/api/invoices', async (req, res) => {
         };
     });
 
-    const totalBeforeTax = subtotal - (discount || 0);
-    taxAmount = totalBeforeTax * 0.15;
+    const totalBeforeTax = subtotal - (Number(discount) || 0);
+    const taxAmount = totalBeforeTax * 0.15;
     const total = totalBeforeTax + taxAmount;
 
     try {
-        // Transaction: Create Invoice + Items
-        const result = await prisma.$transaction(async (prisma) => {
+        const result = await prisma.$transaction(async (tx) => {
             // 1. Create Invoice
-            const invoice = await prisma.invoice.create({
+            const invoice = await tx.invoice.create({
                 data: {
-                    invoiceNumber: `INV-${Date.now()}`, // Temporary numbering
+                    invoiceNumber: `INV-${Date.now()}`,
                     uuid: require('crypto').randomUUID(),
                     date: new Date(date),
                     type: type || 'SALES_TAX',
@@ -648,14 +645,44 @@ app.post('/api/invoices', async (req, res) => {
                     discount: Number(discount) || 0,
                     taxAmount,
                     total,
-                    items: {
-                        create: invoiceItemsData
-                    }
+                    items: { create: invoiceItemsData }
                 }
             });
 
-            // 2. Update Stock (Optional for now)
-            // for (const item of items) { ... }
+            // 2. Auto Journal Entry (if accounting accounts exist)
+            try {
+                // Find required accounts
+                const arAccount = await tx.account.findFirst({ where: { code: '1103' } }); // Accounts Receivable
+                const revAccount = await tx.account.findFirst({ where: { code: '42' } });   // Sales Revenue
+                const vatAccount = await tx.account.findFirst({ where: { code: '2102' } }); // VAT Payable
+
+                if (arAccount && revAccount && vatAccount) {
+                    // Dr. AR, Cr. Revenue, Cr. VAT
+                    const journalEntries = [
+                        { accountId: arAccount.id, debit: total, credit: 0, description: 'عميل - ' + invoice.invoiceNumber },
+                        { accountId: revAccount.id, debit: 0, credit: totalBeforeTax, description: 'إيراد مبيعات - ' + invoice.invoiceNumber },
+                        { accountId: vatAccount.id, debit: 0, credit: taxAmount, description: 'ضريبة القيمة المضافة 15% - ' + invoice.invoiceNumber },
+                    ];
+
+                    await tx.transaction.create({
+                        data: {
+                            date: new Date(date),
+                            description: `قيد فاتورة مبيعات ${invoice.invoiceNumber}`,
+                            reference: invoice.invoiceNumber,
+                            type: 'INVOICE',
+                            entries: { create: journalEntries }
+                        }
+                    });
+
+                    // Update account balances
+                    await tx.account.update({ where: { id: arAccount.id }, data: { balance: { increment: total } } });
+                    await tx.account.update({ where: { id: revAccount.id }, data: { balance: { increment: -totalBeforeTax } } });
+                    await tx.account.update({ where: { id: vatAccount.id }, data: { balance: { increment: -taxAmount } } });
+                }
+            } catch (journalErr) {
+                // Journal entry failure should NOT block invoice creation
+                console.warn('⚠️ Auto-journal skipped (accounts may not be seeded):', journalErr.message);
+            }
 
             return invoice;
         });
@@ -975,6 +1002,82 @@ app.delete('/api/employees/:id', async (req, res) => {
             where: { id: parseInt(req.params.id) }
         });
         res.json({ message: 'Employee deleted' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Pay Salary (creates payroll journal entry)
+app.post('/api/employees/:id/pay-salary', async (req, res) => {
+    const employeeId = parseInt(req.params.id);
+    const { amount, month, year, notes } = req.body;
+
+    try {
+        const employee = await prisma.employee.findUnique({ where: { id: employeeId } });
+        if (!employee) return res.status(404).json({ error: 'Employee not found' });
+
+        const salaryAmount = parseFloat(amount) || employee.salary;
+        const periodLabel = `${month || new Date().toLocaleString('ar-SA', { month: 'long' })} ${year || new Date().getFullYear()}`;
+
+        const result = await prisma.$transaction(async (tx) => {
+            // Find accounts
+            const salaryExpenseAccount = await tx.account.findFirst({ where: { code: '5101' } }); // Salary Expense
+            const cashAccount = await tx.account.findFirst({ where: { code: '1101' } }); // Cash
+            const salaryPayableAccount = await tx.account.findFirst({ where: { code: '2103' } }); // Salaries Payable
+
+            if (salaryExpenseAccount && cashAccount) {
+                // Dr. Salary Expense, Cr. Cash (or Salaries Payable)
+                const creditAccount = salaryPayableAccount || cashAccount;
+                await tx.transaction.create({
+                    data: {
+                        date: new Date(),
+                        description: `صرف راتب ${employee.name} - ${periodLabel}`,
+                        reference: `SAL-${employee.employeeId}-${Date.now()}`,
+                        type: 'JOURNAL',
+                        entries: {
+                            create: [
+                                { accountId: salaryExpenseAccount.id, debit: salaryAmount, credit: 0, description: `راتب ${employee.name} - ${periodLabel}` },
+                                { accountId: creditAccount.id, debit: 0, credit: salaryAmount, description: `صرف راتب ${employee.name}` },
+                            ]
+                        }
+                    }
+                });
+                await tx.account.update({ where: { id: salaryExpenseAccount.id }, data: { balance: { increment: salaryAmount } } });
+                await tx.account.update({ where: { id: creditAccount.id }, data: { balance: { increment: -salaryAmount } } });
+            }
+
+            // Record salary payment in SalaryRecord
+            const salary = await tx.salaryRecord.create({
+                data: {
+                    employeeId,
+                    month: parseInt(month) || new Date().getMonth() + 1,
+                    year: parseInt(year) || new Date().getFullYear(),
+                    baseSalary: salaryAmount,
+                    allowances: 0,
+                    deductions: 0,
+                    netSalary: salaryAmount,
+                    paymentDate: new Date(),
+                    status: 'PAID'
+                }
+            });
+            return salary;
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Pay salary error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get Salary History for Employee
+app.get('/api/employees/:id/salaries', async (req, res) => {
+    try {
+        const salaries = await prisma.salaryRecord.findMany({
+            where: { employeeId: parseInt(req.params.id) },
+            orderBy: [{ year: 'desc' }, { month: 'desc' }]
+        });
+        res.json(salaries);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
