@@ -2,39 +2,29 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function check() {
-    console.log('\n══════════════════════════════════');
-    console.log('  🔍 فحص قاعدة البيانات');
-    console.log('══════════════════════════════════\n');
+    try {
+        const count = await prisma.account.count();
+        const roots = await prisma.account.findMany({
+            where: { parentId: null },
+            select: { name: true, code: true }
+        });
 
-    const warehouses = await prisma.warehouse.count();
-    const categories = await prisma.category.count();
-    const products = await prisma.product.count();
-    const partners = await prisma.partner.count();
-    const users = await prisma.user.count();
-    const invoices = await prisma.invoice.count();
-    const quotes = await prisma.quote.count();
+        console.log('\n--- نتائج فحص النظام السحابي ---');
+        console.log(`✅ حالة القاعدة: متصلة أونلاين`);
+        console.log(`📊 إجمالي الحسابات: ${count}`);
+        console.log('🌳 الحسابات الرئيسية المتاحة:');
+        roots.forEach(r => console.log(`   - [${r.code}] ${r.name}`));
 
-    console.log('🏭 المستودعات    :', warehouses);
-    console.log('📦 الأقسام       :', categories);
-    console.log('🛒 المنتجات      :', products);
-    console.log('👥 العملاء/شركاء :', partners);
-    console.log('👤 المستخدمون    :', users);
-    console.log('🧾 الفواتير      :', invoices);
-    console.log('📄 عروض الأسعار  :', quotes);
-
-    console.log('\n══════════════════════════════════');
-    if (warehouses === 0 && categories === 0 && products === 0) {
-        console.log('⚠️  قاعدة البيانات فارغة - يجب تشغيل seed');
-        console.log('   شغّل: node seed_categories.js');
-    } else {
-        console.log('✅ قاعدة البيانات تحتوي على بيانات');
+        if (count > 0) {
+            console.log('\n✨ النتيجة: النظام جاهز ومستقر للعمليات المحاسبية.');
+        } else {
+            console.log('\n⚠️ النتيجة: شجرة الحسابات تحتاج إلى إعادة زراعة.');
+        }
+    } catch (e) {
+        console.error('❌ خطأ في الاتصال:', e.message);
+    } finally {
+        await prisma.$disconnect();
     }
-    console.log('══════════════════════════════════\n');
-
-    await prisma.$disconnect();
 }
 
-check().catch(e => {
-    console.error('❌ خطأ:', e.message);
-    process.exit(1);
-});
+check();
