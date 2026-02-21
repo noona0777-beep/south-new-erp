@@ -1065,6 +1065,30 @@ app.post('/api/contracts', async (req, res) => {
     }
 });
 
+// --- Settings Routes ---
+app.get('/api/settings/:key', async (req, res) => {
+    try {
+        const setting = await prisma.settings.findUnique({ where: { key: req.params.key } });
+        res.json(setting ? JSON.parse(setting.value) : {});
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/settings/:key', async (req, res) => {
+    try {
+        const { value } = req.body;
+        const setting = await prisma.settings.upsert({
+            where: { key: req.params.key },
+            update: { value: JSON.stringify(value) },
+            create: { key: req.params.key, value: JSON.stringify(value) }
+        });
+        res.json(JSON.parse(setting.value));
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);

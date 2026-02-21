@@ -42,18 +42,41 @@ const InputField = ({ label, value, onChange, type = 'text', placeholder, readOn
 
 // ======= TAB: Company Info =======
 const CompanyTab = () => {
-    const [form, setForm] = useState(() => {
-        try { return JSON.parse(localStorage.getItem('companyInfo') || '{}'); } catch { return {}; }
-    });
+    const [form, setForm] = useState({});
+    const [loading, setLoading] = useState(true);
     const [saved, setSaved] = useState(false);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await axios.get(`${API_URL}/settings/companyInfo`, {
+                    headers: { Authorization: `Bearer ${token()}` }
+                });
+                setForm(res.data);
+            } catch (error) {
+                console.error('Fetch error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const update = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }));
 
-    const handleSave = () => {
-        localStorage.setItem('companyInfo', JSON.stringify(form));
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+    const handleSave = async () => {
+        try {
+            await axios.post(`${API_URL}/settings/companyInfo`, { value: form }, {
+                headers: { Authorization: `Bearer ${token()}` }
+            });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        } catch (error) {
+            alert('فشل في حفظ البيانات');
+        }
     };
+
+    if (loading) return <div style={{ color: '#64748b', fontFamily: 'Cairo' }}>جاري تحميل البيانات...</div>;
 
     return (
         <div>
@@ -78,7 +101,7 @@ const CompanyTab = () => {
                 display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.3s'
             }}>
                 <Save size={16} />
-                {saved ? '✅ تم الحفظ!' : 'حفظ البيانات'}
+                {saved ? '✅ تم الحفظ في قاعدة البيانات!' : 'حفظ البيانات'}
             </button>
         </div>
     );
@@ -247,19 +270,42 @@ const UsersTab = () => {
 
 // ======= TAB: System Preferences =======
 const SystemTab = () => {
-    const [prefs, setPrefs] = useState(() => {
-        try { return JSON.parse(localStorage.getItem('systemPrefs') || '{}'); } catch { return {}; }
-    });
+    const [prefs, setPrefs] = useState({});
+    const [loading, setLoading] = useState(true);
     const [saved, setSaved] = useState(false);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await axios.get(`${API_URL}/settings/systemPrefs`, {
+                    headers: { Authorization: `Bearer ${token()}` }
+                });
+                setPrefs(res.data);
+            } catch (error) {
+                console.error('Fetch error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const toggle = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }));
     const update = (key) => (e) => setPrefs(p => ({ ...p, [key]: e.target.value }));
 
-    const handleSave = () => {
-        localStorage.setItem('systemPrefs', JSON.stringify(prefs));
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+    const handleSave = async () => {
+        try {
+            await axios.post(`${API_URL}/settings/systemPrefs`, { value: prefs }, {
+                headers: { Authorization: `Bearer ${token()}` }
+            });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        } catch (error) {
+            alert('فشل في حفظ التفضيلات');
+        }
     };
+
+    if (loading) return <div style={{ color: '#64748b', fontFamily: 'Cairo' }}>جاري التحميل...</div>;
 
     return (
         <div>
@@ -323,8 +369,8 @@ const SystemTab = () => {
                         {[
                             ['اسم النظام', 'مؤسسة الجنوب الجديد - ERP'],
                             ['الإصدار', 'v2.0.0'],
-                            ['قاعدة البيانات', 'SQLite (محلي)'],
-                            ['بيئة التشغيل', 'Development'],
+                            ['قاعدة البيانات', 'PostgreSQL (Cloud)'],
+                            ['بيئة التشغيل', 'Production'],
                         ].map(([label, value]) => (
                             <div key={label}>
                                 <span style={{ color: '#94a3b8' }}>{label}: </span>
@@ -341,7 +387,7 @@ const SystemTab = () => {
                     display: 'flex', alignItems: 'center', gap: '8px', width: 'fit-content', transition: 'background 0.3s'
                 }}>
                     <Save size={16} />
-                    {saved ? '✅ تم الحفظ!' : 'حفظ الإعدادات'}
+                    {saved ? '✅ تم الحفظ في السحابة!' : 'حفظ الإعدادات'}
                 </button>
             </div>
         </div>
