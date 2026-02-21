@@ -194,11 +194,17 @@ export default function InventoryPage() {
     // Group rows by category for 'all' view
     const groupedRows = [];
     if (activeCat === 'all') {
-        let lastCatId = '__none__';
+        let lastCatId = null;   // start null so first header always renders
         filtered.forEach(p => {
-            const cid = p.categoryId || '__none__';
+            // Normalize: if product has no category object (null or orphaned), treat as __none__
+            const cid = p.category ? (p.categoryId || '__none__') : '__none__';
             if (cid !== lastCatId) {
-                groupedRows.push({ type: 'header', catId: cid, catName: p.category?.name || 'بدون قسم', color: p.category ? catColor(p.category.name) : '#475569' });
+                groupedRows.push({
+                    type: 'header',
+                    catId: cid,
+                    catName: p.category?.name || 'بدون قسم',
+                    color: p.category ? catColor(p.category.name) : '#475569'
+                });
                 lastCatId = cid;
             }
             groupedRows.push({ type: 'row', product: p });
@@ -268,15 +274,28 @@ export default function InventoryPage() {
             </div>
 
             {/* KPI Cards - horizontal scroll */}
-            <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 6, marginBottom: 22, scrollbarWidth: 'none' }}>
+            <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8, marginBottom: 22, scrollbarWidth: 'none' }}>
                 {kpis.map(({ title, val, sub, icon: Icon, g, glo }) => (
-                    <div key={title} style={{ flexShrink: 0, width: 180, borderRadius: 16, background: g, padding: '20px 18px', position: 'relative', overflow: 'hidden', boxShadow: `0 8px 32px ${glo}25`, border: `1px solid ${glo}30` }}>
-                        <div style={{ position: 'absolute', top: -10, left: -10, opacity: 0.12 }}><Icon size={80} /></div>
+                    <div key={title} style={{
+                        flexShrink: 0,
+                        width: 210,
+                        borderRadius: 16,
+                        background: g,
+                        padding: '18px 16px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        boxShadow: `0 8px 32px ${glo}25`,
+                        border: `1px solid ${glo}30`
+                    }}>
+                        {/* Background icon - fixed to top-left corner in RTL */}
+                        <div style={{ position: 'absolute', top: -8, right: -8, opacity: 0.10, pointerEvents: 'none' }}>
+                            <Icon size={75} />
+                        </div>
                         <div style={{ position: 'relative', zIndex: 1 }}>
-                            <Icon size={20} color="rgba(255,255,255,0.9)" style={{ marginBottom: 10 }} />
-                            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'white', lineHeight: 1, marginBottom: 4 }}>{val}</div>
-                            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>{title}</div>
-                            <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>{sub}</div>
+                            <Icon size={18} color="rgba(255,255,255,0.9)" style={{ marginBottom: 8, display: 'block' }} />
+                            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'white', lineHeight: 1.1, marginBottom: 5 }}>{val}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, whiteSpace: 'normal', wordBreak: 'keep-all' }}>{title}</div>
+                            <div style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.5)', marginTop: 3, whiteSpace: 'normal', wordBreak: 'keep-all' }}>{sub}</div>
                         </div>
                     </div>
                 ))}
