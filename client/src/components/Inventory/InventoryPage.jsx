@@ -301,353 +301,397 @@ export default function InventoryPage() {
                 ))}
             </div>
 
-            {/* Main Layout */}
-            <div style={{ display: 'flex', gap: 18 }}>
+            {/* ── Full Width Content ── */}
+            <div>
 
-                {/* ── Sidebar ── */}
-                <aside style={{ width: 210, flexShrink: 0 }}>
-                    <div style={{ background: '#0b1424', borderRadius: 16, border: '1px solid rgba(59,130,246,0.12)', overflow: 'hidden', position: 'sticky', top: 20, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
-                        {/* Header */}
-                        <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'white', fontWeight: 700, fontSize: '0.88rem' }}>
-                                <Layers size={14} color="#3b82f6" /> الأقسام
-                            </span>
-                            <button onClick={() => setModal('mgr-cats')} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 7, padding: '4px 5px', cursor: 'pointer', color: '#64748b', display: 'flex' }}>
-                                <Settings2 size={12} />
-                            </button>
-                        </div>
+                {/* ═══ Category Pills Row ═══ */}
+                <div style={{ marginBottom: 14 }}>
+                    {/* Pills container */}
+                    <div style={{
+                        display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6,
+                        scrollbarWidth: 'none', msOverflowStyle: 'none', alignItems: 'center'
+                    }}>
+                        {/* All Categories pill */}
+                        <button
+                            onClick={() => setActiveCat('all')}
+                            style={{
+                                flexShrink: 0, display: 'flex', alignItems: 'center', gap: 7,
+                                padding: '8px 16px', borderRadius: 50,
+                                border: activeCat === 'all' ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.07)',
+                                background: activeCat === 'all' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
+                                color: activeCat === 'all' ? '#60a5fa' : '#64748b',
+                                fontFamily: 'Cairo', fontSize: '0.82rem', fontWeight: activeCat === 'all' ? 700 : 400,
+                                cursor: 'pointer', transition: 'all 0.2s',
+                                boxShadow: activeCat === 'all' ? '0 0 14px rgba(59,130,246,0.25)' : 'none'
+                            }}
+                        >
+                            <span style={{ fontSize: '0.9rem' }}>🏠</span>
+                            <span>جميع المنتجات</span>
+                            <span style={{
+                                background: activeCat === 'all' ? '#3b82f6' : 'rgba(255,255,255,0.08)',
+                                color: activeCat === 'all' ? 'white' : '#475569',
+                                borderRadius: 50, padding: '1px 8px', fontSize: '0.72rem', fontWeight: 700
+                            }}>{products.length}</span>
+                        </button>
 
-                        {/* Category list */}
-                        <div style={{ padding: '10px 8px 6px' }}>
-                            <SideCatBtn label="🏠 جميع المنتجات" count={products.length} active={activeCat === 'all'} color="#3b82f6" onClick={() => setActiveCat('all')} />
+                        {/* Divider */}
+                        {categories.length > 0 && <div style={{ width: 1, height: 28, background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />}
 
-                            {categories.length > 0
-                                ? <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 6, paddingTop: 6 }}>
-                                    {categories.map(c => (
-                                        <SideCatBtn key={c.id} label={c.name} count={catCnt(c.id)}
-                                            active={activeCat === c.id} color={catColor(c.name)}
-                                            onClick={() => setActiveCat(c.id)} />
-                                    ))}
-                                </div>
-                                : <div style={{ padding: '8px 6px', fontSize: '0.75rem', color: '#334155', textAlign: 'center' }}>لا توجد أقسام</div>
-                            }
+                        {/* Category pills */}
+                        {categories.map(c => {
+                            const color = catColor(c.name);
+                            const isActive = activeCat === c.id;
+                            const cnt = catCnt(c.id);
+                            return (
+                                <button key={c.id}
+                                    onClick={() => setActiveCat(c.id)}
+                                    style={{
+                                        flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
+                                        padding: '8px 14px', borderRadius: 50,
+                                        border: isActive ? `1.5px solid ${color}` : '1.5px solid rgba(255,255,255,0.07)',
+                                        background: isActive ? `${color}18` : 'rgba(255,255,255,0.04)',
+                                        color: isActive ? color : '#64748b',
+                                        fontFamily: 'Cairo', fontSize: '0.8rem', fontWeight: isActive ? 700 : 400,
+                                        cursor: 'pointer', transition: 'all 0.18s',
+                                        boxShadow: isActive ? `0 0 16px ${color}35` : 'none'
+                                    }}
+                                    onMouseOver={e => { if (!isActive) { e.currentTarget.style.borderColor = `${color}50`; e.currentTarget.style.color = color; } }}
+                                    onMouseOut={e => { if (!isActive) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#64748b'; } }}
+                                >
+                                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0, boxShadow: isActive ? `0 0 6px ${color}` : 'none' }} />
+                                    <span style={{ whiteSpace: 'nowrap' }}>{c.name}</span>
+                                    <span style={{
+                                        background: isActive ? `${color}30` : 'rgba(255,255,255,0.07)',
+                                        color: isActive ? color : '#475569',
+                                        borderRadius: 50, padding: '1px 7px', fontSize: '0.7rem', fontWeight: 700
+                                    }}>{cnt}</span>
+                                </button>
+                            );
+                        })}
 
-                            <button onClick={() => setModal('add-cat')}
-                                style={{ width: '100%', marginTop: 8, padding: '7px 0', background: 'rgba(59,130,246,0.06)', border: '1.5px dashed rgba(59,130,246,0.25)', borderRadius: 10, cursor: 'pointer', color: '#60a5fa', fontFamily: 'Cairo', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, transition: 'all 0.2s' }}
-                                onMouseOver={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.14)'; e.currentTarget.style.borderColor = '#3b82f6'; }}
-                                onMouseOut={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.06)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.25)'; }}>
-                                <Plus size={11} /> إضافة قسم
-                            </button>
-                        </div>
-
-                        {/* Stock alerts */}
-                        {(zeroCount > 0 || lowCount > 0) && (
-                            <div style={{ margin: '6px 8px 10px', padding: '10px 12px', background: 'rgba(239,68,68,0.06)', borderRadius: 10, border: '1px solid rgba(239,68,68,0.15)' }}>
-                                <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, marginBottom: 8 }}>⚠️ تنبيهات المخزون</div>
-                                {zeroCount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#f87171', marginBottom: 4 }}><span>نفد المخزون</span><span style={{ fontWeight: 700 }}>{zeroCount}</span></div>}
-                                {lowCount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#fbbf24' }}><span>كمية منخفضة</span><span style={{ fontWeight: 700 }}>{lowCount}</span></div>}
-                            </div>
-                        )}
+                        {/* Spacer + Add category button */}
+                        <div style={{ marginRight: 'auto' }} />
+                        <button onClick={() => setModal('add-cat')}
+                            style={{
+                                flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5,
+                                padding: '7px 14px', borderRadius: 50,
+                                border: '1.5px dashed rgba(59,130,246,0.3)',
+                                background: 'rgba(59,130,246,0.05)',
+                                color: '#3b82f6', fontFamily: 'Cairo', fontSize: '0.78rem',
+                                cursor: 'pointer', transition: 'all 0.18s'
+                            }}
+                            onMouseOver={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.12)'; e.currentTarget.style.borderColor = '#3b82f6'; }}
+                            onMouseOut={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.05)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.3)'; }}
+                        >
+                            <Plus size={12} /> إضافة قسم
+                        </button>
+                        <button onClick={() => setModal('mgr-cats')}
+                            style={{
+                                flexShrink: 0, display: 'flex', alignItems: 'center',
+                                padding: '7px 10px', borderRadius: 50,
+                                border: '1.5px solid rgba(255,255,255,0.07)',
+                                background: 'rgba(255,255,255,0.04)',
+                                color: '#475569', cursor: 'pointer', transition: 'all 0.18s'
+                            }}
+                            title="إدارة الأقسام"
+                            onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = '#94a3b8'; }}
+                            onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#475569'; }}
+                        >
+                            <Settings2 size={13} />
+                        </button>
                     </div>
-                </aside>
+                </div>
 
-                {/* ── Main Content ── */}
-                <div style={{ flex: 1, minWidth: 0 }}>
+                {/* ═══ Search Bar ═══ */}
+                <div style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, background: '#0b1424', borderRadius: 12, padding: '10px 16px', border: '1px solid rgba(59,130,246,0.15)' }}>
+                        <Search size={15} color="#475569" />
+                        <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+                            placeholder={`بحث في ${activeCat === 'all' ? 'جميع المنتجات' : (categories.find(c => c.id === activeCat)?.name || 'المخزون')
+                                }... (${filtered.length} نتيجة)`}
+                            style={{ flex: 1, border: 'none', outline: 'none', fontFamily: 'Cairo', fontSize: '0.88rem', color: 'white', background: 'transparent', direction: 'rtl' }} />
+                        {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 0, display: 'flex' }}><X size={12} /></button>}
+                    </div>
+                    {/* Active category badge */}
+                    {activeCat !== 'all' && (
+                        <button onClick={() => setActiveCat('all')}
+                            style={{
+                                padding: '10px 14px', borderRadius: 12, whiteSpace: 'nowrap',
+                                border: `1px solid ${catColor(categories.find(c => c.id === activeCat)?.name || '')}40`,
+                                background: `${catColor(categories.find(c => c.id === activeCat)?.name || '')}12`,
+                                color: catColor(categories.find(c => c.id === activeCat)?.name || ''),
+                                fontFamily: 'Cairo', fontSize: '0.78rem', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', gap: 5
+                            }}>
+                            <X size={11} /> مسح الفلتر
+                        </button>
+                    )}
+                </div>
 
-                    {/* Search + Category Dropdown filter bar */}
-                    <div style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
-
-                        {/* Category Dropdown */}
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <select
-                                value={activeCat}
-                                onChange={e => setActiveCat(e.target.value)}
-                                style={{ appearance: 'none', WebkitAppearance: 'none', padding: '10px 36px 10px 16px', background: '#0b1424', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 12, color: activeCat === 'all' ? '#94a3b8' : catColor(categories.find(c => c.id === activeCat)?.name || ''), fontFamily: 'Cairo', fontSize: '0.85rem', cursor: 'pointer', outline: 'none', minWidth: 170, direction: 'rtl', boxShadow: activeCat !== 'all' ? `0 0 0 2px ${catColor(categories.find(c => c.id === activeCat)?.name || '')}30` : 'none', transition: 'all 0.2s' }}
-                            >
-                                <option value="all">🏠 جميع الأقسام ({products.length})</option>
-                                {categories.map(c => (
-                                    <option key={c.id} value={c.id}>
-                                        {c.name} ({catCnt(c.id)})
-                                    </option>
+                {/* Table */}
+                <div style={{ background: '#0b1424', borderRadius: 16, border: '1px solid rgba(59,130,246,0.12)', overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo', tableLayout: 'fixed' }}>
+                        <colgroup>
+                            <col style={{ width: '28%' }} />{/* المنتج */}
+                            <col style={{ width: '13%' }} />{/* القسم */}
+                            <col style={{ width: '14%' }} />{/* الكمية + ± */}
+                            <col style={{ width: '10%' }} />{/* التكلفة */}
+                            <col style={{ width: '11%' }} />{/* سعر البيع */}
+                            <col style={{ width: '10%' }} />{/* الحالة */}
+                            <col style={{ width: '14%' }} />{/* إجراءات */}
+                        </colgroup>
+                        <thead>
+                            <tr style={{ background: 'rgba(59,130,246,0.06)', borderBottom: '1px solid rgba(59,130,246,0.12)' }}>
+                                {[
+                                    { l: 'المنتج', f: 'name' },
+                                    { l: 'القسم', f: null },
+                                    { l: 'الكمية / ±', f: 'qty' },
+                                    { l: 'التكلفة', f: null },
+                                    { l: 'سعر البيع', f: 'price' },
+                                    { l: 'الحالة', f: null },
+                                    { l: 'إجراءات', f: null },
+                                ].map(({ l, f }) => (
+                                    <th key={l} onClick={f ? () => toggleSort(f) : null}
+                                        style={{ padding: '11px 10px', textAlign: 'center', color: '#475569', fontWeight: 600, fontSize: '0.7rem', cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                            {l} {f && <SortIco f={f} />}
+                                        </span>
+                                    </th>
                                 ))}
-                            </select>
-                            <ChevronDown size={13} color="#475569" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                        </div>
-
-                        {/* Search Box */}
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, background: '#0b1424', borderRadius: 12, padding: '10px 16px', border: '1px solid rgba(59,130,246,0.15)' }}>
-                            <Search size={15} color="#475569" />
-                            <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-                                placeholder={`بحث في ${activeCat === 'all' ? 'جميع المنتجات' : (categories.find(c => c.id === activeCat)?.name || '')}... (${filtered.length})`}
-                                style={{ flex: 1, border: 'none', outline: 'none', fontFamily: 'Cairo', fontSize: '0.88rem', color: 'white', background: 'transparent', direction: 'rtl' }} />
-                            {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 0, display: 'flex' }}><X size={12} /></button>}
-                        </div>
-
-                        {/* Active filter badge */}
-                        {activeCat !== 'all' && (
-                            <button onClick={() => setActiveCat('all')}
-                                style={{ padding: '10px 14px', borderRadius: 12, border: `1px solid ${catColor(categories.find(c => c.id === activeCat)?.name || '')}40`, background: `${catColor(categories.find(c => c.id === activeCat)?.name || '')}15`, color: catColor(categories.find(c => c.id === activeCat)?.name || ''), fontFamily: 'Cairo', fontSize: '0.78rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
-                                <X size={11} /> مسح الفلتر
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Table */}
-                    <div style={{ background: '#0b1424', borderRadius: 16, border: '1px solid rgba(59,130,246,0.12)', overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo', tableLayout: 'fixed' }}>
-                            <colgroup>
-                                <col style={{ width: '28%' }} />{/* المنتج */}
-                                <col style={{ width: '13%' }} />{/* القسم */}
-                                <col style={{ width: '14%' }} />{/* الكمية + ± */}
-                                <col style={{ width: '10%' }} />{/* التكلفة */}
-                                <col style={{ width: '11%' }} />{/* سعر البيع */}
-                                <col style={{ width: '10%' }} />{/* الحالة */}
-                                <col style={{ width: '14%' }} />{/* إجراءات */}
-                            </colgroup>
-                            <thead>
-                                <tr style={{ background: 'rgba(59,130,246,0.06)', borderBottom: '1px solid rgba(59,130,246,0.12)' }}>
-                                    {[
-                                        { l: 'المنتج', f: 'name' },
-                                        { l: 'القسم', f: null },
-                                        { l: 'الكمية / ±', f: 'qty' },
-                                        { l: 'التكلفة', f: null },
-                                        { l: 'سعر البيع', f: 'price' },
-                                        { l: 'الحالة', f: null },
-                                        { l: 'إجراءات', f: null },
-                                    ].map(({ l, f }) => (
-                                        <th key={l} onClick={f ? () => toggleSort(f) : null}
-                                            style={{ padding: '11px 10px', textAlign: 'center', color: '#475569', fontWeight: 600, fontSize: '0.7rem', cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                                                {l} {f && <SortIco f={f} />}
-                                            </span>
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr><td colSpan={7}>
-                                        <div style={{ padding: 60, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
-                                            <RefreshCw size={26} style={{ display: 'block', margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#3b82f6' }} />
-                                            جاري تحميل البيانات...
-                                        </div>
-                                    </td></tr>
-                                ) : filtered.length === 0 ? (
-                                    <tr><td colSpan={7}>
-                                        <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
-                                            <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
-                                            لا توجد منتجات مطابقة
-                                        </div>
-                                    </td></tr>
-                                ) : groupedRows.length === 0 ? (
-                                    <tr><td colSpan={7}>
-                                        <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
-                                            <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
-                                            لا توجد منتجات مطابقة
-                                        </div>
-                                    </td></tr>
-                                ) : groupedRows.map((item, idx) => {
-                                    if (item.type === 'header') {
-                                        return (
-                                            <tr key={`cat-${item.catId}`}>
-                                                <td colSpan={7} style={{ padding: '8px 16px', background: `${item.color}10`, borderTop: idx > 0 ? `2px solid ${item.color}30` : 'none', borderBottom: `1px solid ${item.color}20` }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, display: 'inline-block', boxShadow: `0 0 6px ${item.color}` }} />
-                                                        <span style={{ fontWeight: 700, fontSize: '0.78rem', color: item.color, letterSpacing: '0.05em' }}>
-                                                            {item.catName}
-                                                        </span>
-                                                        <span style={{ fontSize: '0.68rem', color: '#334155', marginRight: 4 }}>
-                                                            ({filtered.filter(p => (p.categoryId || '__none__') === item.catId).length} صنف)
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    }
-                                    const p = item.product;
-                                    const dummy_idx = idx;
-                                    {/* same row render below */ }
-                                    const qty = p.stocks?.[0]?.quantity ?? 0;
-                                    const cc = p.category ? catColor(p.category.name) : '#3b82f6';
-                                    const st = qty === 0
-                                        ? { l: 'نفد', bg: 'rgba(239,68,68,0.12)', cr: '#f87171', dot: '#ef4444' }
-                                        : qty < 10
-                                            ? { l: 'منخفض', bg: 'rgba(245,158,11,0.12)', cr: '#fbbf24', dot: '#f59e0b' }
-                                            : { l: 'متوفر', bg: 'rgba(16,185,129,0.12)', cr: '#34d399', dot: '#10b981' };
-
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr><td colSpan={7}>
+                                    <div style={{ padding: 60, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
+                                        <RefreshCw size={26} style={{ display: 'block', margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#3b82f6' }} />
+                                        جاري تحميل البيانات...
+                                    </div>
+                                </td></tr>
+                            ) : filtered.length === 0 ? (
+                                <tr><td colSpan={7}>
+                                    <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
+                                        <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
+                                        لا توجد منتجات مطابقة
+                                    </div>
+                                </td></tr>
+                            ) : groupedRows.length === 0 ? (
+                                <tr><td colSpan={7}>
+                                    <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
+                                        <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
+                                        لا توجد منتجات مطابقة
+                                    </div>
+                                </td></tr>
+                            ) : groupedRows.map((item, idx) => {
+                                if (item.type === 'header') {
                                     return (
-                                        <tr key={`row-${p.id}`}
-                                            style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', height: 48, opacity: saving === p.id ? 0.5 : 1, transition: 'background 0.12s', borderRight: `3px solid ${cc}` }}
-                                            onMouseOver={e => e.currentTarget.style.background = 'rgba(59,130,246,0.05)'}
-                                            onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
-
-                                            {/* Product — single line, truncated */}
-                                            <td style={{ padding: '0 14px', textAlign: 'right', maxWidth: 0 }}>
-                                                <div title={p.name} style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.84rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                    {p.name}
-                                                </div>
-                                            </td>
-
-                                            {/* Category */}
-                                            <td style={{ padding: '0 8px', textAlign: 'center' }}>
-                                                {p.category
-                                                    ? <span style={{ padding: '2px 9px', borderRadius: 20, fontSize: '0.66rem', fontWeight: 700, background: `${cc}15`, color: cc, border: `1px solid ${cc}25`, whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.category.name}</span>
-                                                    : <span style={{ color: '#1e2d3d' }}>—</span>}
-                                            </td>
-
-                                            {/* Qty + ± merged */}
-                                            <td style={{ padding: '0 6px', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                                                    <InlineQty product={p} onSave={setQty} />
-                                                    <QuickPM product={p} onAdjust={quickAdj} />
-                                                </div>
-                                            </td>
-
-                                            {/* Cost */}
-                                            <td style={{ padding: '0 8px', textAlign: 'center', color: '#475569', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
-                                                {p.cost.toLocaleString()}
-                                            </td>
-
-                                            {/* Price */}
-                                            <td style={{ padding: '0 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                                                <span style={{ fontWeight: 700, color: '#10b981', fontSize: '0.88rem' }}>{p.price.toLocaleString()}</span>
-                                                <span style={{ fontSize: '0.62rem', color: '#334155', marginRight: 2 }}>ر.س</span>
-                                            </td>
-
-                                            {/* Status */}
-                                            <td style={{ padding: '0 8px', textAlign: 'center' }}>
-                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 9px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700, background: st.bg, color: st.cr, whiteSpace: 'nowrap' }}>
-                                                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: st.dot, flexShrink: 0, boxShadow: `0 0 4px ${st.dot}` }} />
-                                                    {st.l}
-                                                </span>
-                                            </td>
-
-                                            {/* Actions */}
-                                            <td style={{ padding: '0 8px', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-                                                    <ActionBtn title="تعديل الكمية" clr="#3b82f6" onClick={() => { setSel(p); setAdjForm({ quantity: 1, type: 'ADD' }); setModal('adj'); }}><BarChart3 size={12} /></ActionBtn>
-                                                    <ActionBtn title="تعديل البيانات" clr="#a855f7" onClick={() => { setSel(p); setPForm({ name: p.name, cost: p.cost, price: p.price, quantity: p.stocks?.[0]?.quantity ?? 0, categoryId: p.categoryId || '' }); setErr(''); setModal('edit-p'); }}><Edit3 size={12} /></ActionBtn>
-                                                    <ActionBtn title="حذف" clr="#ef4444" onClick={() => delProduct(p.id)}><Trash2 size={12} /></ActionBtn>
+                                        <tr key={`cat-${item.catId}`}>
+                                            <td colSpan={7} style={{ padding: '8px 16px', background: `${item.color}10`, borderTop: idx > 0 ? `2px solid ${item.color}30` : 'none', borderBottom: `1px solid ${item.color}20` }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, display: 'inline-block', boxShadow: `0 0 6px ${item.color}` }} />
+                                                    <span style={{ fontWeight: 700, fontSize: '0.78rem', color: item.color, letterSpacing: '0.05em' }}>
+                                                        {item.catName}
+                                                    </span>
+                                                    <span style={{ fontSize: '0.68rem', color: '#334155', marginRight: 4 }}>
+                                                        ({filtered.filter(p => (p.categoryId || '__none__') === item.catId).length} صنف)
+                                                    </span>
                                                 </div>
                                             </td>
                                         </tr>
                                     );
-                                })}
-                            </tbody>
-                        </table>
+                                }
+                                const p = item.product;
+                                const dummy_idx = idx;
+                                {/* same row render below */ }
+                                const qty = p.stocks?.[0]?.quantity ?? 0;
+                                const cc = p.category ? catColor(p.category.name) : '#3b82f6';
+                                const st = qty === 0
+                                    ? { l: 'نفد', bg: 'rgba(239,68,68,0.12)', cr: '#f87171', dot: '#ef4444' }
+                                    : qty < 10
+                                        ? { l: 'منخفض', bg: 'rgba(245,158,11,0.12)', cr: '#fbbf24', dot: '#f59e0b' }
+                                        : { l: 'متوفر', bg: 'rgba(16,185,129,0.12)', cr: '#34d399', dot: '#10b981' };
 
-                        {filtered.length > 0 && (
-                            <div style={{ padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', color: '#334155', fontSize: '0.74rem', fontFamily: 'Cairo' }}>
-                                <span>يعرض <strong style={{ color: '#60a5fa' }}>{filtered.length}</strong> من <strong style={{ color: '#60a5fa' }}>{products.length}</strong> منتج</span>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#475569' }}>
-                                    <Edit3 size={10} /> انقر على الكمية لتعديلها · hover للاسم الكامل
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* ══ MODALS ══ */}
-
-            {/* Add / Edit Product */}
-            {(modal === 'add-p' || modal === 'edit-p') && (
-                <Modal title={modal === 'edit-p' ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد'} icon={Package} onClose={() => setModal(null)}>
-                    {err && <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.12)', color: '#f87171', borderRadius: 10, marginBottom: 14, fontSize: '0.83rem', fontFamily: 'Cairo', border: '1px solid rgba(239,68,68,0.2)' }}>{err}</div>}
-                    <form onSubmit={saveProduct}>
-                        <DField label="اسم المنتج" required value={pForm.name} onChange={e => setPForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: أسمنت بورتلاندي 50 كجم" />
-                        <div style={{ marginBottom: 14 }}>
-                            <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Cairo', letterSpacing: '0.05em' }}>القسم</label>
-                            <select value={pForm.categoryId} onChange={e => setPForm(f => ({ ...f, categoryId: e.target.value }))}
-                                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(59,130,246,0.2)', background: '#0b1221', fontFamily: 'Cairo', fontSize: '0.9rem', color: '#94a3b8', cursor: 'pointer', outline: 'none' }}>
-                                <option value="">— بدون قسم —</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                            <DField label="التكلفة (ر.س)" type="number" step="0.01" required value={pForm.cost} onChange={e => setPForm(f => ({ ...f, cost: e.target.value }))} />
-                            <DField label="سعر البيع (ر.س)" type="number" step="0.01" required value={pForm.price} onChange={e => setPForm(f => ({ ...f, price: e.target.value }))} />
-                        </div>
-                        {modal === 'add-p' && <DField label="الكمية الأولية" type="number" value={pForm.quantity} onChange={e => setPForm(f => ({ ...f, quantity: e.target.value }))} />}
-                        <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                            <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
-                            <button type="submit" style={dPriBtn}>{modal === 'edit-p' ? <><Save size={13} /> حفظ</> : <><Plus size={13} /> إضافة</>}</button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
-
-            {/* Bulk Adjust */}
-            {modal === 'adj' && sel && (
-                <Modal title="تعديل كمية المنتج" icon={BarChart3} onClose={() => setModal(null)} w={400}>
-                    <div style={{ background: 'rgba(59,130,246,0.06)', borderRadius: 12, padding: '14px 16px', marginBottom: 18, border: '1px solid rgba(59,130,246,0.12)' }}>
-                        <div style={{ fontWeight: 700, color: '#e2e8f0', fontFamily: 'Cairo', marginBottom: 4 }}>{sel.name}</div>
-                        <div style={{ fontSize: '0.8rem', color: '#475569', fontFamily: 'Cairo' }}>
-                            الكمية الحالية: <strong style={{ color: '#60a5fa', fontSize: '1.1rem' }}>{sel.stocks?.[0]?.quantity ?? 0}</strong>
-                        </div>
-                    </div>
-                    <form onSubmit={adjSave}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-                            {[['ADD', 'إضافة', '#10b981'], ['SUBTRACT', 'سحب', '#ef4444']].map(([t, lbl, clr]) => (
-                                <button key={t} type="button" onClick={() => setAdjForm(f => ({ ...f, type: t }))}
-                                    style={{ padding: '12px 8px', borderRadius: 10, border: `2px solid ${adjForm.type === t ? clr : 'rgba(255,255,255,0.1)'}`, background: adjForm.type === t ? `${clr}15` : 'transparent', cursor: 'pointer', color: adjForm.type === t ? clr : '#475569', fontFamily: 'Cairo', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
-                                    {t === 'ADD' ? <ArrowUp size={14} /> : <ArrowDown size={14} />} {lbl}
-                                </button>
-                            ))}
-                        </div>
-                        <DField label="الكمية" type="number" min="1" required value={adjForm.quantity} onChange={e => setAdjForm(f => ({ ...f, quantity: e.target.value }))} style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 800 }} />
-                        <div style={{ display: 'flex', gap: 10 }}>
-                            <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
-                            <button type="submit" style={{ ...dPriBtn, background: adjForm.type === 'ADD' ? '#059669' : '#dc2626' }}>تحديث الكمية</button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
-
-            {/* Add Category */}
-            {modal === 'add-cat' && (
-                <Modal title="إضافة قسم جديد" icon={Tag} onClose={() => setModal(null)} w={380}>
-                    <form onSubmit={saveCat}>
-                        <DField label="اسم القسم" required value={cForm.name} onChange={e => setCForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: الكهرباء" />
-                        <DField label="الوصف" value={cForm.description} onChange={e => setCForm(f => ({ ...f, description: e.target.value }))} placeholder="وصف مختصر (اختياري)" />
-                        <div style={{ display: 'flex', gap: 10 }}>
-                            <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
-                            <button type="submit" style={dPriBtn}><Plus size={13} /> إضافة</button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
-
-            {/* Manage Categories */}
-            {modal === 'mgr-cats' && (
-                <Modal title="إدارة الأقسام" icon={Settings2} onClose={() => setModal(null)} w={460}>
-                    <div style={{ maxHeight: 360, overflowY: 'auto' }}>
-                        {categories.length === 0
-                            ? <div style={{ textAlign: 'center', color: '#475569', padding: 30, fontFamily: 'Cairo' }}>لا توجد أقسام</div>
-                            : categories.map(c => {
-                                const clr = catColor(c.name);
                                 return (
-                                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', padding: '11px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', gap: 12 }}>
-                                        <div style={{ width: 32, height: 32, borderRadius: 9, background: `${clr}15`, color: clr, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${clr}25` }}>
-                                            <Tag size={13} />
-                                        </div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 700, color: '#e2e8f0', fontSize: '0.88rem', fontFamily: 'Cairo' }}>{c.name}</div>
-                                            <div style={{ fontSize: '0.7rem', color: '#475569', fontFamily: 'Cairo' }}>{catCnt(c.id)} منتج{c.description ? ` — ${c.description}` : ''}</div>
-                                        </div>
-                                        <button onClick={() => delCat(c.id)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.08)', color: '#f87171', cursor: 'pointer', fontSize: '0.74rem', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                            <Trash2 size={11} /> حذف
-                                        </button>
-                                    </div>
+                                    <tr key={`row-${p.id}`}
+                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', height: 48, opacity: saving === p.id ? 0.5 : 1, transition: 'background 0.12s', borderRight: `3px solid ${cc}` }}
+                                        onMouseOver={e => e.currentTarget.style.background = 'rgba(59,130,246,0.05)'}
+                                        onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
+
+                                        {/* Product — single line, truncated */}
+                                        <td style={{ padding: '0 14px', textAlign: 'right', maxWidth: 0 }}>
+                                            <div title={p.name} style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.84rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {p.name}
+                                            </div>
+                                        </td>
+
+                                        {/* Category */}
+                                        <td style={{ padding: '0 8px', textAlign: 'center' }}>
+                                            {p.category
+                                                ? <span style={{ padding: '2px 9px', borderRadius: 20, fontSize: '0.66rem', fontWeight: 700, background: `${cc}15`, color: cc, border: `1px solid ${cc}25`, whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.category.name}</span>
+                                                : <span style={{ color: '#1e2d3d' }}>—</span>}
+                                        </td>
+
+                                        {/* Qty + ± merged */}
+                                        <td style={{ padding: '0 6px', textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                                                <InlineQty product={p} onSave={setQty} />
+                                                <QuickPM product={p} onAdjust={quickAdj} />
+                                            </div>
+                                        </td>
+
+                                        {/* Cost */}
+                                        <td style={{ padding: '0 8px', textAlign: 'center', color: '#475569', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
+                                            {p.cost.toLocaleString()}
+                                        </td>
+
+                                        {/* Price */}
+                                        <td style={{ padding: '0 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                            <span style={{ fontWeight: 700, color: '#10b981', fontSize: '0.88rem' }}>{p.price.toLocaleString()}</span>
+                                            <span style={{ fontSize: '0.62rem', color: '#334155', marginRight: 2 }}>ر.س</span>
+                                        </td>
+
+                                        {/* Status */}
+                                        <td style={{ padding: '0 8px', textAlign: 'center' }}>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 9px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700, background: st.bg, color: st.cr, whiteSpace: 'nowrap' }}>
+                                                <span style={{ width: 5, height: 5, borderRadius: '50%', background: st.dot, flexShrink: 0, boxShadow: `0 0 4px ${st.dot}` }} />
+                                                {st.l}
+                                            </span>
+                                        </td>
+
+                                        {/* Actions */}
+                                        <td style={{ padding: '0 8px', textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                                                <ActionBtn title="تعديل الكمية" clr="#3b82f6" onClick={() => { setSel(p); setAdjForm({ quantity: 1, type: 'ADD' }); setModal('adj'); }}><BarChart3 size={12} /></ActionBtn>
+                                                <ActionBtn title="تعديل البيانات" clr="#a855f7" onClick={() => { setSel(p); setPForm({ name: p.name, cost: p.cost, price: p.price, quantity: p.stocks?.[0]?.quantity ?? 0, categoryId: p.categoryId || '' }); setErr(''); setModal('edit-p'); }}><Edit3 size={12} /></ActionBtn>
+                                                <ActionBtn title="حذف" clr="#ef4444" onClick={() => delProduct(p.id)}><Trash2 size={12} /></ActionBtn>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 );
                             })}
-                    </div>
-                    <button onClick={() => setModal('add-cat')} style={{ ...dPriBtn, width: '100%', marginTop: 14, justifyContent: 'center' }}>
-                        <Plus size={13} /> إضافة قسم جديد
-                    </button>
-                </Modal>
-            )}
+                        </tbody>
+                    </table>
+
+                    {filtered.length > 0 && (
+                        <div style={{ padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', color: '#334155', fontSize: '0.74rem', fontFamily: 'Cairo' }}>
+                            <span>يعرض <strong style={{ color: '#60a5fa' }}>{filtered.length}</strong> من <strong style={{ color: '#60a5fa' }}>{products.length}</strong> منتج</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#475569' }}>
+                                <Edit3 size={10} /> انقر على الكمية لتعديلها · hover للاسم الكامل
+                            </span>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
+
+            {/* ══ MODALS ══ */ }
+
+    {/* Add / Edit Product */ }
+    {
+        (modal === 'add-p' || modal === 'edit-p') && (
+            <Modal title={modal === 'edit-p' ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد'} icon={Package} onClose={() => setModal(null)}>
+                {err && <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.12)', color: '#f87171', borderRadius: 10, marginBottom: 14, fontSize: '0.83rem', fontFamily: 'Cairo', border: '1px solid rgba(239,68,68,0.2)' }}>{err}</div>}
+                <form onSubmit={saveProduct}>
+                    <DField label="اسم المنتج" required value={pForm.name} onChange={e => setPForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: أسمنت بورتلاندي 50 كجم" />
+                    <div style={{ marginBottom: 14 }}>
+                        <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Cairo', letterSpacing: '0.05em' }}>القسم</label>
+                        <select value={pForm.categoryId} onChange={e => setPForm(f => ({ ...f, categoryId: e.target.value }))}
+                            style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(59,130,246,0.2)', background: '#0b1221', fontFamily: 'Cairo', fontSize: '0.9rem', color: '#94a3b8', cursor: 'pointer', outline: 'none' }}>
+                            <option value="">— بدون قسم —</option>
+                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <DField label="التكلفة (ر.س)" type="number" step="0.01" required value={pForm.cost} onChange={e => setPForm(f => ({ ...f, cost: e.target.value }))} />
+                        <DField label="سعر البيع (ر.س)" type="number" step="0.01" required value={pForm.price} onChange={e => setPForm(f => ({ ...f, price: e.target.value }))} />
+                    </div>
+                    {modal === 'add-p' && <DField label="الكمية الأولية" type="number" value={pForm.quantity} onChange={e => setPForm(f => ({ ...f, quantity: e.target.value }))} />}
+                    <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+                        <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                        <button type="submit" style={dPriBtn}>{modal === 'edit-p' ? <><Save size={13} /> حفظ</> : <><Plus size={13} /> إضافة</>}</button>
+                    </div>
+                </form>
+            </Modal>
+        )
+    }
+
+    {/* Bulk Adjust */ }
+    {
+        modal === 'adj' && sel && (
+            <Modal title="تعديل كمية المنتج" icon={BarChart3} onClose={() => setModal(null)} w={400}>
+                <div style={{ background: 'rgba(59,130,246,0.06)', borderRadius: 12, padding: '14px 16px', marginBottom: 18, border: '1px solid rgba(59,130,246,0.12)' }}>
+                    <div style={{ fontWeight: 700, color: '#e2e8f0', fontFamily: 'Cairo', marginBottom: 4 }}>{sel.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#475569', fontFamily: 'Cairo' }}>
+                        الكمية الحالية: <strong style={{ color: '#60a5fa', fontSize: '1.1rem' }}>{sel.stocks?.[0]?.quantity ?? 0}</strong>
+                    </div>
+                </div>
+                <form onSubmit={adjSave}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                        {[['ADD', 'إضافة', '#10b981'], ['SUBTRACT', 'سحب', '#ef4444']].map(([t, lbl, clr]) => (
+                            <button key={t} type="button" onClick={() => setAdjForm(f => ({ ...f, type: t }))}
+                                style={{ padding: '12px 8px', borderRadius: 10, border: `2px solid ${adjForm.type === t ? clr : 'rgba(255,255,255,0.1)'}`, background: adjForm.type === t ? `${clr}15` : 'transparent', cursor: 'pointer', color: adjForm.type === t ? clr : '#475569', fontFamily: 'Cairo', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
+                                {t === 'ADD' ? <ArrowUp size={14} /> : <ArrowDown size={14} />} {lbl}
+                            </button>
+                        ))}
+                    </div>
+                    <DField label="الكمية" type="number" min="1" required value={adjForm.quantity} onChange={e => setAdjForm(f => ({ ...f, quantity: e.target.value }))} style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 800 }} />
+                    <div style={{ display: 'flex', gap: 10 }}>
+                        <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                        <button type="submit" style={{ ...dPriBtn, background: adjForm.type === 'ADD' ? '#059669' : '#dc2626' }}>تحديث الكمية</button>
+                    </div>
+                </form>
+            </Modal>
+        )
+    }
+
+    {/* Add Category */ }
+    {
+        modal === 'add-cat' && (
+            <Modal title="إضافة قسم جديد" icon={Tag} onClose={() => setModal(null)} w={380}>
+                <form onSubmit={saveCat}>
+                    <DField label="اسم القسم" required value={cForm.name} onChange={e => setCForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: الكهرباء" />
+                    <DField label="الوصف" value={cForm.description} onChange={e => setCForm(f => ({ ...f, description: e.target.value }))} placeholder="وصف مختصر (اختياري)" />
+                    <div style={{ display: 'flex', gap: 10 }}>
+                        <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                        <button type="submit" style={dPriBtn}><Plus size={13} /> إضافة</button>
+                    </div>
+                </form>
+            </Modal>
+        )
+    }
+
+    {/* Manage Categories */ }
+    {
+        modal === 'mgr-cats' && (
+            <Modal title="إدارة الأقسام" icon={Settings2} onClose={() => setModal(null)} w={460}>
+                <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                    {categories.length === 0
+                        ? <div style={{ textAlign: 'center', color: '#475569', padding: 30, fontFamily: 'Cairo' }}>لا توجد أقسام</div>
+                        : categories.map(c => {
+                            const clr = catColor(c.name);
+                            return (
+                                <div key={c.id} style={{ display: 'flex', alignItems: 'center', padding: '11px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', gap: 12 }}>
+                                    <div style={{ width: 32, height: 32, borderRadius: 9, background: `${clr}15`, color: clr, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${clr}25` }}>
+                                        <Tag size={13} />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 700, color: '#e2e8f0', fontSize: '0.88rem', fontFamily: 'Cairo' }}>{c.name}</div>
+                                        <div style={{ fontSize: '0.7rem', color: '#475569', fontFamily: 'Cairo' }}>{catCnt(c.id)} منتج{c.description ? ` — ${c.description}` : ''}</div>
+                                    </div>
+                                    <button onClick={() => delCat(c.id)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.08)', color: '#f87171', cursor: 'pointer', fontSize: '0.74rem', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <Trash2 size={11} /> حذف
+                                    </button>
+                                </div>
+                            );
+                        })}
+                </div>
+                <button onClick={() => setModal('add-cat')} style={{ ...dPriBtn, width: '100%', marginTop: 14, justifyContent: 'center' }}>
+                    <Plus size={13} /> إضافة قسم جديد
+                </button>
+            </Modal>
+        )
+    }
+        </div >
     );
 }
 
