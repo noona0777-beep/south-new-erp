@@ -84,27 +84,16 @@ const HeaderStat = ({ title, value, subtext, icon, color }) => (
 );
 
 const Dashboard = () => {
-    const [reportFilter, setReportFilter] = React.useState('YEARLY'); // MONTHLY, YEARLY
-
-    // Fake data for 5 years
-    const yearlyData = [
-        { label: '2022', value: 65, amount: '450K' },
-        { label: '2023', value: 75, amount: '580K' },
-        { label: '2024', value: 90, amount: '720K' },
-        { label: '2025', value: 85, amount: '690K' },
-        { label: '2026', value: 95, amount: '810K' }
-    ];
-
-    const monthlyData = [
-        { label: 'يناير', value: 40 }, { label: 'فبراير', value: 55 }, { label: 'مارس', value: 45 },
-        { label: 'إبريل', value: 60 }, { label: 'مايو', value: 75 }, { label: 'يونيو', value: 85 },
-        { label: 'يوليو', value: 70 }, { label: 'أغسطس', value: 65 }, { label: 'سبتمبر', value: 80 },
-        { label: 'أكتوبر', value: 90 }, { label: 'نوفمبر', value: 95 }, { label: 'ديسمبر', value: 100 }
-    ];
-
-    const currentData = reportFilter === 'YEARLY' ? yearlyData : monthlyData;
-
+    const [stats, setStats] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
+    const [reportFilter, setReportFilter] = React.useState('MONTHLY');
     const [user] = React.useState(JSON.parse(localStorage.getItem('user')) || { name: 'المستخدم' });
+
+    React.useEffect(() => {
+        axios.get(`${API_URL}/dashboard/stats`)
+            .then(res => { setStats(res.data); setLoading(false); })
+            .catch(() => setLoading(false));
+    }, []);
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -112,120 +101,173 @@ const Dashboard = () => {
         if (hour < 18) return { text: 'طاب يومك', icon: '🌤️' };
         return { text: 'مساء الخير', icon: '🌙' };
     };
-
     const greeting = getGreeting();
+
+    const formatMoney = (val) => {
+        if (!val) return '0';
+        if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+        if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
+        return val.toFixed(0);
+    };
+
+    const chartData = stats?.monthlyRevenue || [];
+    const maxVal = Math.max(...chartData.map(d => d.value), 1);
+
+    const statusLabel = (s) => ({ DRAFT: 'مسودة', POSTED: 'مرسلة', PAID: 'مدفوعة', ACCEPTED: 'مقبول', REJECTED: 'مرفوض', SENT: 'تم الإرسال' }[s] || s);
+    const statusColor = (s) => ({ DRAFT: '#94a3b8', POSTED: '#3b82f6', PAID: '#10b981', ACCEPTED: '#10b981', REJECTED: '#ef4444', SENT: '#f59e0b' }[s] || '#94a3b8');
 
     return (
         <div style={{ marginTop: '10px' }}>
+            {/* Hero Banner */}
             <div className="aurora-bg pulse-glow" style={{ marginBottom: '35px', padding: '32px', borderRadius: '24px', color: 'white', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px -15px rgba(0,0,0,0.2)' }}>
                 <div style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
                         <span style={{ fontSize: '2.5rem' }}>{greeting.icon}</span>
                         <h2 style={{ margin: 0, fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-0.5px' }}>{greeting.text}، {user.name}</h2>
                     </div>
-                    <p style={{ margin: 0, opacity: 0.9, fontSize: '1.2rem', fontWeight: '500', maxWidth: '600px', lineHeight: '1.5' }}>
-                        أهلاً بك مجدداً في نظام إدارة موارد مؤسسة الجنوب الجديد. إليك نظرة سريعة على أداء اليوم.
+                    <p style={{ margin: 0, opacity: 0.9, fontSize: '1.1rem', fontWeight: '500', maxWidth: '600px', lineHeight: '1.5' }}>
+                        أهلاً بك في نظام إدارة موارد مؤسسة الجنوب الجديد. إليك نظرة سريعة على أداء المؤسسة.
                     </p>
                 </div>
-
-                {/* Animated Decorative Elements */}
-                <div className="floating" style={{ position: 'absolute', top: '10%', left: '5%', opacity: 0.1, color: 'white' }}><DollarSign size={80} /></div>
-                <div className="floating" style={{ position: 'absolute', bottom: '15%', left: '15%', opacity: 0.05, color: 'white', animationDelay: '2s' }}><Briefcase size={100} /></div>
-                <div className="floating" style={{ position: 'absolute', top: '20%', right: '10%', opacity: 0.1, color: 'white', animationDelay: '1s' }}><TrendingUp size={60} /></div>
-
-                {/* Aurora Glare */}
-                <div style={{ position: 'absolute', top: '-50%', right: '-10%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)', filter: 'blur(40px)' }}></div>
+                <div className="floating" style={{ position: 'absolute', top: '10%', left: '5%', opacity: 0.1 }}><DollarSign size={80} /></div>
+                <div className="floating" style={{ position: 'absolute', bottom: '15%', left: '15%', opacity: 0.05, animationDelay: '2s' }}><Briefcase size={100} /></div>
+                <div className="floating" style={{ position: 'absolute', top: '20%', right: '10%', opacity: 0.1, animationDelay: '1s' }}><TrendingUp size={60} /></div>
+                <div style={{ position: 'absolute', top: '-50%', right: '-10%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)', filter: 'blur(40px)' }}></div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                <div>
-                    <h2 style={{ margin: 0, color: '#1e293b', fontSize: '1.8rem', fontWeight: '700' }}>لوحة القيادة</h2>
-                    <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>نظرة عامة على أداء المؤسسة الاستراتيجي</p>
-                </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', marginBottom: '40px' }}>
-                <HeaderStat title="إجمالي الإيرادات" value="3.25M ر.س" subtext="+25% (5 سنوات)" icon={<DollarSign />} color="#2563eb" />
-                <HeaderStat title="متوسط النمو" value="15%" subtext="سنوي مستدام" icon={<TrendingUp />} color="#10b981" />
-                <HeaderStat title="المشاريع الكبرى" value="24" subtext="خلال 5 سنوات" icon={<Briefcase />} color="#8b5cf6" />
-                <HeaderStat title="الأرباح الصافية" value="1.1M ر.س" subtext="بعد الاستقطاعات" icon={<TrendingUp />} color="#0ea5e9" />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-                {/* Revenue Report Card */}
-                <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', alignItems: 'center' }}>
-                        <div>
-                            <h3 style={{ margin: 0, fontSize: '1.2rem' }}>تقرير النمو التاريخي</h3>
-                            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>تحليل الإيرادات لفترة 5 سنوات</span>
-                        </div>
-                        <div style={{ display: 'flex', background: '#f8fafc', padding: '4px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                            <button
-                                onClick={() => setReportFilter('YEARLY')}
-                                style={{
-                                    padding: '6px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontFamily: 'Cairo', fontSize: '0.85rem',
-                                    background: reportFilter === 'YEARLY' ? 'white' : 'transparent',
-                                    color: reportFilter === 'YEARLY' ? '#2563eb' : '#64748b',
-                                    boxShadow: reportFilter === 'YEARLY' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
-                                    fontWeight: reportFilter === 'YEARLY' ? 'bold' : 'normal'
-                                }}
-                            >سنوي</button>
-                            <button
-                                onClick={() => setReportFilter('MONTHLY')}
-                                style={{
-                                    padding: '6px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontFamily: 'Cairo', fontSize: '0.85rem',
-                                    background: reportFilter === 'MONTHLY' ? 'white' : 'transparent',
-                                    color: reportFilter === 'MONTHLY' ? '#2563eb' : '#64748b',
-                                    boxShadow: reportFilter === 'MONTHLY' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
-                                    fontWeight: reportFilter === 'MONTHLY' ? 'bold' : 'normal'
-                                }}
-                            >شهري</button>
-                        </div>
+            {/* Stats Cards */}
+            {loading ? (
+                <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8', fontSize: '1.1rem' }}>⏳ جاري تحميل الإحصائيات...</div>
+            ) : (
+                <>
+                    {/* Main KPI Cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+                        <HeaderStat title="إجمالي الإيرادات" value={`${formatMoney(stats?.totals?.revenue)} ر.س`} subtext={`${stats?.totals?.invoices || 0} فاتورة`} icon={<DollarSign />} color="#2563eb" />
+                        <HeaderStat title="العملاء المسجلون" value={stats?.totals?.clients || 0} subtext={`+${stats?.quickStats?.activeProjects || 0} مشروع نشط`} icon={<UserPlus />} color="#10b981" />
+                        <HeaderStat title="عروض الأسعار" value={stats?.totals?.quotes || 0} subtext={`${stats?.quickStats?.pendingQuotes || 0} معلقة`} icon={<FileText />} color="#8b5cf6" />
+                        <HeaderStat title="المنتجات في المخزن" value={stats?.totals?.products || 0} subtext={stats?.quickStats?.lowStockCount > 0 ? `⚠️ ${stats.quickStats.lowStockCount} نقص` : '✅ مخزون جيد'} icon={<Package />} color="#f59e0b" />
                     </div>
 
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', gap: reportFilter === 'YEARLY' ? '40px' : '10px', paddingBottom: '20px', minHeight: '220px' }}>
-                        {currentData.map((data, i) => (
-                            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', position: 'relative' }}>
-                                {reportFilter === 'YEARLY' && (
-                                    <div style={{ position: 'absolute', top: `${100 - data.value - 15}%`, fontSize: '0.75rem', fontWeight: 'bold', color: '#2563eb' }}>{data.amount}</div>
-                                )}
-                                <div style={{
-                                    width: '100%',
-                                    height: `${data.value}%`,
-                                    background: i === currentData.length - 1 ? 'linear-gradient(to top, #2563eb, #60a5fa)' : '#eff6ff',
-                                    borderRadius: '8px 8px 4px 4px',
-                                    transition: 'height 1s ease',
-                                    position: 'relative',
-                                    boxShadow: i === currentData.length - 1 ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none'
-                                }}>
-                                    {i === currentData.length - 1 && <div style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', width: '8px', height: '8px', background: '#2563eb', borderRadius: '50%', border: '2px solid white' }}></div>}
-                                </div>
-                                <div style={{ marginTop: '12px', color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textAlign: 'center' }}>{data.label}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Quick Actions / Notifications */}
-                <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-                    <h3 style={{ margin: '0 0 20px 0' }}>آخر العمليات</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        {[1, 2, 3].map((_, i) => (
-                            <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingBottom: '15px', borderBottom: i < 2 ? '1px solid #f1f5f9' : 'none' }}>
-                                <div style={{ background: '#f0fdf4', padding: '8px', borderRadius: '50%', color: '#16a34a' }}><TrendingUp size={18} /></div>
+                    {/* Chart + Recent Activity */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
+                        {/* Revenue Chart */}
+                        <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', alignItems: 'center' }}>
                                 <div>
-                                    <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>تم تحصيل دفعة #INV-00{i + 1}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>منذ {i * 15 + 5} دقائق</div>
+                                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>الإيرادات الشهرية</h3>
+                                    <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>آخر 6 أشهر</span>
                                 </div>
-                                <div style={{ marginRight: 'auto', fontWeight: 'bold' }}>+1,500</div>
+                                <div style={{ background: '#eff6ff', padding: '6px 14px', borderRadius: '20px', color: '#2563eb', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                                    {formatMoney(stats?.totals?.revenue)} ر.س إجمالي
+                                </div>
                             </div>
-                        ))}
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '12px', paddingBottom: '16px', minHeight: '200px' }}>
+                                {chartData.map((d, i) => (
+                                    <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                                        <div style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#2563eb', marginBottom: '4px' }}>
+                                            {d.value > 0 ? formatMoney(d.value) : ''}
+                                        </div>
+                                        <div style={{
+                                            width: '100%',
+                                            height: `${maxVal > 0 ? Math.max((d.value / maxVal) * 100, d.value > 0 ? 8 : 3) : 3}%`,
+                                            background: i === chartData.length - 1 ? 'linear-gradient(to top, #2563eb, #60a5fa)' : '#dbeafe',
+                                            borderRadius: '6px 6px 3px 3px',
+                                            transition: 'height 0.8s ease',
+                                            boxShadow: i === chartData.length - 1 ? '0 4px 12px rgba(37,99,235,0.3)' : 'none'
+                                        }} />
+                                        <div style={{ marginTop: '8px', color: '#94a3b8', fontSize: '0.72rem', fontWeight: '600' }}>{d.label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Quick Stats Side Panel */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {/* Low Stock Alert */}
+                            {stats?.lowStock?.length > 0 && (
+                                <div className="card-hover fade-in" style={{ background: '#fff7ed', padding: '16px', borderRadius: '14px', border: '1px solid #fed7aa' }}>
+                                    <h4 style={{ margin: '0 0 12px 0', color: '#c2410c', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <AlertOctagon size={16} /> تنبيه نقص المخزون
+                                    </h4>
+                                    {stats.lowStock.map((item, i) => (
+                                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < stats.lowStock.length - 1 ? '1px solid #fed7aa' : 'none', fontSize: '0.85rem' }}>
+                                            <span style={{ color: '#7c2d12', fontWeight: '500' }}>{item.name}</span>
+                                            <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{item.quantity} ق</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Quick Numbers */}
+                            <div className="card-hover fade-in" style={{ background: 'white', padding: '20px', borderRadius: '14px', border: '1px solid #f1f5f9', flex: 1 }}>
+                                <h4 style={{ margin: '0 0 16px 0', color: '#1e293b', fontSize: '0.95rem' }}>ملخص سريع</h4>
+                                {[
+                                    { label: 'المشاريع النشطة', value: stats?.quickStats?.activeProjects || 0, color: '#2563eb', bg: '#eff6ff' },
+                                    { label: 'عروض مقبولة', value: stats?.quickStats?.acceptedQuotes || 0, color: '#10b981', bg: '#ecfdf5' },
+                                    { label: 'عروض معلقة', value: stats?.quickStats?.pendingQuotes || 0, color: '#f59e0b', bg: '#fffbeb' },
+                                    { label: 'الموظفون', value: stats?.totals?.employees || 0, color: '#8b5cf6', bg: '#f5f3ff' },
+                                ].map((item, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 3 ? '1px solid #f8fafc' : 'none' }}>
+                                        <span style={{ color: '#64748b', fontSize: '0.875rem' }}>{item.label}</span>
+                                        <span style={{ background: item.bg, color: item.color, padding: '3px 12px', borderRadius: '12px', fontWeight: 'bold', fontSize: '0.9rem' }}>{item.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
+
+                    {/* Recent Invoices & Quotes */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        {/* Recent Invoices */}
+                        <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                <h3 style={{ margin: 0, fontSize: '1rem', color: '#1e293b' }}>آخر الفواتير</h3>
+                                <Link to="/invoices" style={{ fontSize: '0.8rem', color: '#2563eb', textDecoration: 'none' }}>عرض الكل ←</Link>
+                            </div>
+                            {stats?.recentInvoices?.length > 0 ? stats.recentInvoices.map((inv, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < stats.recentInvoices.length - 1 ? '1px solid #f8fafc' : 'none' }}>
+                                    <div>
+                                        <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#1e293b' }}>{inv.number}</div>
+                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{inv.client}</div>
+                                    </div>
+                                    <div style={{ textAlign: 'left' }}>
+                                        <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '0.875rem' }}>{formatMoney(inv.amount)} ر.س</div>
+                                        <span style={{ fontSize: '0.7rem', color: statusColor(inv.status), fontWeight: 'bold' }}>{statusLabel(inv.status)}</span>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8', fontSize: '0.85rem' }}>لا توجد فواتير بعد</div>
+                            )}
+                        </div>
+
+                        {/* Recent Quotes */}
+                        <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                <h3 style={{ margin: 0, fontSize: '1rem', color: '#1e293b' }}>آخر عروض الأسعار</h3>
+                                <Link to="/quotes" style={{ fontSize: '0.8rem', color: '#2563eb', textDecoration: 'none' }}>عرض الكل ←</Link>
+                            </div>
+                            {stats?.recentQuotes?.length > 0 ? stats.recentQuotes.map((qt, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < stats.recentQuotes.length - 1 ? '1px solid #f8fafc' : 'none' }}>
+                                    <div>
+                                        <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#1e293b' }}>{qt.number}</div>
+                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{qt.client}</div>
+                                    </div>
+                                    <div style={{ textAlign: 'left' }}>
+                                        <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '0.875rem' }}>{formatMoney(qt.amount)} ر.س</div>
+                                        <span style={{ fontSize: '0.7rem', color: statusColor(qt.status), fontWeight: 'bold' }}>{statusLabel(qt.status)}</span>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8', fontSize: '0.85rem' }}>لا توجد عروض أسعار بعد</div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
+
 
 const Placeholder = ({ title, icon }) => (
     <div className="fade-in" style={{

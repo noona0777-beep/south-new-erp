@@ -323,8 +323,8 @@ const SystemTab = () => {
                         {[
                             ['اسم النظام', 'مؤسسة الجنوب الجديد - ERP'],
                             ['الإصدار', 'v2.0.0'],
-                            ['قاعدة البيانات', 'PostgreSQL (Render)'],
-                            ['الاستضافة', 'Vercel + Render'],
+                            ['قاعدة البيانات', 'SQLite (محلي)'],
+                            ['بيئة التشغيل', 'Development'],
                         ].map(([label, value]) => (
                             <div key={label}>
                                 <span style={{ color: '#94a3b8' }}>{label}: </span>

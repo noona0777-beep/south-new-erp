@@ -29,6 +29,115 @@ app.use((req, res, next) => {
 
 // --- System Routes ---
 
+// Dashboard Stats API
+app.get('/api/dashboard/stats', async (req, res) => {
+    try {
+        const [
+            totalInvoices,
+            totalQuotes,
+            totalClients,
+            totalProducts,
+            totalProjects,
+            totalEmployees,
+            recentInvoices,
+            recentQuotes,
+            lowStockItems,
+            invoiceStats
+        ] = await Promise.all([
+            prisma.invoice.count(),
+            prisma.quote.count(),
+            prisma.partner.count({ where: { type: 'CUSTOMER' } }),
+            prisma.product.count(),
+            prisma.project.count(),
+            prisma.employee.count(),
+            prisma.invoice.findMany({
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: { partner: true }
+            }),
+            prisma.quote.findMany({
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: { partner: true }
+            }),
+            prisma.stock.findMany({
+                where: { quantity: { lt: 10 } },
+                include: { product: true },
+                take: 5
+            }),
+            prisma.invoice.aggregate({
+                _sum: { total: true },
+                where: { status: { not: 'CANCELLED' } }
+            })
+        ]);
+
+        // Monthly revenue (last 6 months)
+        const now = new Date();
+        const monthlyRevenue = [];
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const endDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+            const monthData = await prisma.invoice.aggregate({
+                _sum: { total: true },
+                where: {
+                    date: { gte: date, lte: endDate },
+                    status: { not: 'CANCELLED' }
+                }
+            });
+            monthlyRevenue.push({
+                label: date.toLocaleDateString('ar-SA', { month: 'short' }),
+                value: monthData._sum.total || 0
+            });
+        }
+
+        const pendingQuotes = await prisma.quote.count({ where: { status: 'DRAFT' } });
+        const acceptedQuotes = await prisma.quote.count({ where: { status: 'ACCEPTED' } });
+        const activeProjects = await prisma.project.count({ where: { status: { in: ['PLANNED', 'IN_PROGRESS'] } } });
+
+        res.json({
+            totals: {
+                invoices: totalInvoices,
+                quotes: totalQuotes,
+                clients: totalClients,
+                products: totalProducts,
+                projects: totalProjects,
+                employees: totalEmployees,
+                revenue: invoiceStats._sum.total || 0
+            },
+            recentInvoices: recentInvoices.map(inv => ({
+                id: inv.id,
+                number: inv.invoiceNumber,
+                client: inv.partner?.name || 'غير محدد',
+                amount: inv.total,
+                status: inv.status,
+                date: inv.date
+            })),
+            recentQuotes: recentQuotes.map(qt => ({
+                id: qt.id,
+                number: qt.quoteNumber,
+                client: qt.partner?.name || 'غير محدد',
+                amount: qt.total,
+                status: qt.status,
+                date: qt.date
+            })),
+            lowStock: lowStockItems.map(s => ({
+                name: s.product.name,
+                quantity: s.quantity
+            })),
+            monthlyRevenue,
+            quickStats: {
+                pendingQuotes,
+                acceptedQuotes,
+                activeProjects,
+                lowStockCount: lowStockItems.length
+            }
+        });
+    } catch (error) {
+        console.error('Dashboard stats error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/api/notifications', async (req, res) => {
     try {
         const alerts = [];
