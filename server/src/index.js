@@ -38,8 +38,18 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- Health Check (required by Railway) ---
-app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+// --- Health Checks ---
+app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString(), env: process.env.NODE_ENV }));
+
+// API Database Ping Test
+app.get('/api/ping-db', async (req, res) => {
+    try {
+        await prisma.$queryRaw`SELECT 1`;
+        res.json({ status: 'connected', timestamp: new Date().toISOString() });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+});
 
 // --- System Routes ---
 
@@ -311,7 +321,11 @@ app.post('/api/login', async (req, res) => {
         });
     } catch (error) {
         console.error('Login Error:', error);
-        res.status(500).json({ error: 'فشل في عملية تسجيل الدخول' });
+        res.status(500).json({
+            error: 'فشل في عملية تسجيل الدخول',
+            details: error.message,
+            code: error.code // Prisma error codes
+        });
     }
 });
 
