@@ -1383,8 +1383,11 @@ app.get('/api/reports/trial-balance', async (req, res) => {
 // 2. Income Statement (قائمة الدخل)
 app.get('/api/reports/income-statement', async (req, res) => {
     try {
-        // Simple logic: Revenue (4) - Expenses (5)
-        const incomeAccounts = await prisma.account.findMany({
+        const { startDate, endDate } = req.query;
+        const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+        const end = endDate ? new Date(endDate) : new Date();
+
+        const accounts = await prisma.account.findMany({
             where: {
                 OR: [
                     { code: { startsWith: '4' } }, // Revenue
@@ -1393,11 +1396,34 @@ app.get('/api/reports/income-statement', async (req, res) => {
             }
         });
 
-        const revenues = incomeAccounts.filter(a => a.code.startsWith('4'));
-        const expenses = incomeAccounts.filter(a => a.code.startsWith('5'));
+        const reportData = await Promise.all(accounts.map(async (acc) => {
+            const entries = await prisma.journalEntry.findMany({
+                where: {
+                    accountId: acc.id,
+                    transaction: {
+                        date: { gte: start, lte: end }
+                    }
+                }
+            });
 
-        const totalRevenue = revenues.reduce((s, a) => s + Math.abs(a.balance), 0);
-        const totalExpenses = expenses.reduce((s, a) => s + Math.abs(a.balance), 0);
+            const totalDebit = entries.reduce((s, e) => s + e.debit, 0);
+            const totalCredit = entries.reduce((s, e) => s + e.credit, 0);
+
+            let balance = 0;
+            if (acc.code.startsWith('4')) {
+                balance = totalCredit - totalDebit;
+            } else {
+                balance = totalDebit - totalCredit;
+            }
+
+            return { ...acc, balance };
+        }));
+
+        const revenues = reportData.filter(a => a.code.startsWith('4'));
+        const expenses = reportData.filter(a => a.code.startsWith('5'));
+
+        const totalRevenue = revenues.reduce((s, a) => s + a.balance, 0);
+        const totalExpenses = expenses.reduce((s, a) => s + a.balance, 0);
 
         res.json({
             revenues,
@@ -1414,8 +1440,11 @@ app.get('/api/reports/income-statement', async (req, res) => {
 // 3. Balance Sheet (الميزانية العمومية)
 app.get('/api/reports/balance-sheet', async (req, res) => {
     try {
+        const { date } = req.query;
+        const asOfDate = date ? new Date(date) : new Date();
+
         // Assets (1), Liabilities (2), Equity (3)
-        const balanceAccounts = await prisma.account.findMany({
+        const accounts = await prisma.account.findMany({
             where: {
                 OR: [
                     { code: { startsWith: '1' } }, // Assets
@@ -1425,13 +1454,38 @@ app.get('/api/reports/balance-sheet', async (req, res) => {
             }
         });
 
-        const assets = balanceAccounts.filter(a => a.code.startsWith('1'));
-        const liabilities = balanceAccounts.filter(a => a.code.startsWith('2'));
-        const equity = balanceAccounts.filter(a => a.code.startsWith('3'));
+        const reportData = await Promise.all(accounts.map(async (acc) => {
+            const entries = await prisma.journalEntry.findMany({
+                where: {
+                    accountId: acc.id,
+                    transaction: {
+                        date: { lte: asOfDate }
+                    }
+                }
+            });
+
+            const totalDebit = entries.reduce((s, e) => s + e.debit, 0);
+            const totalCredit = entries.reduce((s, e) => s + e.credit, 0);
+
+            // Assets: Dr - Cr
+            // Liabilities/Equity: Cr - Dr
+            let balance = 0;
+            if (acc.code.startsWith('1')) {
+                balance = totalDebit - totalCredit;
+            } else {
+                balance = totalCredit - totalDebit;
+            }
+
+            return { ...acc, balance };
+        }));
+
+        const assets = reportData.filter(a => a.code.startsWith('1'));
+        const liabilities = reportData.filter(a => a.code.startsWith('2'));
+        const equity = reportData.filter(a => a.code.startsWith('3'));
 
         const totalAssets = assets.reduce((s, a) => s + a.balance, 0);
-        const totalLiabilities = liabilities.reduce((s, a) => s + Math.abs(a.balance), 0);
-        const totalEquity = equity.reduce((s, a) => s + Math.abs(a.balance), 0);
+        const totalLiabilities = liabilities.reduce((s, a) => s + a.balance, 0);
+        const totalEquity = equity.reduce((s, a) => s + a.balance, 0);
 
         res.json({
             assets,
@@ -1446,7 +1500,69 @@ app.get('/api/reports/balance-sheet', async (req, res) => {
     }
 });
 
-// --- Notification Routes ---
+// 4. General Ledger (دفتر الأستاذ / كشف حساب)
+app.get('/api/reports/general-ledger', async (req, res) => {
+    try {
+        const { accountId, startDate, endDate } = req.query;
+        if (!accountId) return res.status(400).json({ error: 'Account ID is required' });
+
+        const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+        const end = endDate ? new Date(endDate) : new Date();
+
+        // 1. Get account info
+        const account = await prisma.account.findUnique({ where: { id: parseInt(accountId) } });
+        if (!account) return res.status(404).json({ error: 'Account not found' });
+
+        // 2. Calculate Opening Balance (sum of all entries before startDate)
+        const prevEntries = await prisma.journalEntry.findMany({
+            where: {
+                accountId: account.id,
+                transaction: { date: { lt: start } }
+            }
+        });
+        const openingDebit = prevEntries.reduce((s, e) => s + e.debit, 0);
+        const openingCredit = prevEntries.reduce((s, e) => s + e.credit, 0);
+        let openingBalance = openingDebit - openingCredit;
+
+        // 3. Get entries during period
+        const entries = await prisma.journalEntry.findMany({
+            where: {
+                accountId: account.id,
+                transaction: { date: { gte: start, lte: end } }
+            },
+            include: {
+                transaction: true
+            },
+            orderBy: {
+                transaction: { date: 'asc' }
+            }
+        });
+
+        // 4. Transform entries with running balance
+        let runningBalance = openingBalance;
+        const movements = entries.map(e => {
+            runningBalance += (e.debit - e.credit);
+            return {
+                id: e.id,
+                date: e.transaction.date,
+                description: e.description || e.transaction.description,
+                reference: e.transaction.reference,
+                debit: e.debit,
+                credit: e.credit,
+                balance: runningBalance
+            };
+        });
+
+        res.json({
+            account,
+            openingBalance,
+            movements,
+            closingBalance: runningBalance
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // Internal helper to create persistent notifications without duplicates
 async function addNotification(type, title, message) {

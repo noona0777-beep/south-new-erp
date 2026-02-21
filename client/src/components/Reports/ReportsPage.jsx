@@ -7,6 +7,7 @@ import { FileBarChart2, TrendingUp, Users, Package, Briefcase, DollarSign, Alert
 import TrialBalance from './FinancialReports/TrialBalance';
 import IncomeStatement from './FinancialReports/IncomeStatement';
 import BalanceSheet from './FinancialReports/BalanceSheet';
+import GeneralLedger from './FinancialReports/GeneralLedger';
 
 const token = () => localStorage.getItem('token');
 
@@ -217,7 +218,7 @@ export default function ReportsPage() {
                     <p style={{ margin: 0, color: '#64748b' }}>نظرة شاملة على أداء المؤسسة</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', background: '#f1f5f9', borderRadius: '12px', padding: '4px' }}>
-                    {[['overview', 'نظرة عامة'], ['trial', 'ميزان المراجعة'], ['income', 'قائمة الدخل'], ['balance', 'الميزانية']].map(([k, l]) => (
+                    {[['overview', 'نظرة عامة'], ['trial', 'ميزان المراجعة'], ['income', 'قائمة الدخل'], ['balance', 'الميزانية'], ['ledger', 'كشف حساب']].map(([k, l]) => (
                         <button key={k} onClick={() => setActiveTab(k)} style={{
                             padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer',
                             background: activeTab === k ? 'white' : 'transparent',
@@ -232,6 +233,7 @@ export default function ReportsPage() {
             {activeTab === 'trial' && <TrialBalance />}
             {activeTab === 'income' && <IncomeStatement />}
             {activeTab === 'balance' && <BalanceSheet />}
+            {activeTab === 'ledger' && <GeneralLedger />}
         </div>
     );
 }

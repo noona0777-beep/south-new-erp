@@ -8,25 +8,48 @@ const token = () => localStorage.getItem('token');
 const TrialBalance = () => {
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
+
+    const fetchReport = async () => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`${API_URL}/reports/trial-balance?date=${asOfDate}`, {
+                headers: { Authorization: `Bearer ${token()}` }
+            });
+            setAccounts(res.data);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetch = async () => {
-            try {
-                const res = await axios.get(`${API_URL}/reports/trial-balance`, {
-                    headers: { Authorization: `Bearer ${token()}` }
-                });
-                setAccounts(res.data);
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetch();
-    }, []);
+        fetchReport();
+    }, [asOfDate]);
 
     const totalDebit = accounts.reduce((s, a) => s + (a.balance > 0 ? a.balance : 0), 0);
     const totalCredit = accounts.reduce((s, a) => s + (a.balance < 0 ? Math.abs(a.balance) : 0), 0);
+
+    const exportToCSV = () => {
+        const headers = ['كود الحساب', 'اسم الحساب', 'مدين', 'دائن'];
+        const rows = accounts.map(a => [
+            a.code,
+            a.name,
+            a.balance > 0 ? a.balance : 0,
+            a.balance < 0 ? Math.abs(a.balance) : 0
+        ]);
+
+        // Add footer
+        rows.push(['', 'المجموع', totalDebit, totalCredit]);
+
+        const content = [headers, ...rows].map(e => e.join(',')).join('\n');
+        const blob = new Blob(['\ufeff' + content], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `TrialBalance_${asOfDate}.csv`;
+        link.click();
+    };
 
     const format = (v) => v === 0 ? '-' : v.toLocaleString(undefined, { minimumFractionDigits: 2 });
 
@@ -35,12 +58,23 @@ const TrialBalance = () => {
     return (
         <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold' }}>ميزان المراجعة</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold' }}>ميزان المراجعة</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                        <label style={{ fontSize: '0.85rem', color: '#64748b' }}>حتى تاريخ:</label>
+                        <input
+                            type="date"
+                            value={asOfDate}
+                            onChange={(e) => setAsOfDate(e.target.value)}
+                            style={{ border: 'none', background: 'transparent', fontFamily: 'Cairo', fontSize: '0.9rem', outline: 'none', color: '#1e293b' }}
+                        />
+                    </div>
+                </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
+                    <button onClick={() => window.print()} className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
                         <Printer size={16} /> طباعة
                     </button>
-                    <button style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}>
+                    <button onClick={exportToCSV} className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}>
                         <Download size={16} /> تصدير Excel
                     </button>
                 </div>
