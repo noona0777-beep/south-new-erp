@@ -390,7 +390,7 @@ async function getOrCreateWarehouse() {
     return warehouse;
 }
 
-// Stock Adjustment
+// Stock Adjustment (ADD or SUBTRACT)
 app.post('/api/products/:id/adjust', async (req, res) => {
     try {
         const productId = parseInt(req.params.id);
@@ -404,6 +404,31 @@ app.post('/api/products/:id/adjust', async (req, res) => {
             await prisma.stock.update({
                 where: { id: currentStock.id },
                 data: { quantity: Math.max(0, newQty) }
+            });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Set Stock Quantity Directly (inline edit)
+app.put('/api/products/:id/stock', async (req, res) => {
+    try {
+        const productId = parseInt(req.params.id);
+        const { quantity } = req.body;
+        const warehouse = await getOrCreateWarehouse();
+        const existingStock = await prisma.stock.findFirst({
+            where: { productId, warehouseId: warehouse.id }
+        });
+        if (existingStock) {
+            await prisma.stock.update({
+                where: { id: existingStock.id },
+                data: { quantity: Math.max(0, parseInt(quantity) || 0) }
+            });
+        } else {
+            await prisma.stock.create({
+                data: { productId, warehouseId: warehouse.id, quantity: Math.max(0, parseInt(quantity) || 0) }
             });
         }
         res.json({ success: true });
