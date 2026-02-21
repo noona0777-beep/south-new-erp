@@ -582,115 +582,114 @@ export default function InventoryPage() {
                     )}
                 </div>
             </div>
-        </div>
 
-            {/* ══ MODALS ══ */ }
+            {/* ══ MODALS ══ */}
 
-    {/* Add / Edit Product */ }
-    {
-        (modal === 'add-p' || modal === 'edit-p') && (
-            <Modal title={modal === 'edit-p' ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد'} icon={Package} onClose={() => setModal(null)}>
-                {err && <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.12)', color: '#f87171', borderRadius: 10, marginBottom: 14, fontSize: '0.83rem', fontFamily: 'Cairo', border: '1px solid rgba(239,68,68,0.2)' }}>{err}</div>}
-                <form onSubmit={saveProduct}>
-                    <DField label="اسم المنتج" required value={pForm.name} onChange={e => setPForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: أسمنت بورتلاندي 50 كجم" />
-                    <div style={{ marginBottom: 14 }}>
-                        <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Cairo', letterSpacing: '0.05em' }}>القسم</label>
-                        <select value={pForm.categoryId} onChange={e => setPForm(f => ({ ...f, categoryId: e.target.value }))}
-                            style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(59,130,246,0.2)', background: '#0b1221', fontFamily: 'Cairo', fontSize: '0.9rem', color: '#94a3b8', cursor: 'pointer', outline: 'none' }}>
-                            <option value="">— بدون قسم —</option>
-                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <DField label="التكلفة (ر.س)" type="number" step="0.01" required value={pForm.cost} onChange={e => setPForm(f => ({ ...f, cost: e.target.value }))} />
-                        <DField label="سعر البيع (ر.س)" type="number" step="0.01" required value={pForm.price} onChange={e => setPForm(f => ({ ...f, price: e.target.value }))} />
-                    </div>
-                    {modal === 'add-p' && <DField label="الكمية الأولية" type="number" value={pForm.quantity} onChange={e => setPForm(f => ({ ...f, quantity: e.target.value }))} />}
-                    <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                        <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
-                        <button type="submit" style={dPriBtn}>{modal === 'edit-p' ? <><Save size={13} /> حفظ</> : <><Plus size={13} /> إضافة</>}</button>
-                    </div>
-                </form>
-            </Modal>
-        )
-    }
+            {/* Add / Edit Product */}
+            {
+                (modal === 'add-p' || modal === 'edit-p') && (
+                    <Modal title={modal === 'edit-p' ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد'} icon={Package} onClose={() => setModal(null)}>
+                        {err && <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.12)', color: '#f87171', borderRadius: 10, marginBottom: 14, fontSize: '0.83rem', fontFamily: 'Cairo', border: '1px solid rgba(239,68,68,0.2)' }}>{err}</div>}
+                        <form onSubmit={saveProduct}>
+                            <DField label="اسم المنتج" required value={pForm.name} onChange={e => setPForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: أسمنت بورتلاندي 50 كجم" />
+                            <div style={{ marginBottom: 14 }}>
+                                <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Cairo', letterSpacing: '0.05em' }}>القسم</label>
+                                <select value={pForm.categoryId} onChange={e => setPForm(f => ({ ...f, categoryId: e.target.value }))}
+                                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(59,130,246,0.2)', background: '#0b1221', fontFamily: 'Cairo', fontSize: '0.9rem', color: '#94a3b8', cursor: 'pointer', outline: 'none' }}>
+                                    <option value="">— بدون قسم —</option>
+                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                <DField label="التكلفة (ر.س)" type="number" step="0.01" required value={pForm.cost} onChange={e => setPForm(f => ({ ...f, cost: e.target.value }))} />
+                                <DField label="سعر البيع (ر.س)" type="number" step="0.01" required value={pForm.price} onChange={e => setPForm(f => ({ ...f, price: e.target.value }))} />
+                            </div>
+                            {modal === 'add-p' && <DField label="الكمية الأولية" type="number" value={pForm.quantity} onChange={e => setPForm(f => ({ ...f, quantity: e.target.value }))} />}
+                            <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+                                <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                                <button type="submit" style={dPriBtn}>{modal === 'edit-p' ? <><Save size={13} /> حفظ</> : <><Plus size={13} /> إضافة</>}</button>
+                            </div>
+                        </form>
+                    </Modal>
+                )
+            }
 
-    {/* Bulk Adjust */ }
-    {
-        modal === 'adj' && sel && (
-            <Modal title="تعديل كمية المنتج" icon={BarChart3} onClose={() => setModal(null)} w={400}>
-                <div style={{ background: 'rgba(59,130,246,0.06)', borderRadius: 12, padding: '14px 16px', marginBottom: 18, border: '1px solid rgba(59,130,246,0.12)' }}>
-                    <div style={{ fontWeight: 700, color: '#e2e8f0', fontFamily: 'Cairo', marginBottom: 4 }}>{sel.name}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#475569', fontFamily: 'Cairo' }}>
-                        الكمية الحالية: <strong style={{ color: '#60a5fa', fontSize: '1.1rem' }}>{sel.stocks?.[0]?.quantity ?? 0}</strong>
-                    </div>
-                </div>
-                <form onSubmit={adjSave}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-                        {[['ADD', 'إضافة', '#10b981'], ['SUBTRACT', 'سحب', '#ef4444']].map(([t, lbl, clr]) => (
-                            <button key={t} type="button" onClick={() => setAdjForm(f => ({ ...f, type: t }))}
-                                style={{ padding: '12px 8px', borderRadius: 10, border: `2px solid ${adjForm.type === t ? clr : 'rgba(255,255,255,0.1)'}`, background: adjForm.type === t ? `${clr}15` : 'transparent', cursor: 'pointer', color: adjForm.type === t ? clr : '#475569', fontFamily: 'Cairo', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
-                                {t === 'ADD' ? <ArrowUp size={14} /> : <ArrowDown size={14} />} {lbl}
-                            </button>
-                        ))}
-                    </div>
-                    <DField label="الكمية" type="number" min="1" required value={adjForm.quantity} onChange={e => setAdjForm(f => ({ ...f, quantity: e.target.value }))} style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 800 }} />
-                    <div style={{ display: 'flex', gap: 10 }}>
-                        <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
-                        <button type="submit" style={{ ...dPriBtn, background: adjForm.type === 'ADD' ? '#059669' : '#dc2626' }}>تحديث الكمية</button>
-                    </div>
-                </form>
-            </Modal>
-        )
-    }
-
-    {/* Add Category */ }
-    {
-        modal === 'add-cat' && (
-            <Modal title="إضافة قسم جديد" icon={Tag} onClose={() => setModal(null)} w={380}>
-                <form onSubmit={saveCat}>
-                    <DField label="اسم القسم" required value={cForm.name} onChange={e => setCForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: الكهرباء" />
-                    <DField label="الوصف" value={cForm.description} onChange={e => setCForm(f => ({ ...f, description: e.target.value }))} placeholder="وصف مختصر (اختياري)" />
-                    <div style={{ display: 'flex', gap: 10 }}>
-                        <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
-                        <button type="submit" style={dPriBtn}><Plus size={13} /> إضافة</button>
-                    </div>
-                </form>
-            </Modal>
-        )
-    }
-
-    {/* Manage Categories */ }
-    {
-        modal === 'mgr-cats' && (
-            <Modal title="إدارة الأقسام" icon={Settings2} onClose={() => setModal(null)} w={460}>
-                <div style={{ maxHeight: 360, overflowY: 'auto' }}>
-                    {categories.length === 0
-                        ? <div style={{ textAlign: 'center', color: '#475569', padding: 30, fontFamily: 'Cairo' }}>لا توجد أقسام</div>
-                        : categories.map(c => {
-                            const clr = catColor(c.name);
-                            return (
-                                <div key={c.id} style={{ display: 'flex', alignItems: 'center', padding: '11px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', gap: 12 }}>
-                                    <div style={{ width: 32, height: 32, borderRadius: 9, background: `${clr}15`, color: clr, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${clr}25` }}>
-                                        <Tag size={13} />
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontWeight: 700, color: '#e2e8f0', fontSize: '0.88rem', fontFamily: 'Cairo' }}>{c.name}</div>
-                                        <div style={{ fontSize: '0.7rem', color: '#475569', fontFamily: 'Cairo' }}>{catCnt(c.id)} منتج{c.description ? ` — ${c.description}` : ''}</div>
-                                    </div>
-                                    <button onClick={() => delCat(c.id)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.08)', color: '#f87171', cursor: 'pointer', fontSize: '0.74rem', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                        <Trash2 size={11} /> حذف
+            {/* Bulk Adjust */}
+            {
+                modal === 'adj' && sel && (
+                    <Modal title="تعديل كمية المنتج" icon={BarChart3} onClose={() => setModal(null)} w={400}>
+                        <div style={{ background: 'rgba(59,130,246,0.06)', borderRadius: 12, padding: '14px 16px', marginBottom: 18, border: '1px solid rgba(59,130,246,0.12)' }}>
+                            <div style={{ fontWeight: 700, color: '#e2e8f0', fontFamily: 'Cairo', marginBottom: 4 }}>{sel.name}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#475569', fontFamily: 'Cairo' }}>
+                                الكمية الحالية: <strong style={{ color: '#60a5fa', fontSize: '1.1rem' }}>{sel.stocks?.[0]?.quantity ?? 0}</strong>
+                            </div>
+                        </div>
+                        <form onSubmit={adjSave}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                                {[['ADD', 'إضافة', '#10b981'], ['SUBTRACT', 'سحب', '#ef4444']].map(([t, lbl, clr]) => (
+                                    <button key={t} type="button" onClick={() => setAdjForm(f => ({ ...f, type: t }))}
+                                        style={{ padding: '12px 8px', borderRadius: 10, border: `2px solid ${adjForm.type === t ? clr : 'rgba(255,255,255,0.1)'}`, background: adjForm.type === t ? `${clr}15` : 'transparent', cursor: 'pointer', color: adjForm.type === t ? clr : '#475569', fontFamily: 'Cairo', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
+                                        {t === 'ADD' ? <ArrowUp size={14} /> : <ArrowDown size={14} />} {lbl}
                                     </button>
-                                </div>
-                            );
-                        })}
-                </div>
-                <button onClick={() => setModal('add-cat')} style={{ ...dPriBtn, width: '100%', marginTop: 14, justifyContent: 'center' }}>
-                    <Plus size={13} /> إضافة قسم جديد
-                </button>
-            </Modal>
-        )
-    }
+                                ))}
+                            </div>
+                            <DField label="الكمية" type="number" min="1" required value={adjForm.quantity} onChange={e => setAdjForm(f => ({ ...f, quantity: e.target.value }))} style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 800 }} />
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                                <button type="submit" style={{ ...dPriBtn, background: adjForm.type === 'ADD' ? '#059669' : '#dc2626' }}>تحديث الكمية</button>
+                            </div>
+                        </form>
+                    </Modal>
+                )
+            }
+
+            {/* Add Category */}
+            {
+                modal === 'add-cat' && (
+                    <Modal title="إضافة قسم جديد" icon={Tag} onClose={() => setModal(null)} w={380}>
+                        <form onSubmit={saveCat}>
+                            <DField label="اسم القسم" required value={cForm.name} onChange={e => setCForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: الكهرباء" />
+                            <DField label="الوصف" value={cForm.description} onChange={e => setCForm(f => ({ ...f, description: e.target.value }))} placeholder="وصف مختصر (اختياري)" />
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                                <button type="submit" style={dPriBtn}><Plus size={13} /> إضافة</button>
+                            </div>
+                        </form>
+                    </Modal>
+                )
+            }
+
+            {/* Manage Categories */}
+            {
+                modal === 'mgr-cats' && (
+                    <Modal title="إدارة الأقسام" icon={Settings2} onClose={() => setModal(null)} w={460}>
+                        <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                            {categories.length === 0
+                                ? <div style={{ textAlign: 'center', color: '#475569', padding: 30, fontFamily: 'Cairo' }}>لا توجد أقسام</div>
+                                : categories.map(c => {
+                                    const clr = catColor(c.name);
+                                    return (
+                                        <div key={c.id} style={{ display: 'flex', alignItems: 'center', padding: '11px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', gap: 12 }}>
+                                            <div style={{ width: 32, height: 32, borderRadius: 9, background: `${clr}15`, color: clr, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${clr}25` }}>
+                                                <Tag size={13} />
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: 700, color: '#e2e8f0', fontSize: '0.88rem', fontFamily: 'Cairo' }}>{c.name}</div>
+                                                <div style={{ fontSize: '0.7rem', color: '#475569', fontFamily: 'Cairo' }}>{catCnt(c.id)} منتج{c.description ? ` — ${c.description}` : ''}</div>
+                                            </div>
+                                            <button onClick={() => delCat(c.id)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.08)', color: '#f87171', cursor: 'pointer', fontSize: '0.74rem', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <Trash2 size={11} /> حذف
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                        </div>
+                        <button onClick={() => setModal('add-cat')} style={{ ...dPriBtn, width: '100%', marginTop: 14, justifyContent: 'center' }}>
+                            <Plus size={13} /> إضافة قسم جديد
+                        </button>
+                    </Modal>
+                )
+            }
         </div >
     );
 }
