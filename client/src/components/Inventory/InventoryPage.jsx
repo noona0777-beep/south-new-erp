@@ -4,20 +4,21 @@ import {
     Plus, Search, Package, Edit3, Trash2, X,
     Settings2, Tag, Save, Minus, RefreshCw,
     ArrowUp, ArrowDown, BarChart3, CheckCircle2,
-    DollarSign, AlertTriangle, TrendingDown, Layers
+    DollarSign, AlertTriangle, TrendingDown, Layers,
+    ChevronDown, Filter
 } from 'lucide-react';
 import API_URL from '../../config';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 const CAT_COLORS = [
-    '#2563eb', '#7c3aed', '#db2777', '#dc2626',
-    '#d97706', '#16a34a', '#0891b2', '#9333ea',
-    '#c2410c', '#0f766e', '#1d4ed8', '#be185d'
+    '#3b82f6', '#8b5cf6', '#ec4899', '#ef4444',
+    '#f59e0b', '#10b981', '#06b6d4', '#a855f7',
+    '#f97316', '#14b8a6', '#6366f1', '#e11d48'
 ];
-const catColor = (name = '') => CAT_COLORS[name.charCodeAt(0) % CAT_COLORS.length];
+const catColor = (name = '') => CAT_COLORS[(name.charCodeAt(0) || 0) % CAT_COLORS.length];
 
-/* ══ Inline editable quantity cell ══ */
+/* ────────── Inline Qty Edit ────────── */
 function InlineQty({ product, onSave }) {
     const [editing, setEditing] = useState(false);
     const [val, setVal] = useState('');
@@ -32,11 +33,8 @@ function InlineQty({ product, onSave }) {
         setEditing(false);
     };
 
-    const badge = qty === 0
-        ? { bg: '#fef2f2', color: '#ef4444', border: '#fecaca' }
-        : qty < 10
-            ? { bg: '#fffbeb', color: '#d97706', border: '#fde68a' }
-            : { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' };
+    const clr = qty === 0 ? '#ef4444' : qty < 10 ? '#f59e0b' : '#10b981';
+    const bg = qty === 0 ? 'rgba(239,68,68,0.12)' : qty < 10 ? 'rgba(245,158,11,0.12)' : 'rgba(16,185,129,0.12)';
 
     if (editing) return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -44,67 +42,69 @@ function InlineQty({ product, onSave }) {
                 onChange={e => setVal(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') cancel(); }}
                 onBlur={save}
-                style={{ width: 64, padding: '4px 8px', border: '2px solid #2563eb', borderRadius: 8, fontFamily: 'Cairo', fontSize: '0.9rem', textAlign: 'center', outline: 'none' }} />
-            <button onClick={save} style={iconBtn('#f0fdf4', '#16a34a')}><CheckCircle2 size={14} /></button>
-            <button onClick={cancel} style={iconBtn('#f8fafc', '#94a3b8')}><X size={14} /></button>
+                style={{ width: 60, padding: '4px 8px', background: '#1e2d45', border: '2px solid #3b82f6', borderRadius: 8, color: 'white', fontFamily: 'Cairo', fontSize: '0.88rem', textAlign: 'center', outline: 'none' }} />
+            <button onClick={save} style={{ background: 'rgba(16,185,129,0.15)', border: 'none', cursor: 'pointer', color: '#10b981', borderRadius: 6, padding: '3px 4px', display: 'flex' }}><CheckCircle2 size={13} /></button>
+            <button onClick={cancel} style={{ background: 'rgba(100,116,139,0.15)', border: 'none', cursor: 'pointer', color: '#64748b', borderRadius: 6, padding: '3px 4px', display: 'flex' }}><X size={13} /></button>
         </div>
     );
 
     return (
-        <span onClick={start} title="انقر لتعديل الكمية"
-            style={{ cursor: 'text', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ padding: '3px 14px', borderRadius: 20, fontWeight: 700, fontSize: '0.9rem', background: badge.bg, color: badge.color, border: `1.5px solid ${badge.border}`, transition: 'transform 0.15s', display: 'inline-block' }}
-                onMouseOver={e => e.currentTarget.style.transform = 'scale(1.08)'}
-                onMouseOut={e => e.currentTarget.style.transform = ''}>
+        <span onClick={start} title="انقر لتعديل الكمية" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ padding: '4px 14px', borderRadius: 20, fontWeight: 700, fontSize: '0.88rem', background: bg, color: clr, border: `1px solid ${clr}30`, transition: 'all 0.15s' }}
+                onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = `0 0 8px ${clr}40`; }}
+                onMouseOut={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
                 {qty}
             </span>
-            <Edit3 size={11} color="#94a3b8" />
+            <Edit3 size={10} color="#475569" />
         </span>
     );
 }
 
-/* ══ Quick ±1 ══ */
+/* ────────── Quick ± ────────── */
 function QuickPM({ product, onAdjust }) {
     const qty = product.stocks?.[0]?.quantity ?? 0;
+    const btn = (disabled, clr, onClick, ico) => (
+        <button onClick={onClick} disabled={disabled}
+            style={{ width: 24, height: 24, borderRadius: 6, border: `1px solid ${disabled ? '#1e293b' : clr + '40'}`, background: disabled ? '#0f1a2e' : clr + '15', color: disabled ? '#334155' : clr, cursor: disabled ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', padding: 0 }}
+            onMouseOver={e => { if (!disabled) { e.currentTarget.style.background = clr + '30'; e.currentTarget.style.boxShadow = `0 0 6px ${clr}40`; } }}
+            onMouseOut={e => { if (!disabled) { e.currentTarget.style.background = clr + '15'; e.currentTarget.style.boxShadow = ''; } }}>
+            {ico}
+        </button>
+    );
     return (
         <div style={{ display: 'flex', gap: 3 }}>
-            <button onClick={() => onAdjust(product.id, 'SUBTRACT', 1)} disabled={qty === 0}
-                style={{ ...qBtn, borderColor: qty === 0 ? '#e2e8f0' : '#fecaca', background: qty === 0 ? '#f8fafc' : '#fef2f2', color: qty === 0 ? '#cbd5e1' : '#ef4444', cursor: qty === 0 ? 'not-allowed' : 'pointer' }}>
-                <Minus size={12} />
-            </button>
-            <button onClick={() => onAdjust(product.id, 'ADD', 1)}
-                style={{ ...qBtn, borderColor: '#bbf7d0', background: '#f0fdf4', color: '#16a34a' }}>
-                <Plus size={12} />
-            </button>
+            {btn(qty === 0, '#ef4444', () => onAdjust(product.id, 'SUBTRACT', 1), <Minus size={11} />)}
+            {btn(false, '#10b981', () => onAdjust(product.id, 'ADD', 1), <Plus size={11} />)}
         </div>
     );
 }
 
-/* ══ Modal ══ */
+/* ────────── Modal ────────── */
 const Modal = ({ title, icon: Icon, onClose, children, w = 480 }) => (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(6px)' }}>
-        <div className="fade-in" style={{ background: 'white', borderRadius: 20, width: w, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 32px 64px rgba(0,0,0,0.3)' }}>
-            <div style={{ padding: '20px 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', background: 'linear-gradient(135deg,#f8fafc,white)', borderRadius: '20px 20px 0 0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, color: '#0f172a', fontFamily: 'Cairo' }}>
-                    {Icon && <span style={{ color: '#2563eb' }}><Icon size={18} /></span>}
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}>
+        <div className="fade-in" style={{ background: '#0f1a2e', borderRadius: 20, width: w, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.15)' }}>
+            <div style={{ padding: '18px 22px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(59,130,246,0.05)', borderRadius: '20px 20px 0 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9, fontWeight: 700, color: 'white', fontFamily: 'Cairo', fontSize: '0.95rem' }}>
+                    {Icon && <span style={{ color: '#60a5fa' }}><Icon size={17} /></span>}
                     {title}
                 </div>
-                <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#64748b', borderRadius: 8, padding: 6, display: 'flex' }}><X size={15} /></button>
+                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: '#94a3b8', borderRadius: 8, padding: 6, display: 'flex' }}><X size={14} /></button>
             </div>
-            <div style={{ padding: '22px 24px' }}>{children}</div>
+            <div style={{ padding: '20px 22px' }}>{children}</div>
         </div>
     </div>
 );
 
-const Field = ({ label, ...p }) => (
+const DField = ({ label, ...p }) => (
     <div style={{ marginBottom: 14 }}>
-        {label && <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.82rem', color: '#374151', fontFamily: 'Cairo' }}>{label}</label>}
-        <input {...p} style={{ width: '100%', padding: '10px 13px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontFamily: 'Cairo', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box', direction: 'rtl', ...p.style }}
-            onFocus={e => e.target.style.borderColor = '#2563eb'} onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
+        {label && <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Cairo', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</label>}
+        <input {...p} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(59,130,246,0.2)', background: '#0b1221', fontFamily: 'Cairo', fontSize: '0.9rem', color: 'white', outline: 'none', boxSizing: 'border-box', direction: 'rtl', ...p.style }}
+            onFocus={e => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.15)'; }}
+            onBlur={e => { e.target.style.borderColor = 'rgba(59,130,246,0.2)'; e.target.style.boxShadow = 'none'; }} />
     </div>
 );
 
-/* ══════════════════════ MAIN ══════════════════════ */
+/* ════════════════════ MAIN ════════════════════ */
 export default function InventoryPage() {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -133,15 +133,13 @@ export default function InventoryPage() {
     const setQty = useCallback(async (id, qty) => {
         setSaving(id);
         try { await axios.put(`${API_URL}/products/${id}/stock`, { quantity: qty }, { headers: H() }); await load(); }
-        catch { alert('فشل التحديث'); }
-        finally { setSaving(null); }
+        catch { alert('فشل التحديث'); } finally { setSaving(null); }
     }, []);
 
     const quickAdj = useCallback(async (id, type, qty) => {
         setSaving(id);
         try { await axios.post(`${API_URL}/products/${id}/adjust`, { quantity: qty, type }, { headers: H() }); await load(); }
-        catch { alert('فشل التحديث'); }
-        finally { setSaving(null); }
+        catch { alert('فشل الضبط'); } finally { setSaving(null); }
     }, []);
 
     const saveProduct = async (e) => {
@@ -192,327 +190,349 @@ export default function InventoryPage() {
     const zeroCount = products.filter(p => (p.stocks?.[0]?.quantity ?? 0) === 0).length;
     const catCnt = id => products.filter(p => p.categoryId === id).length;
 
-    const SortIco = ({ f }) => sortBy === f ? (sortDir === 'asc' ? <ArrowUp size={11} /> : <ArrowDown size={11} />) : null;
+    const SortIco = ({ f }) => sortBy === f
+        ? (sortDir === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />)
+        : <ArrowUp size={10} style={{ opacity: 0.2 }} />;
 
-    /* ════ RENDER ════ */
+    /* KPI cards data */
+    const kpis = [
+        { title: 'إجمالي الأصناف', val: products.length, sub: `${categories.length} قسم`, icon: Layers, g: 'linear-gradient(135deg,#1d4ed8,#2563eb)', glo: '#2563eb' },
+        { title: 'قيمة المخزون', val: `${(totalVal / 1000).toFixed(1)}K`, sub: 'ألف ريال سعودي', icon: DollarSign, g: 'linear-gradient(135deg,#065f46,#059669)', glo: '#10b981' },
+        { title: 'منخفض المخزون', val: lowCount, sub: 'تحت 10 وحدات', icon: AlertTriangle, g: 'linear-gradient(135deg,#92400e,#d97706)', glo: '#f59e0b' },
+        { title: 'نفد من المخزون', val: zeroCount, sub: 'يحتاج تعبئة فورية', icon: TrendingDown, g: 'linear-gradient(135deg,#7f1d1d,#dc2626)', glo: '#ef4444' },
+        { title: 'الأقسام', val: categories.length, sub: 'قسم مخزوني', icon: Tag, g: 'linear-gradient(135deg,#4c1d95,#7c3aed)', glo: '#8b5cf6' },
+    ];
+
+    /* ══ RENDER ══ */
     return (
-        <div style={{ display: 'flex', gap: 20, fontFamily: 'Cairo, sans-serif', direction: 'rtl', minHeight: 'calc(100vh - 100px)' }}>
+        <div style={{ margin: '-20px', padding: '20px', background: '#060e1a', minHeight: 'calc(100vh - 60px)', fontFamily: 'Cairo, sans-serif', direction: 'rtl', color: 'white' }}>
 
-            {/* ══ SIDEBAR ══ */}
-            <aside style={{ width: 220, flexShrink: 0 }}>
-                <div style={{ background: '#0f172a', borderRadius: 16, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.2)', position: 'sticky', top: 20 }}>
-
-                    {/* Header */}
-                    <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'white', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Layers size={15} color="#2563eb" /> الأقسام
-                            </span>
-                            <button onClick={() => setModal('mgr-cats')} title="إدارة الأقسام"
-                                style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 7, padding: '5px 6px', cursor: 'pointer', color: '#94a3b8', display: 'flex' }}>
-                                <Settings2 size={13} />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Items */}
-                    <div style={{ padding: '10px 10px 6px' }}>
-                        <SideItem label="🏠 جميع المنتجات" count={products.length} active={activeCat === 'all'} color="#2563eb" onClick={() => setActiveCat('all')} />
-                        {categories.length > 0 && (
-                            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 6, paddingTop: 6 }}>
-                                {categories.map(c => (
-                                    <SideItem key={c.id} label={c.name} count={catCnt(c.id)} active={activeCat === c.id}
-                                        color={catColor(c.name)} onClick={() => setActiveCat(c.id)} />
-                                ))}
-                            </div>
-                        )}
-                        {(zeroCount > 0 || lowCount > 0) && (
-                            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 6, paddingTop: 6 }}>
-                                {zeroCount > 0 && <SideItem label="⛔ نفد المخزون" count={zeroCount} active={false} color="#ef4444" onClick={() => { }} />}
-                                {lowCount > 0 && <SideItem label="⚠️ كمية منخفضة" count={lowCount} active={false} color="#f59e0b" onClick={() => { }} />}
-                            </div>
-                        )}
-                        <button onClick={() => setModal('add-cat')}
-                            style={{ width: '100%', marginTop: 10, padding: '8px 0', background: 'rgba(37,99,235,0.08)', border: '1.5px dashed rgba(37,99,235,0.35)', borderRadius: 10, cursor: 'pointer', color: '#60a5fa', fontFamily: 'Cairo', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, transition: 'all 0.2s' }}
-                            onMouseOver={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.18)'; }}
-                            onMouseOut={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.08)'; }}>
-                            <Plus size={12} /> إضافة قسم
-                        </button>
-                    </div>
-
-                    {/* Mini stats */}
-                    <div style={{ margin: '10px', background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14, border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: 6, fontWeight: 600 }}>قيمة المخزون</div>
-                        <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'white', lineHeight: 1.2 }}>{totalVal.toLocaleString()}</div>
-                        <div style={{ fontSize: '0.72rem', color: '#64748b' }}>ريال سعودي</div>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                            <div style={{ flex: 1, textAlign: 'center', padding: '8px 4px', borderRadius: 10, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f87171' }}>{zeroCount}</div>
-                                <div style={{ fontSize: '0.65rem', color: '#f87171' }}>نفد</div>
-                            </div>
-                            <div style={{ flex: 1, textAlign: 'center', padding: '8px 4px', borderRadius: 10, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)' }}>
-                                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fbbf24' }}>{lowCount}</div>
-                                <div style={{ fontSize: '0.65rem', color: '#fbbf24' }}>منخفض</div>
-                            </div>
-                        </div>
-                    </div>
+            {/* Page Title */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <div>
+                    <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: 'white', letterSpacing: '-0.3px' }}>
+                        <Package size={20} style={{ display: 'inline', marginLeft: 8, color: '#3b82f6', verticalAlign: 'middle' }} />
+                        إدارة المخزون
+                    </h1>
+                    <p style={{ margin: '4px 0 0', color: '#475569', fontSize: '0.82rem' }}>
+                        {filtered.length} صنف من {products.length} — آخر تحديث: الآن
+                    </p>
                 </div>
-            </aside>
-
-            {/* ══ MAIN ══ */}
-            <main style={{ flex: 1, minWidth: 0 }}>
-
-                {/* Stats row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
-                    {[
-                        { title: 'إجمالي الأصناف', val: products.length, sub: `${categories.length} قسم`, icon: Package, color: '#2563eb' },
-                        { title: 'قيمة المخزون', val: `${(totalVal / 1000).toFixed(0)}K`, sub: 'ريال سعودي', icon: DollarSign, color: '#10b981' },
-                        { title: 'منخفض الكمية', val: lowCount, sub: 'تحت 10 وحدات', icon: AlertTriangle, color: '#f59e0b' },
-                        { title: 'نفد المخزون', val: zeroCount, sub: 'يحتاج تعبئة', icon: TrendingDown, color: '#ef4444' },
-                    ].map(({ title, val, sub, icon: Icon, color }) => (
-                        <div key={title} className="card-hover fade-in" style={{ background: 'white', padding: '18px 20px', borderRadius: 14, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                            <div>
-                                <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, marginBottom: 4 }}>{title}</div>
-                                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.1 }}>{val}</div>
-                                <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: 3 }}>{sub}</div>
-                            </div>
-                            <div style={{ padding: 10, background: `${color}18`, borderRadius: 10, color }}>
-                                <Icon size={20} />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Toolbar */}
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, background: 'white', borderRadius: 12, padding: '10px 16px', border: '1px solid #f1f5f9', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
-                        <Search size={16} color="#94a3b8" />
-                        <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-                            placeholder={`بحث${activeCat !== 'all' ? ` في ${categories.find(c => c.id === activeCat)?.name || ''}` : ''} (${filtered.length} نتيجة)`}
-                            style={{ flex: 1, border: 'none', outline: 'none', fontFamily: 'Cairo', fontSize: '0.9rem', color: '#334155', background: 'transparent' }} />
-                        {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0, display: 'flex' }}><X size={13} /></button>}
-                    </div>
-                    <button onClick={load} style={{ padding: '10px 14px', borderRadius: 12, border: '1px solid #f1f5f9', background: 'white', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Cairo', fontSize: '0.82rem', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
-                        <RefreshCw size={14} /> تحديث
+                <div style={{ display: 'flex', gap: 10 }}>
+                    <button onClick={load}
+                        style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid rgba(59,130,246,0.2)', background: 'rgba(59,130,246,0.07)', cursor: 'pointer', color: '#60a5fa', fontFamily: 'Cairo', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <RefreshCw size={13} /> تحديث
                     </button>
                     <button onClick={() => { setPForm({ name: '', cost: '', price: '', quantity: 0, categoryId: activeCat !== 'all' ? activeCat : '' }); setErr(''); setModal('add-p'); }}
-                        style={{ padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7, boxShadow: '0 4px 14px rgba(37,99,235,0.35)', fontSize: '0.9rem' }}>
-                        <Plus size={16} /> إضافة منتج
+                        style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7, boxShadow: '0 4px 16px rgba(37,99,235,0.4)', fontSize: '0.9rem' }}
+                        onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(37,99,235,0.5)'; }}
+                        onMouseOut={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.4)'; }}>
+                        <Plus size={15} /> إضافة منتج
                     </button>
                 </div>
+            </div>
 
-                {/* Table */}
-                <div className="fade-in" style={{ background: 'white', borderRadius: 16, border: '1px solid #f1f5f9', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo' }}>
-                        <thead>
-                            <tr style={{ background: 'linear-gradient(135deg,#0f172a,#1e293b)' }}>
-                                {[
-                                    { l: 'المنتج', f: 'name' },
-                                    { l: 'القسم', f: null },
-                                    { l: 'الكمية', f: 'qty' },
-                                    { l: '± سريع', f: null },
-                                    { l: 'التكلفة', f: null },
-                                    { l: 'سعر البيع', f: 'price' },
-                                    { l: 'الحالة', f: null },
-                                    { l: 'إجراءات', f: null },
-                                ].map(({ l, f }) => (
-                                    <th key={l} onClick={f ? () => toggleSort(f) : null}
-                                        style={{ padding: '13px 14px', textAlign: 'center', color: '#94a3b8', fontWeight: 600, fontSize: '0.78rem', cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                            {l} {f && <SortIco f={f} />}
-                                        </span>
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan={8}>
-                                    <div style={{ padding: 60, textAlign: 'center', color: '#94a3b8', fontFamily: 'Cairo' }}>
-                                        <RefreshCw size={28} style={{ display: 'block', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }} />
-                                        جاري تحميل البيانات...
-                                    </div>
-                                </td></tr>
-                            ) : filtered.length === 0 ? (
-                                <tr><td colSpan={8}>
-                                    <div style={{ padding: 70, textAlign: 'center', color: '#94a3b8', fontFamily: 'Cairo' }}>
-                                        <Package size={42} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.2 }} />
-                                        لا توجد منتجات
-                                    </div>
-                                </td></tr>
-                            ) : filtered.map((p, idx) => {
-                                const qty = p.stocks?.[0]?.quantity ?? 0;
-                                const cc = p.category ? catColor(p.category.name) : '#94a3b8';
-                                const st = qty === 0 ? { l: 'نفد', bg: '#fef2f2', cr: '#ef4444' }
-                                    : qty < 10 ? { l: 'منخفض', bg: '#fffbeb', cr: '#d97706' }
-                                        : { l: 'متوفر', bg: '#f0fdf4', cr: '#16a34a' };
-                                return (
-                                    <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc', opacity: saving === p.id ? 0.55 : 1, transition: 'background 0.15s', background: idx % 2 === 0 ? 'white' : '#fafbff' }}
-                                        onMouseOver={e => e.currentTarget.style.background = '#eff6ff'}
-                                        onMouseOut={e => e.currentTarget.style.background = idx % 2 === 0 ? 'white' : '#fafbff'}>
-
-                                        {/* Product */}
-                                        <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                            <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.88rem' }}>{p.name}</div>
-                                            <div style={{ fontSize: '0.71rem', color: '#94a3b8', marginTop: 2 }}>
-                                                قيمة المخزون: {(p.cost * qty).toLocaleString()} ر.س
-                                            </div>
-                                        </td>
-
-                                        {/* Category */}
-                                        <td style={{ padding: '12px 10px', textAlign: 'center' }}>
-                                            {p.category
-                                                ? <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: '0.7rem', fontWeight: 700, background: `${cc}15`, color: cc, border: `1px solid ${cc}30` }}>{p.category.name}</span>
-                                                : <span style={{ color: '#e2e8f0' }}>—</span>}
-                                        </td>
-
-                                        {/* Qty inline */}
-                                        <td style={{ padding: '12px 10px', textAlign: 'center' }}>
-                                            <InlineQty product={p} onSave={setQty} />
-                                        </td>
-
-                                        {/* ±1 */}
-                                        <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                            <QuickPM product={p} onAdjust={quickAdj} />
-                                        </td>
-
-                                        {/* Cost */}
-                                        <td style={{ padding: '12px 10px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
-                                            {p.cost.toLocaleString()}
-                                        </td>
-
-                                        {/* Price */}
-                                        <td style={{ padding: '12px 10px', textAlign: 'center', fontWeight: 700, color: '#10b981', fontSize: '0.9rem' }}>
-                                            {p.price.toLocaleString()} <span style={{ fontSize: '0.7rem', fontWeight: 400, color: '#94a3b8' }}>ر.س</span>
-                                        </td>
-
-                                        {/* Status */}
-                                        <td style={{ padding: '12px 10px', textAlign: 'center' }}>
-                                            <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: '0.74rem', fontWeight: 700, background: st.bg, color: st.cr }}>
-                                                {st.l}
-                                            </span>
-                                        </td>
-
-                                        {/* Actions */}
-                                        <td style={{ padding: '12px 10px', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', gap: 5, justifyContent: 'center' }}>
-                                                <button title="تعديل الكمية" onClick={() => { setSel(p); setAdjForm({ quantity: 1, type: 'ADD' }); setModal('adj'); }}
-                                                    style={aBtn('#eff6ff', '#2563eb', '#dbeafe')}><BarChart3 size={13} /></button>
-                                                <button title="تعديل البيانات" onClick={() => { setSel(p); setPForm({ name: p.name, cost: p.cost, price: p.price, quantity: p.stocks?.[0]?.quantity ?? 0, categoryId: p.categoryId || '' }); setErr(''); setModal('edit-p'); }}
-                                                    style={aBtn('#fefce8', '#ca8a04', '#fef08a')}><Edit3 size={13} /></button>
-                                                <button title="حذف" onClick={() => delProduct(p.id)} style={aBtn('#fef2f2', '#ef4444', '#fee2e2')}><Trash2 size={13} /></button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-
-                    {filtered.length > 0 && (
-                        <div style={{ padding: '11px 20px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#64748b', fontSize: '0.78rem', fontFamily: 'Cairo' }}>
-                            <span>يعرض <strong style={{ color: '#0f172a' }}>{filtered.length}</strong> من <strong style={{ color: '#0f172a' }}>{products.length}</strong> منتج</span>
-                            <span style={{ color: '#94a3b8' }}>💡 انقر على الكمية لتعديلها مباشرة <Edit3 size={11} style={{ display: 'inline', marginRight: 3 }} /></span>
+            {/* KPI Cards - horizontal scroll */}
+            <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 6, marginBottom: 22, scrollbarWidth: 'none' }}>
+                {kpis.map(({ title, val, sub, icon: Icon, g, glo }) => (
+                    <div key={title} style={{ flexShrink: 0, width: 180, borderRadius: 16, background: g, padding: '20px 18px', position: 'relative', overflow: 'hidden', boxShadow: `0 8px 32px ${glo}25`, border: `1px solid ${glo}30` }}>
+                        <div style={{ position: 'absolute', top: -10, left: -10, opacity: 0.12 }}><Icon size={80} /></div>
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                            <Icon size={20} color="rgba(255,255,255,0.9)" style={{ marginBottom: 10 }} />
+                            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'white', lineHeight: 1, marginBottom: 4 }}>{val}</div>
+                            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>{title}</div>
+                            <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>{sub}</div>
                         </div>
-                    )}
-                </div>
-            </main>
+                    </div>
+                ))}
+            </div>
 
-            {/* ══ MODAL: Add/Edit Product ══ */}
+            {/* Main Layout */}
+            <div style={{ display: 'flex', gap: 18 }}>
+
+                {/* ── Sidebar ── */}
+                <aside style={{ width: 210, flexShrink: 0 }}>
+                    <div style={{ background: '#0b1424', borderRadius: 16, border: '1px solid rgba(59,130,246,0.12)', overflow: 'hidden', position: 'sticky', top: 20, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+                        {/* Header */}
+                        <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'white', fontWeight: 700, fontSize: '0.88rem' }}>
+                                <Layers size={14} color="#3b82f6" /> الأقسام
+                            </span>
+                            <button onClick={() => setModal('mgr-cats')} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 7, padding: '4px 5px', cursor: 'pointer', color: '#64748b', display: 'flex' }}>
+                                <Settings2 size={12} />
+                            </button>
+                        </div>
+
+                        {/* Category list */}
+                        <div style={{ padding: '10px 8px 6px' }}>
+                            <SideCatBtn label="🏠 جميع المنتجات" count={products.length} active={activeCat === 'all'} color="#3b82f6" onClick={() => setActiveCat('all')} />
+
+                            {categories.length > 0
+                                ? <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 6, paddingTop: 6 }}>
+                                    {categories.map(c => (
+                                        <SideCatBtn key={c.id} label={c.name} count={catCnt(c.id)}
+                                            active={activeCat === c.id} color={catColor(c.name)}
+                                            onClick={() => setActiveCat(c.id)} />
+                                    ))}
+                                </div>
+                                : <div style={{ padding: '8px 6px', fontSize: '0.75rem', color: '#334155', textAlign: 'center' }}>لا توجد أقسام</div>
+                            }
+
+                            <button onClick={() => setModal('add-cat')}
+                                style={{ width: '100%', marginTop: 8, padding: '7px 0', background: 'rgba(59,130,246,0.06)', border: '1.5px dashed rgba(59,130,246,0.25)', borderRadius: 10, cursor: 'pointer', color: '#60a5fa', fontFamily: 'Cairo', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, transition: 'all 0.2s' }}
+                                onMouseOver={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.14)'; e.currentTarget.style.borderColor = '#3b82f6'; }}
+                                onMouseOut={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.06)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.25)'; }}>
+                                <Plus size={11} /> إضافة قسم
+                            </button>
+                        </div>
+
+                        {/* Stock alerts */}
+                        {(zeroCount > 0 || lowCount > 0) && (
+                            <div style={{ margin: '6px 8px 10px', padding: '10px 12px', background: 'rgba(239,68,68,0.06)', borderRadius: 10, border: '1px solid rgba(239,68,68,0.15)' }}>
+                                <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, marginBottom: 8 }}>⚠️ تنبيهات المخزون</div>
+                                {zeroCount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#f87171', marginBottom: 4 }}><span>نفد المخزون</span><span style={{ fontWeight: 700 }}>{zeroCount}</span></div>}
+                                {lowCount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#fbbf24' }}><span>كمية منخفضة</span><span style={{ fontWeight: 700 }}>{lowCount}</span></div>}
+                            </div>
+                        )}
+                    </div>
+                </aside>
+
+                {/* ── Main Content ── */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+
+                    {/* Search + filter bar */}
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, background: '#0b1424', borderRadius: 12, padding: '10px 16px', border: '1px solid rgba(59,130,246,0.15)' }}>
+                            <Search size={15} color="#475569" />
+                            <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+                                placeholder={`بحث في المخزون... (${filtered.length} نتيجة)`}
+                                style={{ flex: 1, border: 'none', outline: 'none', fontFamily: 'Cairo', fontSize: '0.88rem', color: 'white', background: 'transparent', direction: 'rtl' }} />
+                            {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 0, display: 'flex' }}><X size={12} /></button>}
+                        </div>
+                    </div>
+
+                    {/* Table */}
+                    <div style={{ background: '#0b1424', borderRadius: 16, border: '1px solid rgba(59,130,246,0.12)', overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo' }}>
+                            <thead>
+                                <tr style={{ background: 'rgba(59,130,246,0.06)', borderBottom: '1px solid rgba(59,130,246,0.12)' }}>
+                                    {[
+                                        { l: 'المنتج', f: 'name' },
+                                        { l: 'القسم', f: null },
+                                        { l: 'الكمية', f: 'qty' },
+                                        { l: '±', f: null },
+                                        { l: 'التكلفة', f: null },
+                                        { l: 'سعر البيع', f: 'price' },
+                                        { l: 'الحالة', f: null },
+                                        { l: 'إجراءات', f: null },
+                                    ].map(({ l, f }) => (
+                                        <th key={l} onClick={f ? () => toggleSort(f) : null}
+                                            style={{ padding: '12px 14px', textAlign: 'center', color: '#475569', fontWeight: 600, fontSize: '0.72rem', cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                                {l} {f && <SortIco f={f} />}
+                                            </span>
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr><td colSpan={8}>
+                                        <div style={{ padding: 60, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
+                                            <RefreshCw size={26} style={{ display: 'block', margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#3b82f6' }} />
+                                            جاري تحميل البيانات...
+                                        </div>
+                                    </td></tr>
+                                ) : filtered.length === 0 ? (
+                                    <tr><td colSpan={8}>
+                                        <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
+                                            <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
+                                            لا توجد منتجات مطابقة
+                                        </div>
+                                    </td></tr>
+                                ) : filtered.map((p, idx) => {
+                                    const qty = p.stocks?.[0]?.quantity ?? 0;
+                                    const cc = p.category ? catColor(p.category.name) : '#3b82f6';
+                                    const st = qty === 0
+                                        ? { l: 'نفد', bg: 'rgba(239,68,68,0.12)', cr: '#f87171', dot: '#ef4444' }
+                                        : qty < 10
+                                            ? { l: 'منخفض', bg: 'rgba(245,158,11,0.12)', cr: '#fbbf24', dot: '#f59e0b' }
+                                            : { l: 'متوفر', bg: 'rgba(16,185,129,0.12)', cr: '#34d399', dot: '#10b981' };
+
+                                    return (
+                                        <tr key={p.id}
+                                            style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: saving === p.id ? 0.5 : 1, transition: 'all 0.15s', borderRight: `3px solid ${cc}`, position: 'relative' }}
+                                            onMouseOver={e => e.currentTarget.style.background = 'rgba(59,130,246,0.04)'}
+                                            onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
+
+                                            {/* Product */}
+                                            <td style={{ padding: '11px 16px', textAlign: 'right' }}>
+                                                <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.86rem', marginBottom: 2 }}>{p.name}</div>
+                                                <div style={{ fontSize: '0.68rem', color: '#334155' }}>
+                                                    قيمة: <span style={{ color: '#475569' }}>{(p.cost * qty).toLocaleString()} ر.س</span>
+                                                </div>
+                                            </td>
+
+                                            {/* Category */}
+                                            <td style={{ padding: '11px 10px', textAlign: 'center' }}>
+                                                {p.category
+                                                    ? <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700, background: `${cc}15`, color: cc, border: `1px solid ${cc}25` }}>{p.category.name}</span>
+                                                    : <span style={{ color: '#1e293b' }}>—</span>}
+                                            </td>
+
+                                            {/* Qty */}
+                                            <td style={{ padding: '11px 10px', textAlign: 'center' }}>
+                                                <InlineQty product={p} onSave={setQty} />
+                                            </td>
+
+                                            {/* ± */}
+                                            <td style={{ padding: '11px 8px', textAlign: 'center' }}>
+                                                <QuickPM product={p} onAdjust={quickAdj} />
+                                            </td>
+
+                                            {/* Cost */}
+                                            <td style={{ padding: '11px 10px', textAlign: 'center', color: '#475569', fontSize: '0.83rem' }}>
+                                                {p.cost.toLocaleString()}
+                                            </td>
+
+                                            {/* Price */}
+                                            <td style={{ padding: '11px 10px', textAlign: 'center' }}>
+                                                <span style={{ fontWeight: 700, color: '#10b981', fontSize: '0.9rem' }}>
+                                                    {p.price.toLocaleString()}
+                                                </span>
+                                                <span style={{ fontSize: '0.65rem', color: '#334155', marginRight: 3 }}>ر.س</span>
+                                            </td>
+
+                                            {/* Status */}
+                                            <td style={{ padding: '11px 10px', textAlign: 'center' }}>
+                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, fontSize: '0.7rem', fontWeight: 700, background: st.bg, color: st.cr }}>
+                                                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: st.dot, flexShrink: 0, display: 'inline-block', boxShadow: `0 0 4px ${st.dot}` }} />
+                                                    {st.l}
+                                                </span>
+                                            </td>
+
+                                            {/* Actions */}
+                                            <td style={{ padding: '11px 10px', textAlign: 'center' }}>
+                                                <div style={{ display: 'flex', gap: 5, justifyContent: 'center' }}>
+                                                    <ActionBtn title="تعديل الكمية" clr="#3b82f6" onClick={() => { setSel(p); setAdjForm({ quantity: 1, type: 'ADD' }); setModal('adj'); }}><BarChart3 size={12} /></ActionBtn>
+                                                    <ActionBtn title="تعديل البيانات" clr="#a855f7" onClick={() => { setSel(p); setPForm({ name: p.name, cost: p.cost, price: p.price, quantity: p.stocks?.[0]?.quantity ?? 0, categoryId: p.categoryId || '' }); setErr(''); setModal('edit-p'); }}><Edit3 size={12} /></ActionBtn>
+                                                    <ActionBtn title="حذف" clr="#ef4444" onClick={() => delProduct(p.id)}><Trash2 size={12} /></ActionBtn>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+
+                        {filtered.length > 0 && (
+                            <div style={{ padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', color: '#334155', fontSize: '0.74rem', fontFamily: 'Cairo' }}>
+                                <span>يعرض <strong style={{ color: '#60a5fa' }}>{filtered.length}</strong> من <strong style={{ color: '#60a5fa' }}>{products.length}</strong> منتج</span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <Edit3 size={10} /> انقر على الكمية لتعديلها مباشرة
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* ══ MODALS ══ */}
+
+            {/* Add / Edit Product */}
             {(modal === 'add-p' || modal === 'edit-p') && (
                 <Modal title={modal === 'edit-p' ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد'} icon={Package} onClose={() => setModal(null)}>
-                    {err && <div style={{ padding: '10px 14px', background: '#fef2f2', color: '#ef4444', borderRadius: 10, marginBottom: 14, fontSize: '0.85rem', fontWeight: 600, fontFamily: 'Cairo' }}>{err}</div>}
+                    {err && <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.12)', color: '#f87171', borderRadius: 10, marginBottom: 14, fontSize: '0.83rem', fontFamily: 'Cairo', border: '1px solid rgba(239,68,68,0.2)' }}>{err}</div>}
                     <form onSubmit={saveProduct}>
-                        <Field label="اسم المنتج *" required value={pForm.name} onChange={e => setPForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: أسمنت بورتلاندي" />
+                        <DField label="اسم المنتج" required value={pForm.name} onChange={e => setPForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: أسمنت بورتلاندي 50 كجم" />
                         <div style={{ marginBottom: 14 }}>
-                            <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.82rem', color: '#374151', fontFamily: 'Cairo' }}>القسم</label>
+                            <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Cairo', letterSpacing: '0.05em' }}>القسم</label>
                             <select value={pForm.categoryId} onChange={e => setPForm(f => ({ ...f, categoryId: e.target.value }))}
-                                style={{ width: '100%', padding: '10px 13px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontFamily: 'Cairo', fontSize: '0.9rem', cursor: 'pointer', background: 'white', outline: 'none' }}>
+                                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(59,130,246,0.2)', background: '#0b1221', fontFamily: 'Cairo', fontSize: '0.9rem', color: '#94a3b8', cursor: 'pointer', outline: 'none' }}>
                                 <option value="">— بدون قسم —</option>
                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                            <Field label="التكلفة (ر.س) *" type="number" step="0.01" required value={pForm.cost} onChange={e => setPForm(f => ({ ...f, cost: e.target.value }))} />
-                            <Field label="سعر البيع (ر.س) *" type="number" step="0.01" required value={pForm.price} onChange={e => setPForm(f => ({ ...f, price: e.target.value }))} />
+                            <DField label="التكلفة (ر.س)" type="number" step="0.01" required value={pForm.cost} onChange={e => setPForm(f => ({ ...f, cost: e.target.value }))} />
+                            <DField label="سعر البيع (ر.س)" type="number" step="0.01" required value={pForm.price} onChange={e => setPForm(f => ({ ...f, price: e.target.value }))} />
                         </div>
-                        {modal === 'add-p' && <Field label="الكمية الأولية" type="number" value={pForm.quantity} onChange={e => setPForm(f => ({ ...f, quantity: e.target.value }))} />}
+                        {modal === 'add-p' && <DField label="الكمية الأولية" type="number" value={pForm.quantity} onChange={e => setPForm(f => ({ ...f, quantity: e.target.value }))} />}
                         <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                            <button type="button" onClick={() => setModal(null)} style={outBtn}>إلغاء</button>
-                            <button type="submit" style={priBtn}>{modal === 'edit-p' ? <><Save size={14} /> حفظ التعديلات</> : <><Plus size={14} /> إضافة المنتج</>}</button>
+                            <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                            <button type="submit" style={dPriBtn}>{modal === 'edit-p' ? <><Save size={13} /> حفظ</> : <><Plus size={13} /> إضافة</>}</button>
                         </div>
                     </form>
                 </Modal>
             )}
 
-            {/* ══ MODAL: Bulk Adjust ══ */}
+            {/* Bulk Adjust */}
             {modal === 'adj' && sel && (
-                <Modal title="تعديل الكمية" icon={BarChart3} onClose={() => setModal(null)} w={400}>
-                    <div style={{ background: '#f8fafc', borderRadius: 12, padding: '14px 16px', marginBottom: 18, border: '1px solid #f1f5f9' }}>
-                        <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4, fontFamily: 'Cairo' }}>{sel.name}</div>
-                        <div style={{ fontSize: '0.82rem', color: '#64748b', fontFamily: 'Cairo' }}>
-                            الكمية الحالية: <strong style={{ color: '#2563eb', fontSize: '1.1rem' }}>{sel.stocks?.[0]?.quantity ?? 0}</strong>
-                            <span style={{ marginRight: 14 }}>السعر: <strong>{sel.price.toLocaleString()} ر.س</strong></span>
+                <Modal title="تعديل كمية المنتج" icon={BarChart3} onClose={() => setModal(null)} w={400}>
+                    <div style={{ background: 'rgba(59,130,246,0.06)', borderRadius: 12, padding: '14px 16px', marginBottom: 18, border: '1px solid rgba(59,130,246,0.12)' }}>
+                        <div style={{ fontWeight: 700, color: '#e2e8f0', fontFamily: 'Cairo', marginBottom: 4 }}>{sel.name}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#475569', fontFamily: 'Cairo' }}>
+                            الكمية الحالية: <strong style={{ color: '#60a5fa', fontSize: '1.1rem' }}>{sel.stocks?.[0]?.quantity ?? 0}</strong>
                         </div>
                     </div>
                     <form onSubmit={adjSave}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-                            {[['ADD', 'إضافة للمخزون', '#16a34a'], ['SUBTRACT', 'سحب من المخزون', '#ef4444']].map(([t, lbl, clr]) => (
+                            {[['ADD', 'إضافة', '#10b981'], ['SUBTRACT', 'سحب', '#ef4444']].map(([t, lbl, clr]) => (
                                 <button key={t} type="button" onClick={() => setAdjForm(f => ({ ...f, type: t }))}
-                                    style={{ padding: '13px 8px', borderRadius: 12, border: `2px solid ${adjForm.type === t ? clr : '#e2e8f0'}`, background: adjForm.type === t ? `${clr}10` : 'white', cursor: 'pointer', color: adjForm.type === t ? clr : '#94a3b8', fontFamily: 'Cairo', fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
-                                    {t === 'ADD' ? <ArrowUp size={15} /> : <ArrowDown size={15} />} {lbl}
+                                    style={{ padding: '12px 8px', borderRadius: 10, border: `2px solid ${adjForm.type === t ? clr : 'rgba(255,255,255,0.1)'}`, background: adjForm.type === t ? `${clr}15` : 'transparent', cursor: 'pointer', color: adjForm.type === t ? clr : '#475569', fontFamily: 'Cairo', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
+                                    {t === 'ADD' ? <ArrowUp size={14} /> : <ArrowDown size={14} />} {lbl}
                                 </button>
                             ))}
                         </div>
-                        <Field label="الكمية" type="number" min="1" required value={adjForm.quantity} onChange={e => setAdjForm(f => ({ ...f, quantity: e.target.value }))} style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 800 }} />
+                        <DField label="الكمية" type="number" min="1" required value={adjForm.quantity} onChange={e => setAdjForm(f => ({ ...f, quantity: e.target.value }))} style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 800 }} />
                         <div style={{ display: 'flex', gap: 10 }}>
-                            <button type="button" onClick={() => setModal(null)} style={outBtn}>إلغاء</button>
-                            <button type="submit" style={{ ...priBtn, background: adjForm.type === 'ADD' ? '#16a34a' : '#ef4444' }}>تحديث الكمية</button>
+                            <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                            <button type="submit" style={{ ...dPriBtn, background: adjForm.type === 'ADD' ? '#059669' : '#dc2626' }}>تحديث الكمية</button>
                         </div>
                     </form>
                 </Modal>
             )}
 
-            {/* ══ MODAL: Add Category ══ */}
+            {/* Add Category */}
             {modal === 'add-cat' && (
-                <Modal title="إضافة قسم جديد" icon={Tag} onClose={() => setModal(null)} w={400}>
+                <Modal title="إضافة قسم جديد" icon={Tag} onClose={() => setModal(null)} w={380}>
                     <form onSubmit={saveCat}>
-                        <Field label="اسم القسم *" required value={cForm.name} onChange={e => setCForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: الديكور" />
-                        <Field label="الوصف (اختياري)" value={cForm.description} onChange={e => setCForm(f => ({ ...f, description: e.target.value }))} placeholder="وصف مختصر" />
+                        <DField label="اسم القسم" required value={cForm.name} onChange={e => setCForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: الكهرباء" />
+                        <DField label="الوصف" value={cForm.description} onChange={e => setCForm(f => ({ ...f, description: e.target.value }))} placeholder="وصف مختصر (اختياري)" />
                         <div style={{ display: 'flex', gap: 10 }}>
-                            <button type="button" onClick={() => setModal(null)} style={outBtn}>إلغاء</button>
-                            <button type="submit" style={priBtn}><Plus size={14} /> إضافة القسم</button>
+                            <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                            <button type="submit" style={dPriBtn}><Plus size={13} /> إضافة</button>
                         </div>
                     </form>
                 </Modal>
             )}
 
-            {/* ══ MODAL: Manage Categories ══ */}
+            {/* Manage Categories */}
             {modal === 'mgr-cats' && (
-                <Modal title="إدارة الأقسام" icon={Settings2} onClose={() => setModal(null)} w={480}>
-                    <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+                <Modal title="إدارة الأقسام" icon={Settings2} onClose={() => setModal(null)} w={460}>
+                    <div style={{ maxHeight: 360, overflowY: 'auto' }}>
                         {categories.length === 0
-                            ? <div style={{ textAlign: 'center', color: '#94a3b8', padding: 30, fontFamily: 'Cairo' }}>لا توجد أقسام بعد</div>
+                            ? <div style={{ textAlign: 'center', color: '#475569', padding: 30, fontFamily: 'Cairo' }}>لا توجد أقسام</div>
                             : categories.map(c => {
                                 const clr = catColor(c.name);
                                 return (
-                                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f8fafc', gap: 12 }}>
-                                        <div style={{ width: 34, height: 34, borderRadius: 10, background: `${clr}15`, color: clr, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${clr}25` }}>
-                                            <Tag size={15} />
+                                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', padding: '11px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', gap: 12 }}>
+                                        <div style={{ width: 32, height: 32, borderRadius: 9, background: `${clr}15`, color: clr, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${clr}25` }}>
+                                            <Tag size={13} />
                                         </div>
                                         <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem', fontFamily: 'Cairo' }}>{c.name}</div>
-                                            <div style={{ fontSize: '0.74rem', color: '#94a3b8', fontFamily: 'Cairo' }}>{catCnt(c.id)} منتج{c.description ? ` • ${c.description}` : ''}</div>
+                                            <div style={{ fontWeight: 700, color: '#e2e8f0', fontSize: '0.88rem', fontFamily: 'Cairo' }}>{c.name}</div>
+                                            <div style={{ fontSize: '0.7rem', color: '#475569', fontFamily: 'Cairo' }}>{catCnt(c.id)} منتج{c.description ? ` — ${c.description}` : ''}</div>
                                         </div>
-                                        <button onClick={() => delCat(c.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', cursor: 'pointer', fontSize: '0.78rem', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                            <Trash2 size={12} /> حذف
+                                        <button onClick={() => delCat(c.id)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.08)', color: '#f87171', cursor: 'pointer', fontSize: '0.74rem', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <Trash2 size={11} /> حذف
                                         </button>
                                     </div>
                                 );
                             })}
                     </div>
-                    <button onClick={() => setModal('add-cat')} style={{ ...priBtn, width: '100%', marginTop: 16, justifyContent: 'center' }}>
-                        <Plus size={14} /> إضافة قسم جديد
+                    <button onClick={() => setModal('add-cat')} style={{ ...dPriBtn, width: '100%', marginTop: 14, justifyContent: 'center' }}>
+                        <Plus size={13} /> إضافة قسم جديد
                     </button>
                 </Modal>
             )}
@@ -520,24 +540,30 @@ export default function InventoryPage() {
     );
 }
 
-/* ══ Sidebar item ══ */
-const SideItem = ({ label, count, active, color, onClick }) => (
-    <div onClick={onClick} style={{ padding: '8px 10px', borderRadius: 9, cursor: 'pointer', marginBottom: 2, background: active ? `${color}22` : 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.15s' }}
-        onMouseOver={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+/* ── Sub-components ── */
+const SideCatBtn = ({ label, count, active, color, onClick }) => (
+    <div onClick={onClick}
+        style={{ padding: '7px 9px', borderRadius: 9, cursor: 'pointer', marginBottom: 2, background: active ? `${color}18` : 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.15s', borderRight: active ? `2px solid ${color}` : '2px solid transparent' }}
+        onMouseOver={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
         onMouseOut={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}>
-        <span style={{ fontSize: '0.82rem', fontWeight: active ? 700 : 400, color: active ? color : '#94a3b8', display: 'flex', alignItems: 'center', gap: 7, fontFamily: 'Cairo' }}>
-            {!['🏠', '⛔', '⚠️'].some(e => label.startsWith(e)) && (
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0, display: 'inline-block', boxShadow: active ? `0 0 6px ${color}` : 'none' }} />
+        <span style={{ fontSize: '0.8rem', fontWeight: active ? 700 : 400, color: active ? color : '#475569', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: 6 }}>
+            {!label.match(/^[🏠⛔⚠️]/) && (
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0, boxShadow: active ? `0 0 6px ${color}` : 'none', display: 'inline-block' }} />
             )}
             {label}
         </span>
-        <span style={{ background: active ? `${color}30` : 'rgba(255,255,255,0.07)', color: active ? color : '#475569', borderRadius: 10, padding: '1px 7px', fontSize: '0.7rem', fontWeight: 700 }}>{count}</span>
+        <span style={{ background: active ? `${color}25` : 'rgba(255,255,255,0.06)', color: active ? color : '#334155', borderRadius: 9, padding: '1px 7px', fontSize: '0.66rem', fontWeight: 700 }}>{count}</span>
     </div>
 );
 
-/* ══ Tiny style helpers ══ */
-const iconBtn = (bg, clr) => ({ background: bg, border: 'none', cursor: 'pointer', color: clr, borderRadius: 7, padding: '3px 4px', display: 'flex', alignItems: 'center', justifyContent: 'center' });
-const qBtn = { width: 26, height: 26, borderRadius: 7, border: '1px solid', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', transition: 'transform 0.12s' };
-const aBtn = (bg, clr, bd) => ({ padding: 6, borderRadius: 8, border: `1px solid ${bd}`, background: bg, color: clr, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' });
-const priBtn = { flex: 1, padding: '11px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' };
-const outBtn = { flex: 1, padding: 11, borderRadius: 10, border: '1.5px solid #e2e8f0', background: 'white', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 600, color: '#374151' };
+const ActionBtn = ({ clr, onClick, title, children }) => (
+    <button title={title} onClick={onClick}
+        style={{ width: 26, height: 26, borderRadius: 7, border: `1px solid ${clr}25`, background: `${clr}12`, color: clr, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+        onMouseOver={e => { e.currentTarget.style.background = `${clr}25`; e.currentTarget.style.boxShadow = `0 0 8px ${clr}40`; }}
+        onMouseOut={e => { e.currentTarget.style.background = `${clr}12`; e.currentTarget.style.boxShadow = ''; }}>
+        {children}
+    </button>
+);
+
+const dPriBtn = { flex: 1, padding: '10px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 700, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' };
+const dOutBtn = { flex: 1, padding: 10, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 600, color: '#94a3b8' };
