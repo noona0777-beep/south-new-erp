@@ -108,9 +108,6 @@ const Login = ({ onSuccess }) => {
                     }}>
                         مؤسسة الجنوب الجديد
                     </h1>
-                    <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 400 }}>
-                        للمقاولات العامة والديكور وإدارة المشاريع
-                    </p>
                     <div style={{
                         display: 'inline-block', marginTop: 12, padding: '4px 14px',
                         background: 'linear-gradient(135deg, #eff6ff, #f0f4ff)',
