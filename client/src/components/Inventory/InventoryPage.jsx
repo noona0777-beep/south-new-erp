@@ -205,7 +205,20 @@ export default function InventoryPage() {
 
     /* ══ RENDER ══ */
     return (
-        <div style={{ margin: '-20px', padding: '20px', background: '#060e1a', minHeight: 'calc(100vh - 60px)', fontFamily: 'Cairo, sans-serif', direction: 'rtl', color: 'white' }}>
+        <div id="inv-root" style={{ margin: '-20px', padding: '20px', background: '#060e1a', minHeight: 'calc(100vh - 60px)', fontFamily: 'Cairo, sans-serif', direction: 'rtl', color: 'white' }}>
+            {/* ── Force Cairo font on all children ── */}
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+                #inv-root, #inv-root * {
+                    font-family: 'Cairo', sans-serif !important;
+                }
+                #inv-root input::placeholder {
+                    font-family: 'Cairo', sans-serif !important;
+                }
+                #inv-root select option {
+                    font-family: 'Cairo', sans-serif !important;
+                }
+            `}</style>
 
             {/* Page Title */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
