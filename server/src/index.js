@@ -322,9 +322,9 @@ app.post('/api/login', async (req, res) => {
     } catch (error) {
         console.error('Login Error:', error);
         res.status(500).json({
-            error: 'فشل في عملية تسجيل الدخول',
+            error: `فشل الدخول: ${error.message} (Code: ${error.code})`,
             details: error.message,
-            code: error.code // Prisma error codes
+            code: error.code
         });
     }
 });
