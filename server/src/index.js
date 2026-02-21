@@ -1089,6 +1089,81 @@ app.post('/api/settings/:key', async (req, res) => {
     }
 });
 
+// --- Accounting & General Ledger Routes ---
+
+// Get Chart of Accounts (Hierarchical)
+app.get('/api/accounts', async (req, res) => {
+    try {
+        const accounts = await prisma.account.findMany({
+            include: { children: true },
+            orderBy: { code: 'asc' }
+        });
+
+        // Transform into a tree structure if needed, or send as is
+        // For simplicity, we'll send a flat list and handle tree structure in frontend
+        res.json(accounts);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create New Account
+app.post('/api/accounts', async (req, res) => {
+    const { name, code, type, parentId } = req.body;
+    try {
+        const account = await prisma.account.create({
+            data: {
+                name,
+                code,
+                type,
+                parentId: parentId ? parseInt(parentId) : null
+            }
+        });
+        res.json(account);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create Journal Entry
+app.post('/api/journal', async (req, res) => {
+    const { date, description, reference, entries } = req.body;
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            const transaction = await tx.transaction.create({
+                data: {
+                    date: new Date(date),
+                    description,
+                    reference,
+                    type: 'JOURNAL',
+                    entries: {
+                        create: entries.map(e => ({
+                            accountId: parseInt(e.accountId),
+                            debit: parseFloat(e.debit || 0),
+                            credit: parseFloat(e.credit || 0),
+                            description: e.description
+                        }))
+                    }
+                }
+            });
+
+            // Update Account Balances
+            for (const entry of entries) {
+                const diff = (parseFloat(entry.debit || 0) - parseFloat(entry.credit || 0));
+                await tx.account.update({
+                    where: { id: parseInt(entry.accountId) },
+                    data: { balance: { increment: diff } }
+                });
+            }
+
+            return transaction;
+        });
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);

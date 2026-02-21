@@ -14,6 +14,7 @@ import RealEstatePage from './components/RealEstate/RealEstatePage';
 import ClientStatement from './components/Clients/ClientStatement';
 import ReportsPage from './components/Reports/ReportsPage';
 import SettingsPage from './components/Settings/SettingsPage';
+import AccountingPage from './components/Accounting/AccountingPage';
 import API_URL from './config';
 
 import {
@@ -334,6 +335,7 @@ const Layout = ({ user, onLogout }) => {
                     <NavLink to="/inventory" icon={<Package />} label="المخزون" active={isActive('/inventory')} />
                     <NavLink to="/clients" icon={<Users />} label="العملاء" active={isActive('/clients')} />
                     <NavLink to="/projects" icon={<Briefcase />} label="المشاريع والمقاولات" active={isActive('/projects')} />
+                    <NavLink to="/accounting" icon={<DollarSign />} label="المحاسبة والمالية" active={isActive('/accounting')} />
                     <NavLink to="/hr" icon={<Users />} label="الموارد البشرية" active={isActive('/hr')} />
                     <NavLink to="/real-estate" icon={<Building2 />} label="إدارة الأملاك" active={isActive('/real-estate')} />
                     <NavLink to="/reports" icon={<FileBarChart2 />} label="التقارير" active={isActive('/reports')} />
@@ -382,6 +384,7 @@ const Layout = ({ user, onLogout }) => {
                         <Route path="/clients" element={<ClientsPage />} />
                         <Route path="/projects" element={<ProjectsPage />} />
                         <Route path="/hr" element={<HRPage />} />
+                        <Route path="/accounting" element={<AccountingPage />} />
                         <Route path="/real-estate" element={<RealEstatePage />} />
                         <Route path="/reports" element={<ReportsPage />} />
                         <Route path="/users" element={<SettingsPage />} />
