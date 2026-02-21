@@ -1314,6 +1314,86 @@ app.get('/api/journal', async (req, res) => {
     }
 });
 
+// --- Financial Reports Endpoints ---
+
+// 1. Trial Balance (ميزان المراجعة)
+app.get('/api/reports/trial-balance', async (req, res) => {
+    try {
+        const accounts = await prisma.account.findMany({
+            orderBy: { code: 'asc' }
+        });
+        res.json(accounts);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 2. Income Statement (قائمة الدخل)
+app.get('/api/reports/income-statement', async (req, res) => {
+    try {
+        // Simple logic: Revenue (4) - Expenses (5)
+        const incomeAccounts = await prisma.account.findMany({
+            where: {
+                OR: [
+                    { code: { startsWith: '4' } }, // Revenue
+                    { code: { startsWith: '5' } }  // Expenses
+                ]
+            }
+        });
+
+        const revenues = incomeAccounts.filter(a => a.code.startsWith('4'));
+        const expenses = incomeAccounts.filter(a => a.code.startsWith('5'));
+
+        const totalRevenue = revenues.reduce((s, a) => s + Math.abs(a.balance), 0);
+        const totalExpenses = expenses.reduce((s, a) => s + Math.abs(a.balance), 0);
+
+        res.json({
+            revenues,
+            expenses,
+            totalRevenue,
+            totalExpenses,
+            netIncome: totalRevenue - totalExpenses
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 3. Balance Sheet (الميزانية العمومية)
+app.get('/api/reports/balance-sheet', async (req, res) => {
+    try {
+        // Assets (1), Liabilities (2), Equity (3)
+        const balanceAccounts = await prisma.account.findMany({
+            where: {
+                OR: [
+                    { code: { startsWith: '1' } }, // Assets
+                    { code: { startsWith: '2' } }, // Liabilities
+                    { code: { startsWith: '3' } }  // Equity
+                ]
+            }
+        });
+
+        const assets = balanceAccounts.filter(a => a.code.startsWith('1'));
+        const liabilities = balanceAccounts.filter(a => a.code.startsWith('2'));
+        const equity = balanceAccounts.filter(a => a.code.startsWith('3'));
+
+        const totalAssets = assets.reduce((s, a) => s + a.balance, 0);
+        const totalLiabilities = liabilities.reduce((s, a) => s + Math.abs(a.balance), 0);
+        const totalEquity = equity.reduce((s, a) => s + Math.abs(a.balance), 0);
+
+        res.json({
+            assets,
+            liabilities,
+            equity,
+            totalAssets,
+            totalLiabilities,
+            totalEquity
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);
