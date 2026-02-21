@@ -326,22 +326,30 @@ export default function InventoryPage() {
 
                     {/* Table */}
                     <div style={{ background: '#0b1424', borderRadius: 16, border: '1px solid rgba(59,130,246,0.12)', overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo', tableLayout: 'fixed' }}>
+                            <colgroup>
+                                <col style={{ width: '28%' }} />{/* المنتج */}
+                                <col style={{ width: '13%' }} />{/* القسم */}
+                                <col style={{ width: '14%' }} />{/* الكمية + ± */}
+                                <col style={{ width: '10%' }} />{/* التكلفة */}
+                                <col style={{ width: '11%' }} />{/* سعر البيع */}
+                                <col style={{ width: '10%' }} />{/* الحالة */}
+                                <col style={{ width: '14%' }} />{/* إجراءات */}
+                            </colgroup>
                             <thead>
                                 <tr style={{ background: 'rgba(59,130,246,0.06)', borderBottom: '1px solid rgba(59,130,246,0.12)' }}>
                                     {[
                                         { l: 'المنتج', f: 'name' },
                                         { l: 'القسم', f: null },
-                                        { l: 'الكمية', f: 'qty' },
-                                        { l: '±', f: null },
+                                        { l: 'الكمية / ±', f: 'qty' },
                                         { l: 'التكلفة', f: null },
                                         { l: 'سعر البيع', f: 'price' },
                                         { l: 'الحالة', f: null },
                                         { l: 'إجراءات', f: null },
                                     ].map(({ l, f }) => (
                                         <th key={l} onClick={f ? () => toggleSort(f) : null}
-                                            style={{ padding: '12px 14px', textAlign: 'center', color: '#475569', fontWeight: 600, fontSize: '0.72rem', cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                            style={{ padding: '11px 10px', textAlign: 'center', color: '#475569', fontWeight: 600, fontSize: '0.7rem', cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                                                 {l} {f && <SortIco f={f} />}
                                             </span>
                                         </th>
@@ -350,14 +358,14 @@ export default function InventoryPage() {
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <tr><td colSpan={8}>
+                                    <tr><td colSpan={7}>
                                         <div style={{ padding: 60, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
                                             <RefreshCw size={26} style={{ display: 'block', margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#3b82f6' }} />
                                             جاري تحميل البيانات...
                                         </div>
                                     </td></tr>
                                 ) : filtered.length === 0 ? (
-                                    <tr><td colSpan={8}>
+                                    <tr><td colSpan={7}>
                                         <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
                                             <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
                                             لا توجد منتجات مطابقة
@@ -374,59 +382,54 @@ export default function InventoryPage() {
 
                                     return (
                                         <tr key={p.id}
-                                            style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: saving === p.id ? 0.5 : 1, transition: 'all 0.15s', borderRight: `3px solid ${cc}`, position: 'relative' }}
-                                            onMouseOver={e => e.currentTarget.style.background = 'rgba(59,130,246,0.04)'}
+                                            style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', height: 48, opacity: saving === p.id ? 0.5 : 1, transition: 'background 0.12s', borderRight: `3px solid ${cc}` }}
+                                            onMouseOver={e => e.currentTarget.style.background = 'rgba(59,130,246,0.05)'}
                                             onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
 
-                                            {/* Product */}
-                                            <td style={{ padding: '11px 16px', textAlign: 'right' }}>
-                                                <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.86rem', marginBottom: 2 }}>{p.name}</div>
-                                                <div style={{ fontSize: '0.68rem', color: '#334155' }}>
-                                                    قيمة: <span style={{ color: '#475569' }}>{(p.cost * qty).toLocaleString()} ر.س</span>
+                                            {/* Product — single line, truncated */}
+                                            <td style={{ padding: '0 14px', textAlign: 'right', maxWidth: 0 }}>
+                                                <div title={p.name} style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.84rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {p.name}
                                                 </div>
                                             </td>
 
                                             {/* Category */}
-                                            <td style={{ padding: '11px 10px', textAlign: 'center' }}>
+                                            <td style={{ padding: '0 8px', textAlign: 'center' }}>
                                                 {p.category
-                                                    ? <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700, background: `${cc}15`, color: cc, border: `1px solid ${cc}25` }}>{p.category.name}</span>
-                                                    : <span style={{ color: '#1e293b' }}>—</span>}
+                                                    ? <span style={{ padding: '2px 9px', borderRadius: 20, fontSize: '0.66rem', fontWeight: 700, background: `${cc}15`, color: cc, border: `1px solid ${cc}25`, whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.category.name}</span>
+                                                    : <span style={{ color: '#1e2d3d' }}>—</span>}
                                             </td>
 
-                                            {/* Qty */}
-                                            <td style={{ padding: '11px 10px', textAlign: 'center' }}>
-                                                <InlineQty product={p} onSave={setQty} />
-                                            </td>
-
-                                            {/* ± */}
-                                            <td style={{ padding: '11px 8px', textAlign: 'center' }}>
-                                                <QuickPM product={p} onAdjust={quickAdj} />
+                                            {/* Qty + ± merged */}
+                                            <td style={{ padding: '0 6px', textAlign: 'center' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                                                    <InlineQty product={p} onSave={setQty} />
+                                                    <QuickPM product={p} onAdjust={quickAdj} />
+                                                </div>
                                             </td>
 
                                             {/* Cost */}
-                                            <td style={{ padding: '11px 10px', textAlign: 'center', color: '#475569', fontSize: '0.83rem' }}>
+                                            <td style={{ padding: '0 8px', textAlign: 'center', color: '#475569', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
                                                 {p.cost.toLocaleString()}
                                             </td>
 
                                             {/* Price */}
-                                            <td style={{ padding: '11px 10px', textAlign: 'center' }}>
-                                                <span style={{ fontWeight: 700, color: '#10b981', fontSize: '0.9rem' }}>
-                                                    {p.price.toLocaleString()}
-                                                </span>
-                                                <span style={{ fontSize: '0.65rem', color: '#334155', marginRight: 3 }}>ر.س</span>
+                                            <td style={{ padding: '0 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                <span style={{ fontWeight: 700, color: '#10b981', fontSize: '0.88rem' }}>{p.price.toLocaleString()}</span>
+                                                <span style={{ fontSize: '0.62rem', color: '#334155', marginRight: 2 }}>ر.س</span>
                                             </td>
 
                                             {/* Status */}
-                                            <td style={{ padding: '11px 10px', textAlign: 'center' }}>
-                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, fontSize: '0.7rem', fontWeight: 700, background: st.bg, color: st.cr }}>
-                                                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: st.dot, flexShrink: 0, display: 'inline-block', boxShadow: `0 0 4px ${st.dot}` }} />
+                                            <td style={{ padding: '0 8px', textAlign: 'center' }}>
+                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 9px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700, background: st.bg, color: st.cr, whiteSpace: 'nowrap' }}>
+                                                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: st.dot, flexShrink: 0, boxShadow: `0 0 4px ${st.dot}` }} />
                                                     {st.l}
                                                 </span>
                                             </td>
 
                                             {/* Actions */}
-                                            <td style={{ padding: '11px 10px', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', gap: 5, justifyContent: 'center' }}>
+                                            <td style={{ padding: '0 8px', textAlign: 'center' }}>
+                                                <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
                                                     <ActionBtn title="تعديل الكمية" clr="#3b82f6" onClick={() => { setSel(p); setAdjForm({ quantity: 1, type: 'ADD' }); setModal('adj'); }}><BarChart3 size={12} /></ActionBtn>
                                                     <ActionBtn title="تعديل البيانات" clr="#a855f7" onClick={() => { setSel(p); setPForm({ name: p.name, cost: p.cost, price: p.price, quantity: p.stocks?.[0]?.quantity ?? 0, categoryId: p.categoryId || '' }); setErr(''); setModal('edit-p'); }}><Edit3 size={12} /></ActionBtn>
                                                     <ActionBtn title="حذف" clr="#ef4444" onClick={() => delProduct(p.id)}><Trash2 size={12} /></ActionBtn>
@@ -441,8 +444,8 @@ export default function InventoryPage() {
                         {filtered.length > 0 && (
                             <div style={{ padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', color: '#334155', fontSize: '0.74rem', fontFamily: 'Cairo' }}>
                                 <span>يعرض <strong style={{ color: '#60a5fa' }}>{filtered.length}</strong> من <strong style={{ color: '#60a5fa' }}>{products.length}</strong> منتج</span>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                    <Edit3 size={10} /> انقر على الكمية لتعديلها مباشرة
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#475569' }}>
+                                    <Edit3 size={10} /> انقر على الكمية لتعديلها · hover للاسم الكامل
                                 </span>
                             </div>
                         )}
