@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import API_URL from '../../config';
 import { Settings, User, Building2, Save, Plus, Trash2, Eye, EyeOff, Shield, Bell, Database, RefreshCw } from 'lucide-react';
+import AuditLogs from '../Admin/AuditLogs';
 
 const token = () => localStorage.getItem('token');
 const currentUser = () => {
@@ -394,6 +395,8 @@ const SystemTab = () => {
     );
 };
 
+import AuditLogs from '../Admin/AuditLogs';
+
 // ======= Main Settings Page =======
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('company');
@@ -401,6 +404,7 @@ export default function SettingsPage() {
     const tabs = [
         { key: 'company', label: 'معلومات المنشأة', icon: <Building2 /> },
         { key: 'users', label: 'المستخدمون', icon: <User /> },
+        { key: 'logs', label: 'سجل العمليات', icon: <Shield /> },
         { key: 'system', label: 'إعدادات النظام', icon: <Settings /> },
     ];
 
@@ -425,6 +429,7 @@ export default function SettingsPage() {
             <div style={{ background: 'white', borderRadius: '16px', padding: '28px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', minHeight: '400px' }}>
                 {activeTab === 'company' && <CompanyTab />}
                 {activeTab === 'users' && <UsersTab />}
+                {activeTab === 'logs' && <AuditLogs />}
                 {activeTab === 'system' && <SystemTab />}
             </div>
         </div>

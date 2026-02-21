@@ -273,7 +273,11 @@ const Layout = ({ user, onLogout }) => {
 
     useEffect(() => {
         const fetchNotifications = () => {
-            axios.get(`${API_URL}/notifications`)
+            // First trigger a refresh on the server
+            axios.post(`${API_URL}/notifications/refresh`)
+                .then(() => {
+                    return axios.get(`${API_URL}/notifications`);
+                })
                 .then(res => setNotifications(res.data))
                 .catch(err => console.error('Notifications fetch failed', err));
         };
@@ -315,7 +319,7 @@ const Layout = ({ user, onLogout }) => {
     return (
         <div style={{ display: 'flex', height: '100vh', direction: 'rtl', fontFamily: 'Cairo, sans-serif', background: '#f8fafc' }}>
             {/* Sidebar */}
-            <div className="sidebar-scroll" style={{
+            <div className="sidebar-scroll no-print" style={{
                 width: '280px', background: '#0f172a', color: 'white', padding: '24px',
                 display: 'flex', flexDirection: 'column', overflowY: 'auto',
                 boxShadow: '4px 0 20px rgb(0 0 0 / 0.05)', zIndex: 10
@@ -360,7 +364,7 @@ const Layout = ({ user, onLogout }) => {
 
             {/* Main Content */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-                <header style={{ background: 'white', padding: '16px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                <header className="fade-in no-print" style={{ background: 'white', padding: '16px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                     <div style={{ position: 'relative', width: '400px' }}>
                         <Search size={20} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                         <input type="text" placeholder="بحث..." value={searchQuery} onChange={handleSearch} style={{ width: '100%', padding: '12px 45px 12px 15px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc', outline: 'none', fontFamily: 'Cairo' }} />
@@ -370,8 +374,48 @@ const Layout = ({ user, onLogout }) => {
                             <div style={{ color: '#64748b', fontSize: '0.85rem' }}>{currentTime.toLocaleDateString('ar-SA')}</div>
                             <div style={{ color: '#2563eb', fontSize: '1rem', fontWeight: 'bold' }}>{currentTime.toLocaleTimeString('ar-SA')}</div>
                         </div>
-                        <div style={{ cursor: 'pointer', padding: '8px' }}>
-                            <Bell size={24} color="#64748b" />
+
+                        {/* Notifications */}
+                        <div style={{ position: 'relative' }}>
+                            <div onClick={() => setShowNotifications(!showNotifications)} style={{ cursor: 'pointer', padding: '10px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', position: 'relative' }}>
+                                <Bell size={22} color={notifications.some(n => !n.isRead) ? '#2563eb' : '#64748b'} />
+                                {notifications.some(n => !n.isRead) && (
+                                    <span style={{ position: 'absolute', top: '8px', right: '8px', width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }} />
+                                )}
+                            </div>
+
+                            {showNotifications && (
+                                <div style={{
+                                    position: 'absolute', top: '55px', left: '0', width: '320px', background: 'white',
+                                    borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9',
+                                    zIndex: 100, padding: '16px', direction: 'rtl'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
+                                        <h4 style={{ margin: 0, fontSize: '1rem' }}>التنبيهات</h4>
+                                        <button
+                                            onClick={async () => {
+                                                await axios.put(`${API_URL}/notifications/read-all`);
+                                                setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+                                            }}
+                                            style={{ color: '#2563eb', border: 'none', background: 'none', fontSize: '0.8rem', cursor: 'pointer' }}
+                                        >تحديد الكل كمقروء</button>
+                                    </div>
+                                    <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {notifications.length === 0 ? (
+                                            <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '0.9rem' }}>لا توجد تنبيهات</div>
+                                        ) : notifications.map(n => (
+                                            <div key={n.id} style={{
+                                                padding: '12px', borderRadius: '10px', background: n.isRead ? 'transparent' : '#f0f7ff',
+                                                border: `1px solid ${n.isRead ? '#f1f5f9' : '#dbeafe'}`, fontSize: '0.85rem'
+                                            }}>
+                                                <div style={{ fontWeight: 'bold', color: '#0f172a', marginBottom: '4px' }}>{n.title}</div>
+                                                <div style={{ color: '#64748b' }}>{n.message}</div>
+                                                <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '6px' }}>{new Date(n.createdAt).toLocaleString('ar-SA')}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </header>

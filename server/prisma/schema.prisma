@@ -127,6 +127,15 @@ model JournalEntry {
   description   String?
 }
 
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String   // LOW_STOCK, PROJECT_DEADLINE, INVOICE_OVERDUE
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
 // 4. Inventory
 model Warehouse {
   id          Int       @id @default(autoincrement())

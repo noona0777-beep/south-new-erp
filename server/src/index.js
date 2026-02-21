@@ -38,6 +38,30 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' })); // Increase Payload Limit
 
+// Middleware to authenticate JWT
+const authenticate = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Access Denied: No Token Provided' });
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Invalid Token' });
+        req.user = user;
+        next();
+    });
+};
+
+// Middleware to authorize roles
+const authorize = (roles = []) => {
+    if (typeof roles === 'string') roles = [roles];
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ error: 'Unauthorized: You do not have permission for this action' });
+        }
+        next();
+    };
+};
+
 // Logging Middleware
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -56,6 +80,24 @@ app.get('/api/ping-db', async (req, res) => {
         res.status(500).json({ status: 'error', message: error.message });
     }
 });
+
+// Helper to log activities
+async function logActivity(userId, action, entity, entityId, details) {
+    try {
+        if (!userId) return;
+        await prisma.activityLog.create({
+            data: {
+                userId,
+                action,
+                entity,
+                entityId: entityId ? parseInt(entityId) : null,
+                details
+            }
+        });
+    } catch (e) {
+        console.error('Logging failed', e);
+    }
+}
 
 // --- System Routes ---
 
@@ -168,60 +210,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
     }
 });
 
-app.get('/api/notifications', async (req, res) => {
-    try {
-        const alerts = [];
-
-        // 1. Check Low Stock
-        const lowStock = await prisma.stock.findMany({
-            where: { quantity: { lt: 10 } },
-            include: { product: true }
-        });
-        lowStock.forEach(s => {
-            alerts.push({
-                id: `stock-${s.id}`,
-                text: `نقص في مخزون "${s.product.name}" (${s.quantity})`,
-                type: 'stock',
-                time: 'تنبيه فوري'
-            });
-        });
-
-        // 2. Check Expiring Quotes
-        const expiringQuotes = await prisma.quote.findMany({
-            where: {
-                status: 'SENT',
-                validUntil: { lte: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) }
-            }
-        });
-        expiringQuotes.forEach(q => {
-            alerts.push({
-                id: `quote-${q.id}`,
-                text: `عرض سعر #${q.quoteNumber} أوشك على الانتهاء`,
-                type: 'quote',
-                time: 'تحرك سريع'
-            });
-        });
-
-        // 3. New Draft Invoices
-        const draftInvoices = await prisma.invoice.findMany({
-            where: { status: 'DRAFT' },
-            take: 5,
-            orderBy: { createdAt: 'desc' }
-        });
-        draftInvoices.forEach(inv => {
-            alerts.push({
-                id: `inv-${inv.id}`,
-                text: `فاتورة مسودة جديدة #${inv.invoiceNumber} معلقة`,
-                type: 'invoice',
-                time: 'بانتظار المراجعة'
-            });
-        });
-
-        res.json(alerts);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// (Old notifications route removed - now using persistent database-backed notifications at the end of the file)
 
 app.get('/api/search', async (req, res) => {
     const { q } = req.query;
@@ -338,7 +327,7 @@ app.post('/api/login', async (req, res) => {
 // --- User Management Routes ---
 
 // Get All Users
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', authenticate, authorize(['ADMIN']), async (req, res) => {
     try {
         const users = await prisma.user.findMany({
             select: { id: true, name: true, email: true, role: true, createdAt: true },
@@ -351,7 +340,7 @@ app.get('/api/users', async (req, res) => {
 });
 
 // Create New User
-app.post('/api/users', async (req, res) => {
+app.post('/api/users', authenticate, authorize(['ADMIN']), async (req, res) => {
     const { name, email, password, role } = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -359,6 +348,7 @@ app.post('/api/users', async (req, res) => {
             data: { name, email, password: hashedPassword, role: role || 'USER' },
             select: { id: true, name: true, email: true, role: true, createdAt: true }
         });
+        await logActivity(req.user.id, 'CREATE', 'USER', user.id, `إضافة مستخدم جديد: ${user.name}`);
         res.json(user);
     } catch (error) {
         if (error.code === 'P2002') return res.status(400).json({ error: 'هذا البريد الإلكتروني مسجل مسبقاً' });
@@ -367,9 +357,12 @@ app.post('/api/users', async (req, res) => {
 });
 
 // Delete User
-app.delete('/api/users/:id', async (req, res) => {
+app.delete('/api/users/:id', authenticate, authorize(['ADMIN']), async (req, res) => {
     try {
-        await prisma.user.delete({ where: { id: parseInt(req.params.id) } });
+        const id = parseInt(req.params.id);
+        if (id === req.user.id) return res.status(400).json({ error: 'لا يمكنك حذف حسابك الخاص' });
+        await prisma.user.delete({ where: { id } });
+        await logActivity(req.user.id, 'DELETE', 'USER', id, `حذف مستخدم رقم ${id}`);
         res.json({ message: 'User deleted' });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -642,7 +635,7 @@ app.get('/api/invoices/:id', async (req, res) => {
 });
 
 // Create New Invoice
-app.post('/api/invoices', async (req, res) => {
+app.post('/api/invoices', authenticate, async (req, res) => {
     const { partnerId, date, type, items, discount } = req.body;
 
     // Calculate Totals
@@ -718,8 +711,41 @@ app.post('/api/invoices', async (req, res) => {
                 console.warn('⚠️ Auto-journal skipped (accounts may not be seeded):', journalErr.message);
             }
 
+            // 3. Update Stock and Check for Low Stock
+            for (const item of invoiceItemsData) {
+                if (item.productId) {
+                    const warehouse = await getOrCreateWarehouse();
+                    const stock = await tx.stock.findFirst({
+                        where: { productId: item.productId, warehouseId: warehouse.id }
+                    });
+
+                    if (stock) {
+                        const newQty = stock.quantity - item.quantity;
+                        await tx.stock.update({
+                            where: { id: stock.id },
+                            data: { quantity: newQty }
+                        });
+
+                        // Notify if low stock
+                        if (newQty < 10) {
+                            const product = await tx.product.findUnique({ where: { id: item.productId } });
+                            await tx.notification.create({
+                                data: {
+                                    type: 'LOW_STOCK',
+                                    title: 'تنبيه: نقص في المخزون',
+                                    message: `المنتج "${product.name}" وصل لمستوى منخفض (${newQty} وحدة متبقية)`
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+
             return invoice;
         });
+
+        // Log Activity
+        await logActivity(req.user.id, 'CREATE', 'INVOICE', result.id, `إنشاء فاتورة #${result.invoiceNumber} بمبلغ ${result.total} ر.س`);
 
         res.json(result);
     } catch (error) {
@@ -1319,10 +1345,36 @@ app.get('/api/journal', async (req, res) => {
 // 1. Trial Balance (ميزان المراجعة)
 app.get('/api/reports/trial-balance', async (req, res) => {
     try {
+        const { date } = req.query;
+        const asOfDate = date ? new Date(date) : new Date();
+
+        // Get all accounts
         const accounts = await prisma.account.findMany({
             orderBy: { code: 'asc' }
         });
-        res.json(accounts);
+
+        // For each account, calculate balance as of date from journal entries
+        const trialBalance = await Promise.all(accounts.map(async (acc) => {
+            const entries = await prisma.journalEntry.findMany({
+                where: {
+                    accountId: acc.id,
+                    transaction: {
+                        date: { lte: asOfDate }
+                    }
+                }
+            });
+
+            const totalDebit = entries.reduce((s, e) => s + e.debit, 0);
+            const totalCredit = entries.reduce((s, e) => s + e.credit, 0);
+            const calculatedBalance = totalDebit - totalCredit;
+
+            return {
+                ...acc,
+                balance: calculatedBalance
+            };
+        }));
+
+        res.json(trialBalance);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -1389,6 +1441,122 @@ app.get('/api/reports/balance-sheet', async (req, res) => {
             totalLiabilities,
             totalEquity
         });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- Notification Routes ---
+
+// Internal helper to create persistent notifications without duplicates
+async function addNotification(type, title, message) {
+    try {
+        // Check if a similar unread notification exists to avoid spam
+        const existing = await prisma.notification.findFirst({
+            where: { type, title, isRead: false }
+        });
+        if (!existing) {
+            return await prisma.notification.create({
+                data: { type, title, message }
+            });
+        }
+    } catch (e) {
+        console.error('Add notification failed', e);
+    }
+}
+
+// Refresh/Sync notifications (Triggered by frontend or cron)
+app.post('/api/notifications/refresh', async (req, res) => {
+    try {
+        const now = new Date();
+        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        // 1. Check Low Stock
+        const lowStock = await prisma.stock.findMany({
+            where: { quantity: { lt: 10 } },
+            include: { product: true }
+        });
+        for (const s of lowStock) {
+            await addNotification('LOW_STOCK', 'تنبيه مخزون', `المنتج "${s.product.name}" وصل لمستوى منخفض (${s.quantity})`);
+        }
+
+        // 2. Check Upcoming Project Deadlines
+        const upcomingProjects = await prisma.project.findMany({
+            where: {
+                status: { in: ['PLANNED', 'IN_PROGRESS'] },
+                endDate: { lte: nextWeek, gte: now }
+            }
+        });
+        for (const p of upcomingProjects) {
+            await addNotification('PROJECT_DEADLINE', 'موعد تسليم مشروع', `المشروع "${p.name}" يقترب من موعد التسليم (${p.endDate.toLocaleDateString('ar-SA')})`);
+        }
+
+        // 3. Check Overdue Tasks
+        const overdueTasks = await prisma.task.findMany({
+            where: {
+                status: { not: 'DONE' },
+                dueDate: { lt: now }
+            },
+            include: { project: true }
+        });
+        for (const t of overdueTasks) {
+            await addNotification('TASK_OVERDUE', 'مهمة متأخرة', `المهمة "${t.title}" في مشروع "${t.project?.name}" تجاوزت موعدها`);
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all notifications
+app.get('/api/notifications', async (req, res) => {
+    try {
+        const notifications = await prisma.notification.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 20
+        });
+        res.json(notifications);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Mark notification as read
+app.put('/api/notifications/:id/read', async (req, res) => {
+    try {
+        const notification = await prisma.notification.update({
+            where: { id: parseInt(req.params.id) },
+            data: { isRead: true }
+        });
+        res.json(notification);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Mark all as read
+app.put('/api/notifications/read-all', async (req, res) => {
+    try {
+        await prisma.notification.updateMany({
+            where: { isRead: false },
+            data: { isRead: true }
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- Audit Logs ---
+app.get('/api/logs', async (req, res) => {
+    try {
+        const logs = await prisma.activityLog.findMany({
+            include: { user: { select: { name: true } } },
+            orderBy: { createdAt: 'desc' },
+            take: 100
+        });
+        res.json(logs);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
