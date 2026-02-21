@@ -10,7 +10,18 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_for_south_new_sys
 
 // Initialize
 const app = express();
-const prisma = new PrismaClient();
+
+// Prisma Client setup for Serverless (prevent too many connections)
+let prisma;
+if (process.env.NODE_ENV === 'production') {
+    prisma = new PrismaClient();
+} else {
+    if (!global.prisma) {
+        global.prisma = new PrismaClient();
+    }
+    prisma = global.prisma;
+}
+
 const PORT = process.env.PORT || 5000;
 
 // Middleware
@@ -26,6 +37,9 @@ app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
+
+// --- Health Check (required by Railway) ---
+app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
 // --- System Routes ---
 
@@ -1286,20 +1300,22 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
-// Start Server
-const startServer = async () => {
-    try {
-        await prisma.$connect();
-        console.log('✅ Database Connected Successfully (PostgreSQL)');
+// Export for Vercel Serverless
+module.exports = app;
 
-        app.listen(PORT, () => {
-            console.log(`🚀 Server running on http://localhost:${PORT}`);
-            console.log(`👉 API Health Check: http://localhost:${PORT}/api/status`);
-        });
-    } catch (error) {
-        console.error('❌ Database Connection Failed:', error);
-        process.exit(1);
-    }
-};
-
-startServer();
+// Start Server (only if not running on Vercel)
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    const startServer = async () => {
+        try {
+            await prisma.$connect();
+            console.log('✅ Database Connected Successfully (PostgreSQL)');
+            app.listen(PORT, () => {
+                console.log(`🚀 Server running on http://localhost:${PORT}`);
+            });
+        } catch (error) {
+            console.error('❌ Database Connection Failed:', error);
+            process.exit(1);
+        }
+    };
+    startServer();
+}
