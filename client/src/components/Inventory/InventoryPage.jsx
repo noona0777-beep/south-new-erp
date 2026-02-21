@@ -180,10 +180,32 @@ export default function InventoryPage() {
         .filter(p => activeCat === 'all' || p.categoryId === activeCat)
         .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
         .sort((a, b) => {
+            // When viewing all: primary sort by category name, secondary by chosen column
+            if (activeCat === 'all') {
+                const catA = a.category?.name || 'ي';
+                const catB = b.category?.name || 'ي';
+                if (catA !== catB) return catA.localeCompare(catB, 'ar');
+            }
             const va = sortBy === 'name' ? a.name : sortBy === 'qty' ? (a.stocks?.[0]?.quantity ?? 0) : a.price;
             const vb = sortBy === 'name' ? b.name : sortBy === 'qty' ? (b.stocks?.[0]?.quantity ?? 0) : b.price;
             return sortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
         });
+
+    // Group rows by category for 'all' view
+    const groupedRows = [];
+    if (activeCat === 'all') {
+        let lastCatId = '__none__';
+        filtered.forEach(p => {
+            const cid = p.categoryId || '__none__';
+            if (cid !== lastCatId) {
+                groupedRows.push({ type: 'header', catId: cid, catName: p.category?.name || 'بدون قسم', color: p.category ? catColor(p.category.name) : '#475569' });
+                lastCatId = cid;
+            }
+            groupedRows.push({ type: 'row', product: p });
+        });
+    } else {
+        filtered.forEach(p => groupedRows.push({ type: 'row', product: p }));
+    }
 
     const totalVal = products.reduce((s, p) => s + p.cost * (p.stocks?.[0]?.quantity ?? 0), 0);
     const lowCount = products.filter(p => { const q = p.stocks?.[0]?.quantity ?? 0; return q > 0 && q < 10; }).length;
@@ -313,15 +335,42 @@ export default function InventoryPage() {
                 {/* ── Main Content ── */}
                 <div style={{ flex: 1, minWidth: 0 }}>
 
-                    {/* Search + filter bar */}
-                    <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+                    {/* Search + Category Dropdown filter bar */}
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
+
+                        {/* Category Dropdown */}
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                            <select
+                                value={activeCat}
+                                onChange={e => setActiveCat(e.target.value)}
+                                style={{ appearance: 'none', WebkitAppearance: 'none', padding: '10px 36px 10px 16px', background: '#0b1424', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 12, color: activeCat === 'all' ? '#94a3b8' : catColor(categories.find(c => c.id === activeCat)?.name || ''), fontFamily: 'Cairo', fontSize: '0.85rem', cursor: 'pointer', outline: 'none', minWidth: 170, direction: 'rtl', boxShadow: activeCat !== 'all' ? `0 0 0 2px ${catColor(categories.find(c => c.id === activeCat)?.name || '')}30` : 'none', transition: 'all 0.2s' }}
+                            >
+                                <option value="all">🏠 جميع الأقسام ({products.length})</option>
+                                {categories.map(c => (
+                                    <option key={c.id} value={c.id}>
+                                        {c.name} ({catCnt(c.id)})
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown size={13} color="#475569" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                        </div>
+
+                        {/* Search Box */}
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, background: '#0b1424', borderRadius: 12, padding: '10px 16px', border: '1px solid rgba(59,130,246,0.15)' }}>
                             <Search size={15} color="#475569" />
                             <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-                                placeholder={`بحث في المخزون... (${filtered.length} نتيجة)`}
+                                placeholder={`بحث في ${activeCat === 'all' ? 'جميع المنتجات' : (categories.find(c => c.id === activeCat)?.name || '')}... (${filtered.length})`}
                                 style={{ flex: 1, border: 'none', outline: 'none', fontFamily: 'Cairo', fontSize: '0.88rem', color: 'white', background: 'transparent', direction: 'rtl' }} />
                             {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 0, display: 'flex' }}><X size={12} /></button>}
                         </div>
+
+                        {/* Active filter badge */}
+                        {activeCat !== 'all' && (
+                            <button onClick={() => setActiveCat('all')}
+                                style={{ padding: '10px 14px', borderRadius: 12, border: `1px solid ${catColor(categories.find(c => c.id === activeCat)?.name || '')}40`, background: `${catColor(categories.find(c => c.id === activeCat)?.name || '')}15`, color: catColor(categories.find(c => c.id === activeCat)?.name || ''), fontFamily: 'Cairo', fontSize: '0.78rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
+                                <X size={11} /> مسح الفلتر
+                            </button>
+                        )}
                     </div>
 
                     {/* Table */}
@@ -371,7 +420,34 @@ export default function InventoryPage() {
                                             لا توجد منتجات مطابقة
                                         </div>
                                     </td></tr>
-                                ) : filtered.map((p, idx) => {
+                                ) : groupedRows.length === 0 ? (
+                                    <tr><td colSpan={7}>
+                                        <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
+                                            <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
+                                            لا توجد منتجات مطابقة
+                                        </div>
+                                    </td></tr>
+                                ) : groupedRows.map((item, idx) => {
+                                    if (item.type === 'header') {
+                                        return (
+                                            <tr key={`cat-${item.catId}`}>
+                                                <td colSpan={7} style={{ padding: '8px 16px', background: `${item.color}10`, borderTop: idx > 0 ? `2px solid ${item.color}30` : 'none', borderBottom: `1px solid ${item.color}20` }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, display: 'inline-block', boxShadow: `0 0 6px ${item.color}` }} />
+                                                        <span style={{ fontWeight: 700, fontSize: '0.78rem', color: item.color, letterSpacing: '0.05em' }}>
+                                                            {item.catName}
+                                                        </span>
+                                                        <span style={{ fontSize: '0.68rem', color: '#334155', marginRight: 4 }}>
+                                                            ({filtered.filter(p => (p.categoryId || '__none__') === item.catId).length} صنف)
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+                                    const p = item.product;
+                                    const dummy_idx = idx;
+                                    {/* same row render below */ }
                                     const qty = p.stocks?.[0]?.quantity ?? 0;
                                     const cc = p.category ? catColor(p.category.name) : '#3b82f6';
                                     const st = qty === 0
@@ -381,7 +457,7 @@ export default function InventoryPage() {
                                             : { l: 'متوفر', bg: 'rgba(16,185,129,0.12)', cr: '#34d399', dot: '#10b981' };
 
                                     return (
-                                        <tr key={p.id}
+                                        <tr key={`row-${p.id}`}
                                             style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', height: 48, opacity: saving === p.id ? 0.5 : 1, transition: 'background 0.12s', borderRight: `3px solid ${cc}` }}
                                             onMouseOver={e => e.currentTarget.style.background = 'rgba(59,130,246,0.05)'}
                                             onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
