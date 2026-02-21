@@ -14,7 +14,13 @@ const app = express();
 // Prisma Client setup for Serverless (prevent too many connections)
 let prisma;
 if (process.env.NODE_ENV === 'production') {
-    prisma = new PrismaClient();
+    prisma = new PrismaClient({
+        datasources: {
+            db: {
+                url: "postgres://postgres.amryuwnexsntzxjnhmxc:Shrahili%4007@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+            }
+        }
+    });
 } else {
     if (!global.prisma) {
         global.prisma = new PrismaClient();
