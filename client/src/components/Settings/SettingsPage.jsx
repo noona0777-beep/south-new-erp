@@ -395,8 +395,6 @@ const SystemTab = () => {
     );
 };
 
-import AuditLogs from '../Admin/AuditLogs';
-
 // ======= Main Settings Page =======
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('company');
