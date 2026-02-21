@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === 'production') {
     prisma = new PrismaClient({
         datasources: {
             db: {
-                url: "postgresql://postgres:Shrahili%4007@db.amryuwnexsntzxjnhmxc.supabase.co:5432/postgres?sslmode=require"
+                url: "postgres://postgres.amryuwnexsntzxjnhmxc:Shrahili%4007@db.amryuwnexsntzxjnhmxc.supabase.co:6543/postgres?pgbouncer=true&sslmode=require&connect_timeout=30"
             }
         }
     });
