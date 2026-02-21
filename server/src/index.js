@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === 'production') {
     prisma = new PrismaClient({
         datasources: {
             db: {
-                url: "postgres://postgres.amryuwnexsntzxjnhmxc:Shrahili%4007@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+                url: "postgres://postgres.amryuwnexsntzxjnhmxc:Shrahili%4007@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
             }
         }
     });
