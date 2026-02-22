@@ -1,29 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "npm install --prefix client && npm run build --prefix client",
+  "buildCommand": "npm run build --prefix client",
   "outputDirectory": "client/dist",
-  "env": {
-    "VITE_API_URL": "https://south-new-system.onrender.com/api"
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://south-new-system.onrender.com/api/$1"
+      "destination": "/api/index.js"
     },
     {
       "source": "/(.*)",
       "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, must-revalidate"
-        }
-      ]
     }
   ]
 }
