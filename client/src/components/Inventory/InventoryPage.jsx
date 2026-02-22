@@ -583,35 +583,56 @@ export default function InventoryPage() {
                 </div>
             </div>
 
-            {/* ══ MODALS ══ */}
+            {modal === 'add-p' && (
+                <Modal title="إضافة منتج جديد" icon={Package} onClose={() => setModal(null)}>
+                    {err && <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.12)', color: '#f87171', borderRadius: 10, marginBottom: 14, fontSize: '0.83rem', fontFamily: 'Cairo', border: '1px solid rgba(239,68,68,0.2)' }}>{err}</div>}
+                    <form onSubmit={saveProduct}>
+                        <DField label="اسم المنتج" required value={pForm.name} onChange={e => setPForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: أسمنت بورتلاندي 50 كجم" />
+                        <div style={{ marginBottom: 14 }}>
+                            <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Cairo', letterSpacing: '0.05em' }}>القسم</label>
+                            <select value={pForm.categoryId} onChange={e => setPForm(f => ({ ...f, categoryId: e.target.value }))}
+                                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(59,130,246,0.2)', background: '#0b1221', fontFamily: 'Cairo', fontSize: '0.9rem', color: '#94a3b8', cursor: 'pointer', outline: 'none' }}>
+                                <option value="">— بدون قسم —</option>
+                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                            <DField label="التكلفة (ر.س)" type="number" step="0.01" required value={pForm.cost} onChange={e => setPForm(f => ({ ...f, cost: e.target.value }))} />
+                            <DField label="سعر البيع (ر.س)" type="number" step="0.01" required value={pForm.price} onChange={e => setPForm(f => ({ ...f, price: e.target.value }))} />
+                        </div>
+                        <DField label="الكمية الأولية" type="number" value={pForm.quantity} onChange={e => setPForm(f => ({ ...f, quantity: e.target.value }))} />
+                        <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+                            <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                            <button type="submit" style={dPriBtn}><Plus size={13} /> إضافة</button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
 
-            {/* Add / Edit Product */}
-            {(modal === 'add-p' || modal === 'edit-p') && (
-                    <Modal title={modal === 'edit-p' ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد'} icon={Package} onClose={() => setModal(null)}>
-                        {err && <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.12)', color: '#f87171', borderRadius: 10, marginBottom: 14, fontSize: '0.83rem', fontFamily: 'Cairo', border: '1px solid rgba(239,68,68,0.2)' }}>{err}</div>}
-                        <form onSubmit={saveProduct}>
-                            <DField label="اسم المنتج" required value={pForm.name} onChange={e => setPForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: أسمنت بورتلاندي 50 كجم" />
-                            <div style={{ marginBottom: 14 }}>
-                                <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Cairo', letterSpacing: '0.05em' }}>القسم</label>
-                                <select value={pForm.categoryId} onChange={e => setPForm(f => ({ ...f, categoryId: e.target.value }))}
-                                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(59,130,246,0.2)', background: '#0b1221', fontFamily: 'Cairo', fontSize: '0.9rem', color: '#94a3b8', cursor: 'pointer', outline: 'none' }}>
-                                    <option value="">— بدون قسم —</option>
-                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                </select>
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                                <DField label="التكلفة (ر.س)" type="number" step="0.01" required value={pForm.cost} onChange={e => setPForm(f => ({ ...f, cost: e.target.value }))} />
-                                <DField label="سعر البيع (ر.س)" type="number" step="0.01" required value={pForm.price} onChange={e => setPForm(f => ({ ...f, price: e.target.value }))} />
-                            </div>
-                            {modal === 'add-p' && <DField label="الكمية الأولية" type="number" value={pForm.quantity} onChange={e => setPForm(f => ({ ...f, quantity: e.target.value }))} />}
-                            <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                                <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
-                                <button type="submit" style={dPriBtn}>{modal === 'edit-p' ? <><Save size={13} /> حفظ</> : <><Plus size={13} /> إضافة</>}</button>
-                            </div>
-                        </form>
-                    </Modal>
-                )
-            }
+            {modal === 'edit-p' && (
+                <Modal title="تعديل بيانات المنتج" icon={Package} onClose={() => setModal(null)}>
+                    {err && <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.12)', color: '#f87171', borderRadius: 10, marginBottom: 14, fontSize: '0.83rem', fontFamily: 'Cairo', border: '1px solid rgba(239,68,68,0.2)' }}>{err}</div>}
+                    <form onSubmit={saveProduct}>
+                        <DField label="اسم المنتج" required value={pForm.name} onChange={e => setPForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: أسمنت بورتلاندي 50 كجم" />
+                        <div style={{ marginBottom: 14 }}>
+                            <label style={{ display: 'block', marginBottom: 5, fontWeight: 600, fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Cairo', letterSpacing: '0.05em' }}>القسم</label>
+                            <select value={pForm.categoryId} onChange={e => setPForm(f => ({ ...f, categoryId: e.target.value }))}
+                                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(59,130,246,0.2)', background: '#0b1221', fontFamily: 'Cairo', fontSize: '0.9rem', color: '#94a3b8', cursor: 'pointer', outline: 'none' }}>
+                                <option value="">— بدون قسم —</option>
+                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                            <DField label="التكلفة (ر.س)" type="number" step="0.01" required value={pForm.cost} onChange={e => setPForm(f => ({ ...f, cost: e.target.value }))} />
+                            <DField label="سعر البيع (ر.س)" type="number" step="0.01" required value={pForm.price} onChange={e => setPForm(f => ({ ...f, price: e.target.value }))} />
+                        </div>
+                        <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+                            <button type="button" onClick={() => setModal(null)} style={dOutBtn}>إلغاء</button>
+                            <button type="submit" style={dPriBtn}><Save size={13} /> حفظ</button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
 
             {/* Bulk Adjust */}
             {
