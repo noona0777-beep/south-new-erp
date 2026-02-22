@@ -1,11 +1,15 @@
 {
     "version": 2,
-    "buildCommand": "npm run build --prefix client",
+    "buildCommand": "cd client && npm run build",
     "outputDirectory": "client/dist",
+    "installCommand": "npm run install:all",
+    "env": {
+        "VITE_API_URL": "@vite_api_url"
+    },
     "rewrites": [
         {
             "source": "/api/(.*)",
-            "destination": "server/src/index.js"
+            "destination": "https://south-new-system.onrender.com/api/$1"
         },
         {
             "source": "/(.*)",
