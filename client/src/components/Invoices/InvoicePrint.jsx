@@ -10,6 +10,7 @@ const InvoicePrint = () => {
     const [invoice, setInvoice] = useState(null);
 
     const [qrValue, setQrValue] = useState('');
+    const [companyInfo, setCompanyInfo] = useState({ name: 'مؤسسة الجنوب الوثيق', vatNumber: '310123456700003' });
 
     const generateZatcaTLV = (seller, vatNo, timestamp, total, vatTotal) => {
         const tags = [seller, vatNo, timestamp, total, vatTotal];
@@ -24,22 +25,30 @@ const InvoicePrint = () => {
     };
 
     useEffect(() => {
+        // Fetch Company Info
+        axios.get(`${API_URL}/settings/companyInfo`)
+            .then(res => setCompanyInfo(res.data))
+            .catch(() => { });
+
         axios.get(`${API_URL}/invoices/${id}`)
             .then(res => {
                 const inv = res.data;
                 setInvoice(inv);
-                // Generate Official ZATCA QR Code
-                const qr = generateZatcaTLV(
-                    "مؤسسة الجنوب الجديد",
-                    "310123456700003",
-                    new Date(inv.date).toISOString(),
-                    inv.total.toFixed(2),
-                    inv.taxAmount.toFixed(2)
-                );
-                setQrValue(qr);
+                if (inv.qrCode) {
+                    setQrValue(inv.qrCode);
+                } else {
+                    const qr = generateZatcaTLV(
+                        companyInfo.name || "مؤسسة الجنوب الجديد",
+                        companyInfo.vatNumber || "310123456700003",
+                        new Date(inv.date).toISOString(),
+                        inv.total.toFixed(2),
+                        inv.taxAmount.toFixed(2)
+                    );
+                    setQrValue(qr);
+                }
             })
             .catch(err => alert('Error loading invoice'));
-    }, [id]);
+    }, [id, companyInfo.name, companyInfo.vatNumber]);
 
     if (!invoice) return <div style={{ textAlign: 'center', padding: '50px', fontFamily: 'Cairo' }}>جاري تحميل الفاتورة...</div>;
 
@@ -66,9 +75,9 @@ const InvoicePrint = () => {
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #0f172a', paddingBottom: '25px', marginBottom: '35px' }}>
                     <div>
-                        <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#0f172a', fontWeight: '800' }}>مؤسسة الجنوب الجديد</h1>
+                        <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#0f172a', fontWeight: '800' }}>{companyInfo.name || 'مؤسسة الجنوب الجديد'}</h1>
                         <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '0.95rem' }}>للمقاولات العامة والديكور وإدارة الأملاك</p>
-                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#334155' }}>الرقم الضريبي: <span dir="ltr">310123456700003</span></p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#334155' }}>الرقم الضريبي: <span dir="ltr">{companyInfo.vatNumber || '310123456700003'}</span></p>
                         <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#334155' }}>الموقع: أحد المسارحة، جازان</p>
                     </div>
                     <div style={{ textAlign: 'left' }}>
