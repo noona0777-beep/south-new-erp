@@ -184,7 +184,7 @@ const Login = ({ onSuccess }) => {
                                         position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
                                         background: 'none', border: 'none', cursor: 'pointer',
                                         padding: 2, display: 'flex', transition: 'color 0.2s',
-                                        color: showPass ? '#2563eb' : '#94a3b8',
+                                        color: showPass ? '#2563eb' : '#94a3b8'
                                     }}>
                                     {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                                 </button>

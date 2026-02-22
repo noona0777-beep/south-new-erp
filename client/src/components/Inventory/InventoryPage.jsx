@@ -586,8 +586,7 @@ export default function InventoryPage() {
             {/* ══ MODALS ══ */}
 
             {/* Add / Edit Product */}
-            {
-                (modal === 'add-p' || modal === 'edit-p') && (
+            {(modal === 'add-p' || modal === 'edit-p') && (
                     <Modal title={modal === 'edit-p' ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد'} icon={Package} onClose={() => setModal(null)}>
                         {err && <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.12)', color: '#f87171', borderRadius: 10, marginBottom: 14, fontSize: '0.83rem', fontFamily: 'Cairo', border: '1px solid rgba(239,68,68,0.2)' }}>{err}</div>}
                         <form onSubmit={saveProduct}>
