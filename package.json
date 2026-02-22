@@ -6,7 +6,6 @@
         "start": "concurrently \"npm run server\" \"npm run client\"",
         "server": "cd server && npm run dev",
         "client": "cd client && npm run dev",
-        // installs root and all workspaces/sub-projects
         "install:all": "npm install && npm install --prefix server && npm install --prefix client && npm install --prefix electron",
         "build": "npm run build --prefix client",
         "postinstall": "npm run install:all",
