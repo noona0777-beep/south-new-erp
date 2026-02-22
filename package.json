@@ -6,8 +6,9 @@
         "start": "concurrently \"npm run server\" \"npm run client\"",
         "server": "cd server && npm run dev",
         "client": "cd client && npm run dev",
+        "install:all": "npm install && npm install --prefix client && npm install --prefix server",
         "build": "npm run build --prefix client",
-        "install:all": "npm install && cd server && npm install && cd ../client && npm install && cd ../electron && npm install",
+        "postinstall": "npm run install:all",
         "electron": "cd electron && npm start",
         "electron:build": "cd electron && npm run build"
     },
