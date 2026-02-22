@@ -1747,6 +1747,8 @@ app.put('/api/notifications/read-all', async (req, res) => {
     }
 });
 
+const path = require('path');
+
 // --- Audit Logs ---
 app.get('/api/logs', async (req, res) => {
     try {
@@ -1761,6 +1763,16 @@ app.get('/api/logs', async (req, res) => {
     }
 });
 
+// Serve static files from React frontend
+const clientDistPath = path.join(__dirname, '../../client/dist');
+app.use(express.static(clientDistPath));
+
+// Fallback for SPA: serve index.html for any unknown routes (except /api)
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);
@@ -1770,14 +1782,15 @@ app.use((err, req, res, next) => {
 // Export for Vercel Serverless
 module.exports = app;
 
-// Start Server (only if not running on Vercel)
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+// Start Server
+const isVercel = process.env.VERCEL || process.env.NOW_BUILDER;
+if (!isVercel) {
     const startServer = async () => {
         try {
             await prisma.$connect();
             console.log('✅ Database Connected Successfully (PostgreSQL)');
             app.listen(PORT, () => {
-                console.log(`🚀 Server running on http://localhost:${PORT}`);
+                console.log(`🚀 Server running on port ${PORT}`);
             });
         } catch (error) {
             console.error('❌ Database Connection Failed:', error);
