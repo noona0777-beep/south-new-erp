@@ -69,6 +69,7 @@ app.use((req, res, next) => {
 });
 
 // --- Health Checks ---
+app.get('/api/test', (req, res) => res.json({ msg: 'API REACHED', path: req.url }));
 app.get('/api', (req, res) => res.json({ status: 'API Working', version: '1.0.0', server: 'Vercel Serverless' }));
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString(), env: process.env.NODE_ENV }));
 
