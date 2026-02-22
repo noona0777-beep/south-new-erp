@@ -450,9 +450,16 @@ function App() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        console.log("System Initializing...");
         const savedUser = localStorage.getItem('user');
         if (savedUser) {
-            try { setUser(JSON.parse(savedUser)); } catch (e) { localStorage.removeItem('user'); }
+            try {
+                const parsed = JSON.parse(savedUser);
+                setUser(parsed);
+                console.log("Logged in as:", parsed.name);
+            } catch (e) {
+                localStorage.removeItem('user');
+            }
         }
         setLoading(false);
     }, []);
@@ -464,17 +471,27 @@ function App() {
         setUser(null);
     };
 
-    if (loading) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'Cairo' }}>جاري التحميل...</div>;
-    if (!user) return <Login onSuccess={handleLogin} />;
+    if (loading) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'Cairo', background: '#f8fafc' }}>
+        <div style={{ textAlign: 'center' }}>
+            <div className="pulse-glow" style={{ width: '80px', height: '80px', background: '#2563eb', borderRadius: '20px', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                <Building2 size={40} />
+            </div>
+            <p style={{ fontWeight: 'bold', color: '#1e293b' }}>جاري تشغيل النظام...</p>
+        </div>
+    </div>;
 
     return (
         <BrowserRouter>
-            <Routes>
-                <Route path="/invoices/:id/print" element={<InvoicePrint />} />
-                <Route path="/quotes/:id/print" element={<QuotePrint />} />
-                <Route path="/clients/:id/statement" element={<ClientStatement />} />
-                <Route path="/*" element={<Layout user={user} onLogout={handleLogout} />} />
-            </Routes>
+            {!user ? (
+                <Login onSuccess={handleLogin} />
+            ) : (
+                <Routes>
+                    <Route path="/invoices/:id/print" element={<InvoicePrint />} />
+                    <Route path="/quotes/:id/print" element={<QuotePrint />} />
+                    <Route path="/clients/:id/statement" element={<ClientStatement />} />
+                    <Route path="/*" element={<Layout user={user} onLogout={handleLogout} />} />
+                </Routes>
+            )}
         </BrowserRouter>
     );
 }
