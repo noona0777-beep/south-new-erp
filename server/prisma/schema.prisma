@@ -48,6 +48,7 @@ model Partner {
   payments     Payment[]
   projects     Project[]
   contracts    RealEstateContract[]
+  documents    Document[]
   
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -266,6 +267,7 @@ model Project {
   
   invoices    Invoice[]
   tasks       Task[]
+  documents   Document[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -371,6 +373,7 @@ model Employee {
   joinDate    DateTime?
   
   salaries    SalaryRecord[]
+  documents   Document[]
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -390,7 +393,29 @@ model SalaryRecord {
   status      String    @default("PAID")
 }
 
-// 11. Settings
+// 12. Documents & Archive
+model Document {
+  id          Int      @id @default(autoincrement())
+  title       String
+  category    String   // CONTRACT, ID, LICENSE, OTHER
+  fileUrl     String
+  fileType    String?
+  fileSize    Int?
+  
+  // Relations (Optional)
+  partnerId   Int?
+  partner     Partner? @relation(fields: [partnerId], references: [id])
+  
+  employeeId  Int?
+  employee    Employee? @relation(fields: [employeeId], references: [id])
+  
+  projectId   Int?
+  project     Project? @relation(fields: [projectId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Settings {
   id          Int      @id @default(autoincrement())
   key         String   @unique

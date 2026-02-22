@@ -101,6 +101,20 @@ async function logActivity(userId, action, entity, entityId, details) {
     }
 }
 
+// ZATCA QR Helper (TLV Format)
+function generateZatcaTLV(seller, vatNo, timestamp, total, vatTotal) {
+    const tags = [seller, vatNo, timestamp, total, vatTotal];
+    let tlv = Buffer.alloc(0);
+    tags.forEach((val, i) => {
+        const tag = i + 1;
+        const value = Buffer.from(val.toString(), 'utf8');
+        const tagBuf = Buffer.from([tag]);
+        const lenBuf = Buffer.from([value.length]);
+        tlv = Buffer.concat([tlv, tagBuf, lenBuf, value]);
+    });
+    return tlv.toString('base64');
+}
+
 // --- System Routes ---
 
 // Dashboard Stats API
@@ -660,6 +674,10 @@ app.post('/api/invoices', authenticate, async (req, res) => {
     const total = totalBeforeTax + taxAmount;
 
     try {
+        // Fetch Company Info for ZATCA QR
+        const companySetting = await prisma.settings.findUnique({ where: { key: 'companyInfo' } });
+        const companyInfo = companySetting ? JSON.parse(companySetting.value) : { name: 'مؤسسة الجنوب الجديد', vatNumber: '310123456700003' };
+
         const result = await prisma.$transaction(async (tx) => {
             // 1. Create Invoice
             const invoice = await tx.invoice.create({
@@ -674,6 +692,13 @@ app.post('/api/invoices', authenticate, async (req, res) => {
                     discount: Number(discount) || 0,
                     taxAmount,
                     total,
+                    qrCode: generateZatcaTLV(
+                        companyInfo.name,
+                        companyInfo.vatNumber,
+                        new Date(date).toISOString(),
+                        total.toFixed(2),
+                        taxAmount.toFixed(2)
+                    ),
                     items: { create: invoiceItemsData }
                 }
             });
@@ -1561,6 +1586,62 @@ app.get('/api/reports/general-ledger', async (req, res) => {
             movements,
             closingBalance: runningBalance
         });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- Document & Archive Routes ---
+
+// Get All Documents
+app.get('/api/documents', async (req, res) => {
+    try {
+        const { partnerId, employeeId, projectId } = req.query;
+        const where = {};
+        if (partnerId) where.partnerId = parseInt(partnerId);
+        if (employeeId) where.employeeId = parseInt(employeeId);
+        if (projectId) where.projectId = parseInt(projectId);
+
+        const documents = await prisma.document.findMany({
+            where,
+            include: { partner: true, employee: true, project: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(documents);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create Document Entry
+app.post('/api/documents', async (req, res) => {
+    try {
+        const { title, category, fileUrl, fileType, fileSize, partnerId, employeeId, projectId } = req.body;
+        const document = await prisma.document.create({
+            data: {
+                title,
+                category,
+                fileUrl,
+                fileType,
+                fileSize: parseInt(fileSize) || 0,
+                partnerId: partnerId ? parseInt(partnerId) : null,
+                employeeId: employeeId ? parseInt(employeeId) : null,
+                projectId: projectId ? parseInt(projectId) : null,
+            }
+        });
+        res.json(document);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete Document
+app.delete('/api/documents/:id', async (req, res) => {
+    try {
+        await prisma.document.delete({
+            where: { id: parseInt(req.params.id) }
+        });
+        res.json({ message: 'Document deleted' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
