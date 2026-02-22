@@ -2,6 +2,11 @@
   "version": 2,
   "buildCommand": "npx prisma generate --schema=server/prisma/schema.prisma && npm run build --prefix client",
   "outputDirectory": "client/dist",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "server/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
