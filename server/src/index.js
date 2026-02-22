@@ -1687,8 +1687,8 @@ app.use((err, req, res, next) => {
 // Export for Vercel Serverless
 module.exports = app;
 
-// Start Server (only if not running on Vercel)
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+// Start Server (if not running on Vercel - works for local and Render)
+if (!process.env.VERCEL) {
     const startServer = async () => {
         try {
             await prisma.$connect();
