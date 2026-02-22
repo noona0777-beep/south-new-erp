@@ -1,19 +1,29 @@
 {
-    "version": 2,
-    "buildCommand": "cd client && npm run build",
-    "outputDirectory": "client/dist",
-    "installCommand": "npm run install:all",
-    "env": {
-        "VITE_API_URL": "@vite_api_url"
+  "version": 2,
+  "buildCommand": "npm install --prefix client && npm run build --prefix client",
+  "outputDirectory": "client/dist",
+  "env": {
+    "VITE_API_URL": "https://south-new-system.onrender.com/api"
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://south-new-system.onrender.com/api/$1"
     },
-    "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
         {
-            "source": "/api/(.*)",
-            "destination": "https://south-new-system.onrender.com/api/$1"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
         }
-    ]
+      ]
+    }
+  ]
 }
