@@ -276,9 +276,7 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
-app.get('/', (req, res) => {
-    res.send('<h1>South New System API v2.0.0</h1><p>Status: Online. <a href="/api/status">Check DB Status</a></p>');
-});
+// Basic root route removed to allow static frontend serving
 
 // Health Check
 app.get('/api/status', async (req, res) => {
