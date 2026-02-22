@@ -15,6 +15,7 @@ import ClientStatement from './components/Clients/ClientStatement';
 import ReportsPage from './components/Reports/ReportsPage';
 import SettingsPage from './components/Settings/SettingsPage';
 import AccountingPage from './components/Accounting/AccountingPage';
+import DocumentsPage from './components/Documents/DocumentsPage';
 import API_URL from './config';
 
 import {
@@ -35,7 +36,8 @@ import {
     TrendingUp,
     AlertOctagon,
     UserPlus,
-    FileText
+    FileText,
+    Folder
 } from 'lucide-react';
 
 /* --- UI Components --- */
@@ -342,6 +344,7 @@ const Layout = ({ user, onLogout }) => {
                     <NavLink to="/accounting" icon={<DollarSign />} label="المحاسبة والمالية" active={isActive('/accounting')} />
                     <NavLink to="/hr" icon={<Users />} label="الموارد البشرية" active={isActive('/hr')} />
                     <NavLink to="/real-estate" icon={<Building2 />} label="إدارة الأملاك" active={isActive('/real-estate')} />
+                    <NavLink to="/archive" icon={<Folder />} label="الأرشيف والوثائق" active={isActive('/archive')} />
                     <NavLink to="/reports" icon={<FileBarChart2 />} label="التقارير" active={isActive('/reports')} />
                     <NavLink to="/users" icon={<Settings />} label="الإعدادات" active={isActive('/users')} />
                 </nav>
@@ -430,6 +433,7 @@ const Layout = ({ user, onLogout }) => {
                         <Route path="/hr" element={<HRPage />} />
                         <Route path="/accounting" element={<AccountingPage />} />
                         <Route path="/real-estate" element={<RealEstatePage />} />
+                        <Route path="/archive" element={<DocumentsPage />} />
                         <Route path="/reports" element={<ReportsPage />} />
                         <Route path="/users" element={<SettingsPage />} />
                     </Routes>
