@@ -1,8 +1,0 @@
-{
-    "rewrites": [
-        {
-            "source": "/test-redirect",
-            "destination": "https://www.google.com"
-        }
-    ]
-}
