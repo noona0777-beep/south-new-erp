@@ -390,14 +390,15 @@ const Layout = ({ user, onLogout }) => {
                     background: 'white',
                     padding: '12px 30px',
                     display: 'flex',
-                    justifyContent: 'space-between',
+                    justifyContent: 'flex-start',
                     alignItems: 'center',
                     boxShadow: '0 4px 6px -1px rgba(0,0,0,0.01), 0 2px 4px -1px rgba(0,0,0,0.01)',
                     borderBottom: '1px solid #f1f5f9',
-                    zIndex: 20
+                    zIndex: 20,
+                    gap: '24px'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1, justifyContent: 'center' }}>
-                        <button className="show-mobile" onClick={toggleSidebar} style={{ position: 'absolute', right: '20px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', color: '#1e293b', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <button className="show-mobile" onClick={toggleSidebar} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', color: '#1e293b', cursor: 'pointer' }}>
                             <Menu size={20} />
                         </button>
 
@@ -476,54 +477,54 @@ const Layout = ({ user, onLogout }) => {
                                 </div>
                             )}
                         </div>
-                    </div>
 
-                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                        <div className="hide-mobile" style={{ textAlign: 'left' }}>
-                            <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{currentTime.toLocaleDateString('ar-SA')}</div>
-                            <div style={{ color: '#2563eb', fontSize: '0.9rem', fontWeight: 'bold' }}>{currentTime.toLocaleTimeString('ar-SA')}</div>
-                        </div>
-
-                        {/* Notifications */}
-                        <div style={{ position: 'relative' }}>
-                            <div onClick={() => setShowNotifications(!showNotifications)} style={{ cursor: 'pointer', padding: '8px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', position: 'relative' }}>
-                                <Bell size={20} color={notifications.some(n => !n.isRead) ? '#2563eb' : '#64748b'} />
-                                {notifications.some(n => !n.isRead) && (
-                                    <span style={{ position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }} />
-                                )}
+                        <div style={{ display: 'flex', gap: '24px', alignItems: 'center', borderRight: '1px solid #f1f5f9', paddingRight: '24px', marginLeft: '0' }}>
+                            <div className="hide-mobile" style={{ textAlign: 'right' }}>
+                                <div style={{ color: '#64748b', fontSize: '0.7rem' }}>{currentTime.toLocaleDateString('ar-SA')}</div>
+                                <div style={{ color: '#2563eb', fontSize: '0.85rem', fontWeight: 'bold' }}>{currentTime.toLocaleTimeString('ar-SA')}</div>
                             </div>
 
-                            {showNotifications && (
-                                <div style={{
-                                    position: 'absolute', top: '50px', left: '0', width: '280px', background: 'white',
-                                    borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9',
-                                    zIndex: 100, padding: '12px', direction: 'rtl'
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
-                                        <h4 style={{ margin: 0, fontSize: '0.9rem' }}>التنبيهات</h4>
-                                        <button
-                                            onClick={async () => {
-                                                await axios.put(`${API_URL}/notifications/read-all`);
-                                                setNotifications(notifications.map(n => ({ ...n, isRead: true })));
-                                            }}
-                                            style={{ color: '#2563eb', border: 'none', background: 'none', fontSize: '0.75rem', cursor: 'pointer' }}
-                                        >تحديد الكل</button>
-                                    </div>
-                                    <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        {notifications.length === 0 ? (
-                                            <div style={{ textAlign: 'center', padding: '15px', color: '#94a3b8', fontSize: '0.8rem' }}>لا توجد تنبيهات</div>
-                                        ) : notifications.map(n => (
-                                            <div key={n.id} style={{
-                                                padding: '10px', borderRadius: '8px', background: n.isRead ? 'transparent' : '#f0f7ff',
-                                                border: `1px solid ${n.isRead ? '#f1f5f9' : '#dbeafe'}`, fontSize: '0.8rem'
-                                            }}>
-                                                <div style={{ fontWeight: 'bold', color: '#0f172a', marginBottom: '2px' }}>{n.title}</div>
-                                                <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{n.message}</div>
-                                            </div>
-                                        ))}
-                                    </div>
+                            {/* Notifications */}
+                            <div style={{ position: 'relative' }}>
+                                <div onClick={() => setShowNotifications(!showNotifications)} style={{ cursor: 'pointer', padding: '10px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Bell size={20} color={notifications.some(n => !n.isRead) ? '#2563eb' : '#64748b'} />
+                                    {notifications.some(n => !n.isRead) && (
+                                        <span style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }} />
+                                    )}
                                 </div>
-                            )}
+
+                                {showNotifications && (
+                                    <div style={{
+                                        position: 'absolute', top: '55px', left: '0', width: '300px', background: 'white',
+                                        borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9',
+                                        zIndex: 100, padding: '16px', direction: 'rtl'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', alignItems: 'center' }}>
+                                            <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 'bold' }}>التنبيهات</h4>
+                                            <button
+                                                onClick={async () => {
+                                                    await axios.put(`${API_URL}/notifications/read-all`);
+                                                    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+                                                }}
+                                                style={{ color: '#2563eb', border: 'none', background: 'none', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '500' }}
+                                            >تحديد الكل كقروء</button>
+                                        </div>
+                                        <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {notifications.length === 0 ? (
+                                                <div style={{ textAlign: 'center', padding: '30px 10px', color: '#94a3b8', fontSize: '0.85rem' }}>لا توجد تنبيهات حالية</div>
+                                            ) : notifications.map(n => (
+                                                <div key={n.id} style={{
+                                                    padding: '12px', borderRadius: '12px', background: n.isRead ? 'transparent' : '#f0f7ff',
+                                                    border: `1px solid ${n.isRead ? '#f1f5f9' : '#dbeafe'}`, fontSize: '0.85rem'
+                                                }}>
+                                                    <div style={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '4px' }}>{n.title}</div>
+                                                    <div style={{ color: '#64748b', fontSize: '0.8rem', lineHeight: '1.4' }}>{n.message}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </header>
