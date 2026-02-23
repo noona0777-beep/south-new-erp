@@ -31,7 +31,7 @@ axios.interceptors.request.use((config) => {
 import {
     LayoutDashboard, ShoppingCart, Users, Briefcase, Building2,
     DollarSign, FileBarChart2, Settings, Bell, Search, Menu, X,
-    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon
+    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut
 } from 'lucide-react';
 
 /* --- UI Components --- */
@@ -353,19 +353,33 @@ const Layout = ({ user, onLogout }) => {
                         <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
                             {user.name?.charAt(0)}
                         </div>
-                        <div>
+                        <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{user.name}</div>
                             <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{user.role}</div>
                         </div>
+                        <button
+                            onClick={onLogout}
+                            style={{
+                                background: 'transparent', border: 'none', color: '#ef4444',
+                                cursor: 'pointer', padding: '8px', borderRadius: '8px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'background 0.2s'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            title="تسجيل الخروج"
+                        >
+                            <LogOut size={20} />
+                        </button>
                     </div>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', paddingRight: '0', transition: 'padding 0.4s' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', paddingRight: isSidebarOpen ? '280px' : '0', transition: 'padding 0.4s ease' }}>
                 <header className="fade-in no-print" style={{ background: 'white', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', zIndex: 20 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <button className="show-mobile" onClick={toggleSidebar} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', color: '#1e293b', cursor: 'pointer' }}>
+                        <button onClick={toggleSidebar} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', color: '#1e293b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Menu size={20} />
                         </button>
                         <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
