@@ -48,6 +48,7 @@ model Partner {
   payments     Payment[]
   projects     Project[]
   contracts    RealEstateContract[]
+  constructionContracts ConstructionContract[] @relation(name: "ClientContracts")
   documents    Document[]
   
   createdAt    DateTime  @default(now())
@@ -268,6 +269,7 @@ model Project {
   invoices    Invoice[]
   tasks       Task[]
   documents   Document[]
+  constructionContract ConstructionContract?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -421,4 +423,49 @@ model Settings {
   key         String   @unique
   value       String   @db.Text
   updatedAt   DateTime @updatedAt
+}
+
+// 13. Construction Contracts (SCA & Saudi Standards)
+model ConstructionContract {
+  id              Int       @id @default(autoincrement())
+  contractNumber  String    @unique
+  title           String
+  type            String    // MAIN, RENOVATION, DESIGN, LABOR, SUPPLY
+  status          String    @default("DRAFT") // DRAFT, ACTIVE, COMPLETED, CANCELLED
+  
+  partnerId       Int
+  partner         Partner   @relation(name: "ClientContracts", fields: [partnerId], references: [id])
+  
+  projectId       Int?      @unique
+  project         Project?  @relation(fields: [projectId], references: [id])
+  
+  startDate       DateTime
+  endDate         DateTime
+  totalValue      Float
+  taxAmount       Float
+  netValue        Float
+  
+  advancePayment  Float     @default(0)
+  retentionPercent Float    @default(0)
+  
+  location        String?   // موقع التنفيذ
+  signatureName   String?   // اسم المفوض
+  
+  // SCA Standard Clauses
+  clauses         Json?     
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  items           ConstructionContractItem[]
+}
+
+model ConstructionContractItem {
+  id          Int       @id @default(autoincrement())
+  contractId  Int
+  contract    ConstructionContract @relation(fields: [contractId], references: [id])
+  description String
+  unit        String
+  quantity    Float
+  unitPrice   Float
+  total       Float
 }
