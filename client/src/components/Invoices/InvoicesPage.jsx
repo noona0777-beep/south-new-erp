@@ -9,6 +9,8 @@ const InvoicesPage = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingId, setEditingId] = useState(null);
 
     // Form State
     const [invoiceData, setInvoiceData] = useState({
@@ -56,7 +58,28 @@ const InvoicesPage = () => {
             discount: 0,
             items: [{ productId: '', description: '', quantity: 1, unitPrice: 0, total: 0 }]
         });
+        setIsEditing(false);
+        setEditingId(null);
         setShowForm(false);
+    };
+
+    const handleEdit = (inv) => {
+        setInvoiceData({
+            partnerId: inv.partnerId || '',
+            date: new Date(inv.date).toISOString().split('T')[0],
+            type: inv.type || 'SALES_TAX',
+            discount: inv.discount || 0,
+            items: inv.items.map(item => ({
+                productId: item.productId || '',
+                description: item.description || '',
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                total: item.total
+            }))
+        });
+        setEditingId(inv.id);
+        setIsEditing(true);
+        setShowForm(true);
     };
 
     const handleAddItem = () => {
@@ -101,16 +124,25 @@ const InvoicesPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const token = localStorage.getItem('token');
+            const config = { headers: { 'Authorization': `Bearer ${token}` } };
+
             console.log('Sending Invoice Data:', invoiceData);
-            const response = await axios.post(`${API_URL}/invoices`, invoiceData);
-            console.log('Response:', response.data);
+
+            if (isEditing) {
+                await axios.put(`${API_URL}/invoices/${editingId}`, invoiceData, config);
+                alert('✅ تم تحديث الفاتورة بنجاح');
+            } else {
+                await axios.post(`${API_URL}/invoices`, invoiceData, config);
+                alert('✅ تم حفظ الفاتورة بنجاح');
+            }
+
             fetchInvoices();
             handleResetForm();
-            alert('✅ تم حفظ الفاتورة بنجاح');
         } catch (err) {
             console.error('Submit Error:', err.response?.data || err.message);
             const errorMsg = err.response?.data?.error || err.response?.data?.details || err.message;
-            alert(`❌ فشل حفظ الفاتورة: ${errorMsg}`);
+            alert(`❌ فشل العملية: ${errorMsg}`);
         }
     };
 
@@ -125,7 +157,7 @@ const InvoicesPage = () => {
         return (
             <div className="fade-in" style={{ paddingBottom: '50px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ margin: 0, color: '#1e293b' }}>إنشاء فاتورة جديدة</h2>
+                    <h2 style={{ margin: 0, color: '#1e293b' }}>{isEditing ? 'تعديل الفاتورة' : 'إنشاء فاتورة جديدة'}</h2>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button onClick={handleResetForm} style={{ background: 'white', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', color: '#64748b' }}>إلغاء</button>
                         <button onClick={handleSubmit} style={{ background: '#2563eb', border: 'none', padding: '10px 30px', borderRadius: '8px', cursor: 'pointer', color: 'white', fontWeight: 'bold' }}>حفظ الفاتورة</button>
@@ -311,7 +343,7 @@ const InvoicesPage = () => {
                                             <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
                                                     <button onClick={() => openPrint(inv.id)} title="طباعة" style={{ background: '#eff6ff', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Printer size={16} /></button>
-                                                    <button title="تعديل" style={{ background: '#f8fafc', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Edit size={16} /></button>
+                                                    <button onClick={() => handleEdit(inv)} title="تعديل" style={{ background: '#f8fafc', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Edit size={16} /></button>
                                                 </div>
                                             </td>
                                         </tr>

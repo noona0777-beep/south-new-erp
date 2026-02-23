@@ -830,6 +830,62 @@ app.post('/api/invoices', authenticate, async (req, res) => {
     }
 });
 
+// Update Existing Invoice
+app.put('/api/invoices/:id', authenticate, async (req, res) => {
+    const { id } = req.params;
+    const { partnerId, date, type, items, discount } = req.body;
+
+    // Calculate Totals
+    let subtotal = 0;
+    const invoiceItemsData = items.map(item => {
+        const lineTotal = Number(item.quantity) * Number(item.unitPrice);
+        subtotal += lineTotal;
+        return {
+            productId: item.productId ? Number(item.productId) : null,
+            description: item.description,
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            taxRate: 0.15,
+            total: lineTotal
+        };
+    });
+
+    const totalBeforeTax = subtotal - (Number(discount) || 0);
+    const taxAmount = totalBeforeTax * 0.15;
+    const total = totalBeforeTax + taxAmount;
+
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Delete old items
+            await tx.invoiceItem.deleteMany({ where: { invoiceId: parseInt(id) } });
+
+            // 2. Update Invoice
+            const invoice = await tx.invoice.update({
+                where: { id: parseInt(id) },
+                data: {
+                    date: date ? new Date(date) : undefined,
+                    type: type || 'SALES_TAX',
+                    partnerId: (partnerId && partnerId !== "") ? Number(partnerId) : null,
+                    subtotal,
+                    discount: Number(discount) || 0,
+                    taxAmount,
+                    total,
+                    items: { create: invoiceItemsData }
+                }
+            });
+            return invoice;
+        });
+
+        // Log Activity
+        await logActivity(req.user.id, 'UPDATE', 'INVOICE', result.id, `تعديل فاتورة #${result.invoiceNumber} بمبلغ جديد ${result.total} ر.س`);
+
+        res.json(result);
+    } catch (error) {
+        console.error('Update Invoice Error:', error);
+        res.status(500).json({ error: 'Failed to update invoice', details: error.message });
+    }
+});
+
 
 // --- Project Routes ---
 
