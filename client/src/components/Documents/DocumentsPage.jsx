@@ -3,7 +3,7 @@ import axios from 'axios';
 import {
     Folder, File, FileText, Plus, Trash2,
     Download, ExternalLink, Filter, Search,
-    User, Briefcase, Users, Upload, X, Check
+    User, Briefcase, Users, Upload, X, Check, Eye, Printer
 } from 'lucide-react';
 import API_URL from '../../config';
 
@@ -14,6 +14,7 @@ const DocumentsPage = () => {
     const [filter, setFilter] = useState('ALL');
     const [searchQuery, setSearchQuery] = useState('');
     const [uploading, setUploading] = useState(false);
+    const [previewDoc, setPreviewDoc] = useState(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -113,6 +114,39 @@ const DocumentsPage = () => {
             fetchDocuments();
         } catch (err) {
             alert('فشل حذف المستند');
+        }
+    };
+
+    const handleDownload = (doc) => {
+        if (!doc.fileUrl) return;
+
+        try {
+            const splitUrl = doc.fileUrl.split(',');
+            if (splitUrl.length < 2) throw new Error('Invalid format');
+
+            const byteString = atob(splitUrl[1]);
+            const mimeString = splitUrl[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            const blob = new Blob([ab], { type: mimeString });
+
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = doc.title + (mimeString === 'application/pdf' ? '.pdf' : '.png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            // Fallback for simple URLs
+            const link = document.createElement('a');
+            link.href = doc.fileUrl;
+            link.download = doc.title;
+            link.click();
         }
     };
 
@@ -223,11 +257,14 @@ const DocumentsPage = () => {
                             )}
                         </div>
 
-                        <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid #f8fafc', paddingTop: '15px' }}>
-                            <a href={doc.fileUrl} download={doc.title} target="_blank" rel="noreferrer" style={{ flex: 1, textDecoration: 'none', background: '#f8fafc', color: '#334155', padding: '8px', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', border: '1px solid #e2e8f0' }}>
-                                <ExternalLink size={14} /> عرض / تحميل
-                            </a>
-                            <button onClick={() => handleDelete(doc.id)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #fee2e2', color: '#ef4444', background: '#fef2f2', cursor: 'pointer' }}>
+                        <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #f8fafc', paddingTop: '15px' }}>
+                            <button onClick={() => setPreviewDoc(doc)} style={{ flex: 1.5, background: '#2563eb', color: 'white', border: 'none', padding: '10px', borderRadius: '10px', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 'bold' }}>
+                                <Eye size={16} /> استعراض
+                            </button>
+                            <button onClick={() => handleDownload(doc)} style={{ background: '#f1f5f9', color: '#334155', border: '1px solid #e2e8f0', padding: '10px', borderRadius: '10px', cursor: 'pointer' }} title="تحميل">
+                                <Download size={16} />
+                            </button>
+                            <button onClick={() => handleDelete(doc.id)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #fee2e2', color: '#ef4444', background: '#fef2f2', cursor: 'pointer' }} title="حذف">
                                 <Trash2 size={16} />
                             </button>
                         </div>
@@ -376,6 +413,53 @@ const DocumentsPage = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* Preview Modal */}
+            {previewDoc && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px' }}>
+                    <div className="fade-in" style={{ background: 'white', borderRadius: '24px', width: '90%', maxWidth: '1000px', height: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        <div style={{ padding: '20px 30px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1e293b' }}>{previewDoc.title}</h3>
+                                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{categories[previewDoc.category]} - {new Date(previewDoc.createdAt).toLocaleDateString('ar-SA')}</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button onClick={() => handleDownload(previewDoc)} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold' }}>
+                                    <Download size={18} /> تحميل
+                                </button>
+                                <button onClick={() => window.print()} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold' }}>
+                                    <Printer size={18} /> طباعة
+                                </button>
+                                <button onClick={() => setPreviewDoc(null)} style={{ background: '#ef4444', border: 'none', padding: '8px', borderRadius: '50%', cursor: 'pointer', color: 'white' }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style={{ flex: 1, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto', padding: '20px' }}>
+                            {previewDoc.fileUrl ? (
+                                previewDoc.fileUrl.includes('application/pdf') ? (
+                                    <iframe
+                                        src={previewDoc.fileUrl}
+                                        style={{ width: '100%', height: '100%', borderRadius: '12px', shadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                        title="Preview"
+                                    />
+                                ) : (
+                                    <img
+                                        src={previewDoc.fileUrl}
+                                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                        alt="Preview"
+                                    />
+                                )
+                            ) : (
+                                <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+                                    <FileText size={64} style={{ opacity: 0.2, marginBottom: '20px' }} />
+                                    <p>عذراً، هذا المستند لا يحتوي على ملف للعرض.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
