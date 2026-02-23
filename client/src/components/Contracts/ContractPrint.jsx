@@ -133,37 +133,41 @@ const ContractPrint = () => {
                     </div>
 
                     {/* Contract Scope & Details */}
-                    <div style={{ marginBottom: '40px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                    <div style={{ marginBottom: '30px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
                             <ShieldCheck size={22} color="#1e3a8a" />
-                            <h3 style={{ margin: 0, fontSize: '18px', color: '#1e3a8a', borderBottom: '2px solid #e2e8f0', flex: 1, paddingBottom: '5px' }}>اتفاقية العمل وشروطه</h3>
+                            <h3 style={{ margin: 0, fontSize: '18px', color: '#1e3a8a', borderBottom: '2px solid #e2e8f0', flex: 1, paddingBottom: '5px' }}>بنود الاتفاقية وشروط التعاقد (SCA Standard)</h3>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-                            <div style={{ padding: '15px', borderRight: '4px solid #1e3a8a', background: '#f8fafc', borderRadius: '0 10px 10px 0' }}>
-                                <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '5px' }}>موضوع العقد</div>
-                                <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#334155' }}>{contract.title}</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '25px' }}>
+                            <div style={{ padding: '12px', borderRight: '4px solid #1e3a8a', background: '#f8fafc', borderRadius: '0 10px 10px 0' }}>
+                                <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '3px' }}>موضوع العقد</div>
+                                <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#334155' }}>{contract.title}</div>
                             </div>
-                            <div style={{ padding: '15px', borderRight: '4px solid #1e3a8a', background: '#f8fafc', borderRadius: '0 10px 10px 0' }}>
-                                <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '5px' }}>موقع التنفيذ</div>
-                                <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#334155' }}>{contract.location || 'موقع العميل المعتمد'}</div>
+                            <div style={{ padding: '12px', borderRight: '4px solid #1e3a8a', background: '#f8fafc', borderRadius: '0 10px 10px 0' }}>
+                                <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '3px' }}>موقع التنفيذ</div>
+                                <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#334155' }}>{contract.location || 'موقع العميل المعتمد'}</div>
                             </div>
                         </div>
 
-                        <div style={{ fontSize: '14px', lineHeight: '2', color: '#475569', textAlign: 'justify' }}>
-                            {contract.clauses?.length > 0 ? (
-                                contract.clauses.map((c, i) => (
-                                    <div key={i} style={{ marginBottom: '15px' }}>
-                                        <strong>المادة ({c.id}): {c.title}</strong>
-                                        <div style={{ paddingRight: '15px' }}>{c.content}</div>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '20px',
+                            fontSize: '11px',
+                            lineHeight: '1.6',
+                            color: '#475569',
+                            textAlign: 'justify'
+                        }}>
+                            {contract.clauses && Object.keys(contract.clauses).length > 0 ? (
+                                Object.values(contract.clauses).map((c, i) => (
+                                    <div key={i} style={{ marginBottom: '8px', padding: '8px', borderBottom: '1px solid #f1f5f9' }}>
+                                        <strong style={{ color: '#1e3a8a', display: 'block', marginBottom: '3px' }}>المادة ({c.id || i + 1}): {c.title}</strong>
+                                        <div>{c.content}</div>
                                     </div>
                                 ))
                             ) : (
-                                <div>
-                                    <p><strong>المادة (1): موضوع العقد:</strong> يلتزم الطرف الثاني بتنفيذ الأعمال الموضحة في جدول الكميات المرفق طبقاً للمواصفات الفنية.</p>
-                                    <p><strong>المادة (2): مدة العمل:</strong> تبدأ فترة العمل من تاريخ {new Date(contract.startDate).toLocaleDateString('ar-SA')} وتنتهي في {new Date(contract.endDate).toLocaleDateString('ar-SA')}.</p>
-                                    <p><strong>المادة (3): المقابل المادي:</strong> إجمالي قيمة العقد هي <strong>{contract.totalValue.toLocaleString()} ر.س</strong> شاملة ضريبة القيمة المضافة.</p>
-                                </div>
+                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '20px', color: '#94a3b8' }}>لم يتم إدراج بنود إضافية</div>
                             )}
                         </div>
                     </div>
