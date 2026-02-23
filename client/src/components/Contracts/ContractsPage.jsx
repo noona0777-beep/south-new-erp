@@ -38,9 +38,12 @@ const ContractsPage = () => {
 
     const fetchData = async () => {
         try {
+            const token = localStorage.getItem('token');
+            const headers = { Authorization: `Bearer ${token}` };
+
             const [cRes, pRes, prRes] = await Promise.all([
-                axios.get(`${API_URL}/construction-contracts`),
-                axios.get(`${API_URL}/clients`),
+                axios.get(`${API_URL}/construction-contracts`, { headers }),
+                axios.get(`${API_URL}/partners`),
                 axios.get(`${API_URL}/projects`)
             ]);
             setContracts(cRes.data);
@@ -74,7 +77,10 @@ const ContractsPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(`${API_URL}/construction-contracts`, formData);
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_URL}/construction-contracts`, formData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             setShowModal(false);
             fetchData();
             setFormData({
@@ -91,7 +97,10 @@ const ContractsPage = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('هل أنت متأكد من حذف هذا العقد؟')) return;
         try {
-            await axios.delete(`${API_URL}/construction-contracts/${id}`);
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/construction-contracts/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             fetchData();
         } catch (error) {
             alert('خطأ في الحذف');
