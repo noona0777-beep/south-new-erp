@@ -74,27 +74,20 @@ const DataRecordSummary = () => {
             <style>
                 {`
                 @media print {
+                    body { background: white !important; padding: 0 !important; margin: 0 !important; }
                     .no-print { display: none !important; }
-                    body { background: white !important; margin: 0 !important; padding: 0 !important; }
-                    #printable-area { 
+                    .print-page { 
                         box-shadow: none !important; 
                         margin: 0 !important; 
-                        width: 210mm !important; 
-                        height: 296mm !important;
-                        max-height: 296mm !important;
-                        padding: 15mm !important; 
-                        border: none !important; 
-                        overflow: hidden !important;
-                        page-break-after: avoid !important;
-                        page-break-before: avoid !important;
+                        width: 100% !important; 
+                        max-width: none !important;
+                        min-height: auto !important;
+                        padding: 0 !important;
+                        position: relative !important;
                     }
-                    @page { 
-                        size: A4; 
-                        margin: 0 !important; 
-                    }
-                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    @page { margin: 15mm; size: A4; }
                 }
-            `}
+                `}
             </style>
 
             {/* Toolbar */}

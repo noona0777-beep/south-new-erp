@@ -146,22 +146,17 @@ const ClientStatement = () => {
             <style>{`
                 @media print {
                     .no-print { display: none !important; }
-                    body { background: white !important; margin: 0 !important; padding: 0 !important; }
-                    #printable-area { 
+                    body { background: white !important; margin: 0; padding: 0 !important; }
+                    .print-page { 
                         box-shadow: none !important; 
                         margin: 0 !important; 
-                        width: 210mm !important; 
-                        height: 296mm !important;
-                        max-height: 296mm !important;
-                        padding: 15mm !important; 
+                        width: 100% !important; 
+                        padding: 10mm !important; 
                         border: none !important; 
-                        overflow: hidden !important;
-                        page-break-after: avoid !important;
-                        page-break-before: avoid !important;
                     }
                     @page { 
                         size: A4; 
-                        margin: 0 !important; 
+                        margin: 0; 
                     }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }
