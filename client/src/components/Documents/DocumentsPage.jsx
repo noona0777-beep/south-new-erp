@@ -3,7 +3,7 @@ import axios from 'axios';
 import {
     Folder, File, FileText, Plus, Trash2,
     Download, ExternalLink, Filter, Search,
-    User, Briefcase, Users, Link as LinkIcon
+    User, Briefcase, Users, Upload, X, Check
 } from 'lucide-react';
 import API_URL from '../../config';
 
@@ -13,12 +13,14 @@ const DocumentsPage = () => {
     const [showUpload, setShowUpload] = useState(false);
     const [filter, setFilter] = useState('ALL');
     const [searchQuery, setSearchQuery] = useState('');
+    const [uploading, setUploading] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
         title: '',
         category: 'CONTRACT',
-        fileUrl: '',
+        fileUrl: '', // This will hold the Base64 string
+        fileName: '',
         partnerId: '',
         employeeId: '',
         projectId: ''
@@ -60,15 +62,47 @@ const DocumentsPage = () => {
         }
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Check file size (limit to 5MB for base64 storage)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('حجم الملف كبير جداً. يرجى اختيار ملف أقل من 5 ميجابايت.');
+            e.target.value = null;
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setFormData({
+                ...formData,
+                fileUrl: reader.result,
+                fileName: file.name,
+                title: formData.title || file.name.split('.')[0] // Auto-fill title if empty
+            });
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleUpload = async (e) => {
         e.preventDefault();
+        if (!formData.fileUrl) {
+            alert('يرجى اختيار ملف أولاً');
+            return;
+        }
+
+        setUploading(true);
         try {
             await axios.post(`${API_URL}/documents`, formData);
             setShowUpload(false);
-            setFormData({ title: '', category: 'CONTRACT', fileUrl: '', partnerId: '', employeeId: '', projectId: '' });
+            setFormData({ title: '', category: 'CONTRACT', fileUrl: '', fileName: '', partnerId: '', employeeId: '', projectId: '' });
             fetchDocuments();
+            alert('✅ تم رفع المستند بنجاح');
         } catch (err) {
-            alert('فشل حفظ المستند');
+            alert('❌ فشل حفظ المستند');
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -190,8 +224,8 @@ const DocumentsPage = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid #f8fafc', paddingTop: '15px' }}>
-                            <a href={doc.fileUrl} target="_blank" rel="noreferrer" style={{ flex: 1, textDecoration: 'none', background: '#f8fafc', color: '#334155', padding: '8px', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', border: '1px solid #e2e8f0' }}>
-                                <ExternalLink size={14} /> فتح
+                            <a href={doc.fileUrl} download={doc.title} target="_blank" rel="noreferrer" style={{ flex: 1, textDecoration: 'none', background: '#f8fafc', color: '#334155', padding: '8px', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', border: '1px solid #e2e8f0' }}>
+                                <ExternalLink size={14} /> عرض / تحميل
                             </a>
                             <button onClick={() => handleDelete(doc.id)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #fee2e2', color: '#ef4444', background: '#fef2f2', cursor: 'pointer' }}>
                                 <Trash2 size={16} />
@@ -215,11 +249,56 @@ const DocumentsPage = () => {
             {/* Upload Modal */}
             {showUpload && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-                    <div className="fade-in" style={{ background: 'white', padding: '30px', borderRadius: '20px', width: '500px', maxWidth: '100%', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-                        <h3 style={{ marginTop: 0, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <Plus style={{ color: '#2563eb' }} /> إضافة مستند جديد للـأرشيف
-                        </h3>
+                    <div className="fade-in" style={{ background: 'white', padding: '30px', borderRadius: '24px', width: '500px', maxWidth: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                            <h3 style={{ margin: 0, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <Upload style={{ color: '#2563eb' }} size={24} /> رفع مستند جديد
+                            </h3>
+                            <button onClick={() => setShowUpload(false)} style={{ background: '#f1f5f9', border: 'none', padding: '5px', borderRadius: '50%', cursor: 'pointer' }}>
+                                <X size={20} color="#64748b" />
+                            </button>
+                        </div>
+
                         <form onSubmit={handleUpload}>
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '10px', fontSize: '0.95rem', fontWeight: '500', color: '#475569' }}>الملف</label>
+                                <div style={{
+                                    border: '2px dashed #e2e8f0',
+                                    padding: '25px',
+                                    borderRadius: '16px',
+                                    textAlign: 'center',
+                                    position: 'relative',
+                                    background: formData.fileUrl ? '#f0fdf4' : '#f8fafc',
+                                    transition: 'all 0.3s ease'
+                                }}>
+                                    {!formData.fileUrl ? (
+                                        <>
+                                            <Upload size={32} color="#94a3b8" style={{ marginBottom: '10px' }} />
+                                            <p style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '0.9rem' }}>اسحب ملف هنا أو اضغط للاختيار</p>
+                                            <input
+                                                type="file"
+                                                onChange={handleFileChange}
+                                                accept="image/*,.pdf"
+                                                style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+                                            />
+                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>الحد الأقصى: 5 ميجابايت (PDF, JPG, PNG)</span>
+                                        </>
+                                    ) : (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#16a34a' }}>
+                                            <Check size={20} />
+                                            <span style={{ fontWeight: '500' }}>{formData.fileName}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, fileUrl: '', fileName: '' })}
+                                                style={{ background: '#fee2e2', border: 'none', padding: '4px', borderRadius: '50%', cursor: 'pointer', color: '#ef4444' }}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             <div style={{ marginBottom: '15px' }}>
                                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>عنوان المستند*</label>
                                 <input
@@ -231,31 +310,19 @@ const DocumentsPage = () => {
                                     placeholder="مثال: عقد إيجار شقة 5"
                                 />
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>التصنيف</label>
-                                    <select
-                                        value={formData.category}
-                                        onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', background: 'white' }}
-                                    >
-                                        <option value="CONTRACT">عقد</option>
-                                        <option value="ID">هوية / إقامة</option>
-                                        <option value="LICENSE">ترخيص</option>
-                                        <option value="OTHER">أخرى</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>رابط الملف / الرابط</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.fileUrl}
-                                        onChange={e => setFormData({ ...formData, fileUrl: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none' }}
-                                        placeholder="URL المستند"
-                                    />
-                                </div>
+
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>التصنيف</label>
+                                <select
+                                    value={formData.category}
+                                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', background: 'white' }}
+                                >
+                                    <option value="CONTRACT">عقد</option>
+                                    <option value="ID">هوية / إقامة</option>
+                                    <option value="LICENSE">ترخيص</option>
+                                    <option value="OTHER">أخرى</option>
+                                </select>
                             </div>
 
                             <div style={{ marginBottom: '20px' }}>
@@ -289,8 +356,24 @@ const DocumentsPage = () => {
                             </div>
 
                             <div style={{ display: 'flex', gap: '10px' }}>
-                                <button type="button" onClick={() => setShowUpload(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>إلغاء</button>
-                                <button type="submit" style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: '#2563eb', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>حفظ المستند</button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUpload(false)}
+                                    disabled={uploading}
+                                    style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', color: '#64748b' }}
+                                >إلغاء</button>
+                                <button
+                                    type="submit"
+                                    disabled={uploading || !formData.fileUrl}
+                                    style={{
+                                        flex: 2, padding: '12px', borderRadius: '12px', border: 'none',
+                                        background: uploading ? '#94a3b8' : '#2563eb',
+                                        color: 'white', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                    }}
+                                >
+                                    {uploading ? 'جاري الرفع...' : 'حفظ المستند'}
+                                </button>
                             </div>
                         </form>
                     </div>
