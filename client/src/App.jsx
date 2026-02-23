@@ -401,7 +401,50 @@ const Layout = ({ user, onLogout }) => {
                         </button>
                         <div style={{ position: 'relative', width: '100%', maxWidth: '350px' }}>
                             <Search size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                            <input type="text" placeholder="بحث..." value={searchQuery} onChange={handleSearch} style={{ width: '100%', padding: '10px 40px 10px 15px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', outline: 'none', fontFamily: 'Cairo', fontSize: '0.9rem' }} />
+                            <input type="text" placeholder="بحث شامل في النظام..." value={searchQuery} onChange={handleSearch} style={{ width: '100%', padding: '10px 40px 10px 15px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', outline: 'none', fontFamily: 'Cairo', fontSize: '0.9rem' }} />
+
+                            {showSearchResults && (
+                                <div style={{
+                                    position: 'absolute', top: '45px', right: 0, left: 0,
+                                    background: 'white', borderRadius: '12px',
+                                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                                    border: '1px solid #f1f5f9', zIndex: 1000,
+                                    maxHeight: '400px', overflowY: 'auto', padding: '8px'
+                                }}>
+                                    {searchResults.length === 0 ? (
+                                        <div style={{ padding: '15px', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>لا توجد نتائج مطابقة</div>
+                                    ) : (
+                                        searchResults.map((res, i) => (
+                                            <Link
+                                                key={i}
+                                                to={res.link}
+                                                onClick={() => setShowSearchResults(false)}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                                    padding: '10px 12px', borderRadius: '8px',
+                                                    textDecoration: 'none', color: 'inherit',
+                                                    transition: 'background 0.2s', borderBottom: i < searchResults.length - 1 ? '1px solid #f8fafc' : 'none'
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                                <div style={{ padding: '8px', background: '#eff6ff', color: '#2563eb', borderRadius: '8px', display: 'flex' }}>
+                                                    {res.type === 'client' && <Users size={16} />}
+                                                    {res.type === 'invoice' && <ShoppingCart size={16} />}
+                                                    {res.type === 'project' && <Briefcase size={16} />}
+                                                    {res.type === 'employee' && <UserPlus size={16} />}
+                                                    {res.type === 'property' && <Building2 size={16} />}
+                                                    {res.type === 'document' && <Folder size={16} />}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1e293b' }}>{res.title}</div>
+                                                    <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{res.subtitle}</div>
+                                                </div>
+                                            </Link>
+                                        ))
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 

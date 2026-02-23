@@ -250,36 +250,48 @@ app.get('/api/search', async (req, res) => {
         const partners = await prisma.partner.findMany({
             where: {
                 OR: [
-                    { name: { contains: q } },
-                    { phone: { contains: q } },
-                    { vatNumber: { contains: q } }
+                    { name: { contains: q, mode: 'insensitive' } },
+                    { phone: { contains: q, mode: 'insensitive' } }
                 ]
             },
-            take: 5
+            take: 3
         });
-        partners.forEach(p => results.push({ id: p.id, title: p.name, type: 'client', subtitle: `عميل - ${p.phone || ''}`, link: `/clients` }));
+        partners.forEach(p => results.push({ id: p.id, title: p.name, type: 'client', subtitle: 'عميل', link: `/clients` }));
 
         // Search Invoices
         const invoices = await prisma.invoice.findMany({
-            where: {
-                OR: [
-                    { invoiceNumber: { contains: q } }
-                ]
-            },
-            take: 5
+            where: { invoiceNumber: { contains: q, mode: 'insensitive' } },
+            take: 3
         });
         invoices.forEach(inv => results.push({ id: inv.id, title: `فاتورة ${inv.invoiceNumber}`, type: 'invoice', subtitle: `مبلغ: ${inv.total} ر.س`, link: `/invoices` }));
 
-        // Search Quotes
-        const quotes = await prisma.quote.findMany({
-            where: {
-                OR: [
-                    { quoteNumber: { contains: q } }
-                ]
-            },
-            take: 5
+        // Search Projects
+        const projects = await prisma.project.findMany({
+            where: { name: { contains: q, mode: 'insensitive' } },
+            take: 3
         });
-        quotes.forEach(qte => results.push({ id: qte.id, title: `عرض سعر ${qte.quoteNumber}`, type: 'quote', subtitle: `مبلغ: ${qte.total} ر.س`, link: `/quotes` }));
+        projects.forEach(prj => results.push({ id: prj.id, title: prj.name, type: 'project', subtitle: 'مشروع نشط', link: `/projects` }));
+
+        // Search Employees
+        const employees = await prisma.employee.findMany({
+            where: { name: { contains: q, mode: 'insensitive' } },
+            take: 3
+        });
+        employees.forEach(emp => results.push({ id: emp.id, title: emp.name, type: 'employee', subtitle: emp.jobTitle || 'موظف', link: `/hr` }));
+
+        // Search Properties
+        const properties = await prisma.property.findMany({
+            where: { name: { contains: q, mode: 'insensitive' } },
+            take: 3
+        });
+        properties.forEach(prop => results.push({ id: prop.id, title: prop.name, type: 'property', subtitle: 'عقار / مبنى', link: `/real-estate` }));
+
+        // Search Documents
+        const documents = await prisma.document.findMany({
+            where: { title: { contains: q, mode: 'insensitive' } },
+            take: 3
+        });
+        documents.forEach(doc => results.push({ id: doc.id, title: doc.title, type: 'document', subtitle: 'مستند مؤرشف', link: `/archive` }));
 
         res.json(results);
     } catch (error) {
