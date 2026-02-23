@@ -147,18 +147,27 @@ const ContractPrint = () => {
 
                             <div style={{ flex: 1, textAlign: 'center' }}>
                                 <div style={{
-                                    border: '3px solid #1e3a8a',
-                                    padding: '12px 20px',
+                                    border: '2px solid #1e3a8a',
+                                    padding: '10px 15px',
                                     background: '#f8fafc',
-                                    borderRadius: '4px',
-                                    display: 'inline-block',
-                                    boxShadow: '4px 4px 0px #1e3a8a'
+                                    borderRadius: '2px',
+                                    display: 'inline-block'
                                 }}>
-                                    <h2 style={{ margin: 0, fontSize: '24px', color: '#1e3a8a', fontWeight: 'bold' }}>عقد مقاولات</h2>
-                                    <span style={{ fontSize: '10px', color: '#1e3a8a', display: 'block', marginTop: '4px', fontWeight: 'bold', opacity: 0.7 }}>CONSTRUCTION AGREEMENT</span>
+                                    <h2 style={{ margin: 0, fontSize: '22px', color: '#1e3a8a', fontWeight: 'bold' }}>عقد مقاولات</h2>
+                                    <span style={{ fontSize: '9px', color: '#1e3a8a', display: 'block', fontWeight: 'bold', opacity: 0.7 }}>CONSTRUCTION AGREEMENT</span>
                                 </div>
-                                <div style={{ marginTop: '15px' }}>
-                                    <span style={{ background: '#1e3a8a', color: 'white', padding: '4px 12px', borderRadius: '15px', fontSize: '12px', fontWeight: 'bold' }}>الرقم: {contract.contractNumber}</span>
+                                <div style={{ marginTop: '10px' }}>
+                                    <span style={{
+                                        border: '1.2px solid #1e3a8a',
+                                        color: '#1e3a8a',
+                                        padding: '2px 10px',
+                                        borderRadius: '4px',
+                                        fontSize: '11px',
+                                        fontWeight: 'bold',
+                                        background: 'white'
+                                    }}>
+                                        الرقم: {contract.contractNumber}
+                                    </span>
                                 </div>
                             </div>
 
