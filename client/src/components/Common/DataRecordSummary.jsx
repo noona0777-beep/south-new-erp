@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Printer, ChevronRight, User, Briefcase, Users, MapPin, Phone, Building } from 'lucide-react';
+import { Printer, ChevronRight, User, Briefcase, Users, MapPin, Phone, Building, Download } from 'lucide-react';
 import API_URL from '../../config';
 
 const DataRecordSummary = () => {
@@ -40,6 +40,24 @@ const DataRecordSummary = () => {
 
     const print = () => window.print();
 
+    const handleDownloadPDF = () => {
+        const element = document.getElementById('printable-area');
+        const opt = {
+            margin: 0,
+            filename: `${data.name}_Summary.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        // @ts-ignore
+        if (window.html2pdf) {
+            // @ts-ignore
+            window.html2pdf().from(element).set(opt).save();
+        } else {
+            alert('PDF library not loaded yet. Please try again in 2 seconds.');
+        }
+    };
+
     const InfoRow = ({ label, value, icon }) => (
         <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', padding: '15px 0', alignItems: 'center', gap: '12px' }}>
             <div style={{ background: '#f8fafc', padding: '8px', borderRadius: '8px', color: '#64748b' }}>{icon}</div>
@@ -52,19 +70,43 @@ const DataRecordSummary = () => {
 
     return (
         <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '40px', fontFamily: 'Cairo, sans-serif' }}>
+            <style>
+                {`
+                @media print {
+                    body { background: white !important; padding: 0 !important; margin: 0 !important; }
+                    .no-print { display: none !important; }
+                    .print-page { 
+                        box-shadow: none !important; 
+                        margin: 0 !important; 
+                        width: 100% !important; 
+                        height: auto !important; 
+                        padding: 15mm !important;
+                    }
+                    @page { margin: 10mm; size: auto; }
+                }
+                `}
+            </style>
+
             {/* Toolbar */}
             <div className="no-print" style={{ maxWidth: '210mm', margin: '0 auto 20px', display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
-                <span style={{ color: '#64748b', fontSize: '0.9rem' }}>استعراض سجل النظام</span>
-                <button onClick={print} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                    <Printer size={18} /> طباعة السجل
-                </button>
+                <Link to="/archive" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#64748b', gap: '5px' }}>
+                    <ChevronRight size={18} /> العودة للأرشيف
+                </Link>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={handleDownloadPDF} style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                        <Download size={18} /> تحميل PDF
+                    </button>
+                    <button onClick={print} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                        <Printer size={18} /> طباعة السجل
+                    </button>
+                </div>
             </div>
 
             {/* A4 Page */}
-            <div style={{
+            <div id="printable-area" className="print-page" style={{
                 background: 'white', width: '210mm', minHeight: '297mm', margin: '0 auto', padding: '20mm',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box'
-            }} className="print-page">
+            }}>
 
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #0f172a', paddingBottom: '25px', marginBottom: '35px' }}>

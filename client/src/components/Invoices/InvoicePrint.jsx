@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Printer, ChevronRight } from 'lucide-react';
+import { Printer, ChevronRight, Download } from 'lucide-react';
 import QRCode from 'qrcode.react';
 import API_URL from '../../config';
 
@@ -22,6 +22,24 @@ const InvoicePrint = () => {
             tlv.push(tag, value.length, ...value);
         });
         return btoa(String.fromCharCode(...tlv));
+    };
+
+    const handleDownloadPDF = () => {
+        const element = document.getElementById('printable-area');
+        const opt = {
+            margin: 0,
+            filename: `Invoice_${invoice.invoiceNumber}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        // @ts-ignore
+        if (window.html2pdf) {
+            // @ts-ignore
+            window.html2pdf().from(element).set(opt).save();
+        } else {
+            alert('PDF library not loaded yet. Please try again.');
+        }
     };
 
     useEffect(() => {
@@ -61,13 +79,18 @@ const InvoicePrint = () => {
                 <Link to="/invoices" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#64748b' }}>
                     <ChevronRight size={18} /> العودة للفواتير
                 </Link>
-                <button onClick={print} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                    <Printer size={18} /> طباعة الفاتورة
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={handleDownloadPDF} style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                        <Download size={18} /> تحميل PDF
+                    </button>
+                    <button onClick={print} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                        <Printer size={18} /> طباعة الفاتورة
+                    </button>
+                </div>
             </div>
 
             {/* A4 Page */}
-            <div style={{
+            <div id="printable-area" style={{
                 background: 'white', width: '210mm', minHeight: '297mm', margin: '0 auto', padding: '20mm',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box'
             }} className="print-page">
