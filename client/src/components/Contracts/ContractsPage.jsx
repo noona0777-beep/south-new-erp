@@ -12,6 +12,7 @@ const ContractsPage = () => {
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [showArchived, setShowArchived] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -134,6 +135,17 @@ const ContractsPage = () => {
             } catch (err) {
                 alert('❌ فشل الحذف');
             }
+        }
+    };
+
+    const handleArchive = async (id) => {
+        if (!window.confirm('هل أنت متأكد من نقل هذا العقد إلى الأرشيف الرسمي؟')) return;
+        try {
+            await axios.put(`${API_URL}/construction-contracts/${id}`, { status: 'ARCHIVED' });
+            fetchData();
+            alert('✅ تمت أرشفة المستند بنجاح');
+        } catch (err) {
+            alert('❌ فشل عملية الأرشفة');
         }
     };
 
@@ -339,88 +351,82 @@ const ContractsPage = () => {
                     <h2 style={{ margin: 0, color: '#1e293b', fontSize: '1.8rem', fontWeight: 'bold' }}>عقود المقاولات</h2>
                     <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>إدارة وتوليد العقود الإنشائية حسب معايير الهيئة السعودية للمقاولين</p>
                 </div>
-                <button
-                    onClick={() => setShowForm(true)}
-                    style={{ background: '#2563eb', color: 'white', border: 'none', padding: '14px 28px', borderRadius: '14px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 10px 15px -3px rgba(37,99,235,0.3)' }}
-                >
-                    <Plus size={20} /> إنشاء عقد جديد
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                        onClick={() => setShowArchived(!showArchived)}
+                        style={{ background: showArchived ? '#1e3a8a' : 'white', color: showArchived ? 'white' : '#64748b', border: '1px solid #e2e8f0', padding: '12px 24px', borderRadius: '14px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                        <FileText size={20} /> {showArchived ? 'العودة للعقود النشطة' : 'عرض الأرشيف'}
+                    </button>
+                    <button
+                        onClick={() => setShowForm(true)}
+                        style={{ background: '#2563eb', color: 'white', border: 'none', padding: '14px 28px', borderRadius: '14px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 10px 15px -3px rgba(37,99,235,0.3)' }}
+                    >
+                        <Plus size={20} /> إنشاء عقد جديد
+                    </button>
+                </div>
             </div>
 
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '100px', color: '#94a3b8' }}>جاري تحميل العقود...</div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '24px' }}>
-                    {contracts.length === 0 ? (
+                    {contracts.filter(c => showArchived ? c.status === 'ARCHIVED' : c.status !== 'ARCHIVED').length === 0 ? (
                         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px', background: 'white', borderRadius: '24px', border: '2px dashed #e2e8f0' }}>
                             <FileText size={48} color="#cbd5e1" style={{ marginBottom: '16px' }} />
-                            <p style={{ color: '#94a3b8' }}>لا توجد عقود مسجلة حالياً. ابدأ بإنشاء أول عقد احترافي.</p>
+                            <p style={{ color: '#94a3b8' }}>{showArchived ? 'لا توجد عقود مؤرشفة حالياً.' : 'لا توجد عقود نشطة حالياً. ابدأ بإنشاء أول عقد احترافي.'}</p>
                         </div>
                     ) : (
-                        contracts.map(contract => (
-                            <div key={contract.id} className="card-hover" style={{ background: 'white', padding: '24px', borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                                    <span style={{ padding: '6px 14px', borderRadius: '20px', background: '#eff6ff', color: '#2563eb', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                                        {contract.status === 'ACTIVE' ? 'ساري المفعول' : 'مسودة'}
-                                    </span>
-                                    <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>#{contract.contractNumber}</div>
-                                </div>
-                                <h3 style={{ margin: '0 0 12px 0', fontSize: '1.15rem', color: '#1e293b', lineHeight: '1.4' }}>{contract.title}</h3>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.9rem' }}>
-                                        <Briefcase size={16} /> {contract.partner?.name}
+                        contracts
+                            .filter(c => showArchived ? c.status === 'ARCHIVED' : c.status !== 'ARCHIVED')
+                            .map(contract => (
+                                <div key={contract.id} className="card-hover" style={{ background: 'white', padding: '24px', borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)', position: 'relative' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                        <span style={{ padding: '6px 14px', borderRadius: '20px', background: contract.status === 'ARCHIVED' ? '#f1f5f9' : '#eff6ff', color: contract.status === 'ARCHIVED' ? '#64748b' : '#2563eb', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                            {contract.status === 'ARCHIVED' ? 'مؤرشف' : contract.status === 'ACTIVE' ? 'ساري المفعول' : 'مسودة'}
+                                        </span>
+                                        <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>#{contract.contractNumber}</div>
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.9rem' }}>
-                                        <Calendar size={16} /> {new Date(contract.startDate).toLocaleDateString('ar-SA')} - {new Date(contract.endDate).toLocaleDateString('ar-SA')}
+                                    <h3 style={{ margin: '0 0 12px 0', fontSize: '1.15rem', color: '#1e293b', lineHeight: '1.4' }}>{contract.title}</h3>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.9rem' }}>
+                                            <Briefcase size={16} /> {contract.partner?.name}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.9rem' }}>
+                                            <Calendar size={16} /> {new Date(contract.startDate).toLocaleDateString('ar-SA')} - {new Date(contract.endDate).toLocaleDateString('ar-SA')}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0f172a', fontWeight: 'bold' }}>
+                                            <DollarSign size={16} color="#10b981" /> {contract.totalValue.toLocaleString()} ر.س
+                                        </div>
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0f172a', fontWeight: 'bold' }}>
-                                        <DollarSign size={16} color="#10b981" /> {contract.totalValue.toLocaleString()} ر.س
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                                        <button
+                                            onClick={() => window.open(`/contracts/${contract.id}/print`, '_blank')}
+                                            title="عرض وطباعة"
+                                            style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', color: '#2563eb', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 'bold' }}
+                                        >
+                                            <Printer size={16} /> عرض العقد
+                                        </button>
+
+                                        {contract.status !== 'ARCHIVED' && (
+                                            <button
+                                                onClick={() => handleArchive(contract.id)}
+                                                title="نقل للأرشيف"
+                                                style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}
+                                            >
+                                                <ShieldCheck size={18} />
+                                            </button>
+                                        )}
+
+                                        <button onClick={() => handleEdit(contract)} title="تعديل العقد" style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}>
+                                            <Edit size={18} />
+                                        </button>
+                                        <button onClick={() => handleDelete(contract.id)} title="حذف العقد" style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#fef2f2', color: '#ef4444', cursor: 'pointer' }}>
+                                            <Trash2 size={18} />
+                                        </button>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
-                                    <button
-                                        onClick={() => window.open(`/contracts/${contract.id}/print`, '_blank')}
-                                        title="عرض وطباعة"
-                                        style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', color: '#2563eb', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 'bold' }}
-                                    >
-                                        <Printer size={16} /> طباعة
-                                    </button>
-
-                                    <button
-                                        onClick={() => window.open(`/contracts/${contract.id}/print`, '_blank')}
-                                        title="تنزيل PDF"
-                                        style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}
-                                    >
-                                        <FileText size={18} />
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            if (navigator.share) {
-                                                navigator.share({
-                                                    title: contract.title,
-                                                    text: `عقد مقاولات: ${contract.title}`,
-                                                    url: `${window.location.origin}/contracts/${contract.id}/print`,
-                                                });
-                                            } else {
-                                                alert('رابط العقد: ' + `${window.location.origin}/contracts/${contract.id}/print`);
-                                            }
-                                        }}
-                                        title="مشاركة العقد"
-                                        style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}
-                                    >
-                                        <ChevronRight size={18} />
-                                    </button>
-
-                                    <button onClick={() => handleEdit(contract)} title="تعديل العقد" style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}>
-                                        <Edit size={18} />
-                                    </button>
-                                    <button onClick={() => handleDelete(contract.id)} title="حذف العقد" style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#fef2f2', color: '#ef4444', cursor: 'pointer' }}>
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-                            </div>
-                        ))
+                            ))
                     )}
                 </div>
             )}
