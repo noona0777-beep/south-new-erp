@@ -96,10 +96,19 @@ const InvoicePrint = () => {
             <div id="printable-area" style={{
                 background: 'white', width: '100%', maxWidth: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', color: '#0f172a', boxSizing: 'border-box',
-                direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+                direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                position: 'relative', overflow: 'hidden'
             }} className="print-page">
 
-                <div style={{ flex: 1 }}>
+                {/* Professional Watermark */}
+                <div style={{
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    width: '70%', opacity: 0.07, pointerEvents: 'none', zIndex: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'
+                }}>
+                    <img src="/watermark.png" alt="watermark" style={{ width: '100%', height: 'auto' }} />
+                </div>
+
+                <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
                     {/* Header Section */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                         <div>
