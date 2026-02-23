@@ -293,6 +293,18 @@ app.get('/api/search', async (req, res) => {
         });
         documents.forEach(doc => results.push({ id: doc.id, title: doc.title, type: 'document', subtitle: 'مستند مؤرشف', link: `/archive` }));
 
+        // Search Products (Inventory)
+        const products = await prisma.product.findMany({
+            where: {
+                OR: [
+                    { name: { contains: q, mode: 'insensitive' } },
+                    { sku: { contains: q, mode: 'insensitive' } }
+                ]
+            },
+            take: 3
+        });
+        products.forEach(prod => results.push({ id: prod.id, title: prod.name, type: 'product', subtitle: `مخزون - ${prod.sku || ''}`, link: `/inventory` }));
+
         res.json(results);
     } catch (error) {
         res.status(500).json({ error: error.message });

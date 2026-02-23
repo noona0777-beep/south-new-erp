@@ -321,7 +321,9 @@ const Layout = ({ user, onLogout }) => {
                 width: '280px', background: '#0f172a', color: 'white', padding: '24px',
                 display: 'flex', flexDirection: 'column', overflowY: 'auto',
                 boxShadow: '4px 0 20px rgb(0 0 0 / 0.05)', zIndex: 50,
-                position: 'fixed', top: 0, right: 0, bottom: 0, transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                position: window.innerWidth > 768 ? 'sticky' : 'fixed',
+                top: 0, right: 0, bottom: 0, height: '100vh',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
             }}>
                 <div style={{ marginBottom: '40px', textAlign: 'center', paddingBottom: '24px', borderBottom: '1px solid #1e293b', position: 'relative' }}>
                     <button className="show-mobile" onClick={closeSidebar} style={{ position: 'absolute', left: '-10px', top: '-10px', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
@@ -435,6 +437,7 @@ const Layout = ({ user, onLogout }) => {
                                                     {res.type === 'employee' && <UserPlus size={16} />}
                                                     {res.type === 'property' && <Building2 size={16} />}
                                                     {res.type === 'document' && <Folder size={16} />}
+                                                    {res.type === 'product' && <Package size={16} />}
                                                 </div>
                                                 <div style={{ flex: 1 }}>
                                                     <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1e293b' }}>{res.title}</div>
