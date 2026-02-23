@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Users, Search, Plus, Phone, MapPin, Receipt, FileText, User } from 'lucide-react';
+import { Users, Search, Plus, Phone, MapPin, Receipt, FileText, User, Folder } from 'lucide-react';
 import API_URL from '../../config';
 
 const ClientsPage = () => {
@@ -33,6 +33,20 @@ const ClientsPage = () => {
             setSelectedClient(res.data);
         } catch (err) {
             console.error('Failed to fetch client details', err);
+        }
+    };
+
+    const handleArchive = async (client) => {
+        try {
+            await axios.post(`${API_URL}/documents`, {
+                title: `سجل بيانات العميل: ${client.name}`,
+                category: 'OTHER',
+                fileUrl: '',
+                partnerId: client.id
+            });
+            alert('✅ تم أرشفة بيانات العميل في الوثائق');
+        } catch (err) {
+            alert('❌ فشل الأرشفة');
         }
     };
 
@@ -177,7 +191,13 @@ const ClientsPage = () => {
                                 <p style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>لا توجد فواتير مسجلة لهذا العميل</p>
                             )}
                         </div>
-                        <div style={{ padding: '24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', textAlign: 'right' }}>
+                        <div style={{ padding: '24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button
+                                onClick={() => handleArchive(selectedClient)}
+                                style={{ background: 'white', color: '#64748b', border: '1px solid #e2e8f0', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+                            >
+                                <Folder size={18} /> أرشفة البيانات
+                            </button>
                             <button
                                 onClick={() => window.open(`/clients/${selectedClient.id}/statement`, '_blank')}
                                 style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}

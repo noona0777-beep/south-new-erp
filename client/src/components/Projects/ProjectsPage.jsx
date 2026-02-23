@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Briefcase, Calendar, MapPin, User, CheckSquare, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Briefcase, Calendar, MapPin, User, CheckSquare, Clock, AlertCircle, Folder } from 'lucide-react';
 import API_URL from '../../config';
 
 const ProjectsPage = () => {
@@ -64,6 +64,21 @@ const ProjectsPage = () => {
             setTasks(res.data);
         } catch (err) {
             console.error('Error fetching tasks', err);
+        }
+    };
+
+    const handleArchiveProject = async (project) => {
+        try {
+            await axios.post(`${API_URL}/documents`, {
+                title: `سجل بيانات المشروع: ${project.name}`,
+                category: 'OTHER',
+                fileUrl: '',
+                partnerId: project.partnerId,
+                projectId: project.id
+            });
+            alert('✅ تم أرشفة بيانات المشروع في الوثائق');
+        } catch (err) {
+            alert('❌ فشل الأرشفة');
         }
     };
 
@@ -258,10 +273,17 @@ const ProjectsPage = () => {
                         <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px', color: '#94a3b8' }}>لا توجد مشاريع مضافة حالياً</div>
                     ) : (
                         projects.map(project => (
-                            <div key={project.id} onClick={() => { setSelectedProject(project); fetchTasks(project.id); }} className="card-hover" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
+                            <div key={project.id} onClick={() => { setSelectedProject(project); fetchTasks(project.id); }} className="card-hover" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', position: 'relative' }}>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleArchiveProject(project); }}
+                                    style={{ position: 'absolute', left: '15px', top: '15px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px', borderRadius: '8px', color: '#64748b', cursor: 'pointer' }}
+                                    title="أرشفة المشروع"
+                                >
+                                    <Folder size={18} />
+                                </button>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
                                     <div style={{ background: '#eff6ff', padding: '10px', borderRadius: '12px', color: '#3b82f6' }}><Briefcase size={24} /></div>
-                                    <span style={{ fontSize: '0.8rem', background: '#f8fafc', padding: '4px 10px', borderRadius: '20px', color: '#64748b' }}>{project.status}</span>
+                                    <span style={{ fontSize: '0.8rem', background: '#f8fafc', padding: '4px 10px', borderRadius: '20px', color: '#64748b' }}>{getStatusLabel(project.status).label}</span>
                                 </div>
                                 <h3 style={{ margin: '0 0 10px 0', fontSize: '1.2rem', color: '#1e293b' }}>{project.name}</h3>
                                 <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '0.9rem', height: '40px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.description}</p>

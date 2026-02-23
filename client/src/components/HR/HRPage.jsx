@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Users, UserCircle, Briefcase, DollarSign, Phone, Mail, Calendar, TrendingUp, Edit, Trash2, Eye, X } from 'lucide-react';
+import { Plus, Users, UserCircle, Briefcase, DollarSign, Phone, Mail, Calendar, TrendingUp, Edit, Trash2, Eye, X, Folder } from 'lucide-react';
 import API_URL from '../../config';
 
 const HRPage = () => {
@@ -34,6 +34,20 @@ const HRPage = () => {
             setLoading(false);
         } catch (err) {
             console.error('Error fetching employees', err);
+        }
+    };
+
+    const handleArchiveEmployee = async (employee) => {
+        try {
+            await axios.post(`${API_URL}/documents`, {
+                title: `سجل بيانات الموظف: ${employee.name}`,
+                category: 'OTHER',
+                fileUrl: '',
+                employeeId: employee.id
+            });
+            alert('✅ تم أرشفة بيانات الموظف في الوثائق');
+        } catch (err) {
+            alert('❌ فشل الأرشفة');
         }
     };
 
@@ -186,6 +200,7 @@ const HRPage = () => {
                                         <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                                             <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
                                                 <button onClick={() => openDetails(emp)} style={{ color: '#64748b', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '6px', borderRadius: '6px', cursor: 'pointer' }} title="عرض التفاصيل"><Eye size={18} /></button>
+                                                <button onClick={() => handleArchiveEmployee(emp)} style={{ color: '#f59e0b', background: '#fffbeb', border: '1px solid #fef3c7', padding: '6px', borderRadius: '6px', cursor: 'pointer' }} title="أرشفة البيانات"><Folder size={18} /></button>
                                                 <button onClick={() => openForm(emp)} style={{ color: '#3b82f6', background: '#eff6ff', border: '1px solid #dbeafe', padding: '6px', borderRadius: '6px', cursor: 'pointer' }} title="تعديل"><Edit size={18} /></button>
                                                 <button onClick={() => handleDelete(emp.id)} style={{ color: '#ef4444', background: '#fef2f2', border: '1px solid #fee2e2', padding: '6px', borderRadius: '6px', cursor: 'pointer' }} title="حذف"><Trash2 size={18} /></button>
                                             </div>
