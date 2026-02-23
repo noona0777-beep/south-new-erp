@@ -137,7 +137,7 @@ const ProjectsPage = () => {
             <div className="fade-in">
                 <button onClick={() => setSelectedProject(null)} style={{ background: 'transparent', border: 'none', color: '#2563eb', cursor: 'pointer', marginBottom: '20px', fontWeight: 'bold' }}>← العودة للمشاريع</button>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
+                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
                     {/* Project Details Sidebar */}
                     <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', height: 'fit-content' }}>
                         <h2 style={{ margin: '0 0 10px 0', color: '#1e293b' }}>{selectedProject.name}</h2>
@@ -178,7 +178,7 @@ const ProjectsPage = () => {
                         {showTaskForm && (
                             <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
                                 <h4 style={{ margin: '0 0 15px 0', color: '#1e293b' }}>إضافة مهمة جديدة</h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                     <input type="text" placeholder="عنوان المهمة" value={taskData.title} onChange={(e) => setTaskData({ ...taskData, title: e.target.value })} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                                     <input type="text" placeholder="المسؤول" value={taskData.assignedTo} onChange={(e) => setTaskData({ ...taskData, assignedTo: e.target.value })} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                                 </div>
@@ -195,7 +195,7 @@ const ProjectsPage = () => {
                                 <div style={{ background: 'white', padding: '40px', textAlign: 'center', borderRadius: '16px', color: '#94a3b8' }}>لا توجد مهام حالياً</div>
                             ) : (
                                 tasks.map(task => (
-                                    <div key={task.id} style={{ background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 2px 4px rgb(0 0 0 / 0.02)', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div key={task.id} className="mobile-grid-1" style={{ background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 2px 4px rgb(0 0 0 / 0.02)', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                                         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                             <div onClick={() => updateTaskStatus(task.id, task.status === 'DONE' ? 'TODO' : 'DONE')} style={{ cursor: 'pointer', color: task.status === 'DONE' ? '#10b981' : '#cbd5e1' }}>
                                                 <CheckSquare size={24} />
@@ -221,7 +221,7 @@ const ProjectsPage = () => {
 
     return (
         <div className="fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
                 <div>
                     <h2 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>المشاريع والمقاولات</h2>
                     <p style={{ margin: 0, color: '#64748b' }}>إدارة المشاريع الإنشائية ومهام العمل</p>
@@ -231,7 +231,7 @@ const ProjectsPage = () => {
                     style={{
                         background: '#2563eb', color: 'white', border: 'none', padding: '12px 24px',
                         borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold',
-                        display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgb(37 99 235 / 0.3)'
+                        display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgb(37 99 235 / 0.3)', width: 'fit-content'
                     }}
                 >
                     <Plus size={20} /> مشروع جديد
@@ -241,7 +241,7 @@ const ProjectsPage = () => {
             {showForm && (
                 <div style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', marginBottom: '30px' }}>
                     <h3 style={{ margin: '0 0 20px 0' }}>إضافة مشروع جديد</h3>
-                    <form onSubmit={handleCreateProject} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <form onSubmit={handleCreateProject} className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                         <div>
                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>اسم المشروع</label>
                             <input type="text" required value={projectData.name} onChange={(e) => setProjectData({ ...projectData, name: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
@@ -268,7 +268,7 @@ const ProjectsPage = () => {
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '40px' }}>جاري التحميل...</div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
                     {projects.length === 0 ? (
                         <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px', color: '#94a3b8' }}>لا توجد مشاريع مضافة حالياً</div>
                     ) : (

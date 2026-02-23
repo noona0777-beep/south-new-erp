@@ -81,8 +81,8 @@ function QuickPM({ product, onAdjust }) {
 
 /* ────────── Modal ────────── */
 const Modal = ({ title, icon: Icon, onClose, children, w = 480 }) => (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}>
-        <div className="fade-in" style={{ background: '#0f1a2e', borderRadius: 20, width: w, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.15)' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(8px)', padding: '20px' }}>
+        <div className="fade-in" style={{ background: '#0f1a2e', borderRadius: 20, width: '100%', maxWidth: w, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.15)' }}>
             <div style={{ padding: '18px 22px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(59,130,246,0.05)', borderRadius: '20px 20px 0 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9, fontWeight: 700, color: 'white', fontFamily: 'Cairo', fontSize: '0.95rem' }}>
                     {Icon && <span style={{ color: '#60a5fa' }}><Icon size={17} /></span>}
@@ -233,7 +233,7 @@ export default function InventoryPage() {
 
     /* ══ RENDER ══ */
     return (
-        <div id="inv-root" style={{ margin: '-20px', padding: '20px', background: '#060e1a', minHeight: 'calc(100vh - 60px)', fontFamily: 'Cairo, sans-serif', direction: 'rtl', color: 'white' }}>
+        <div id="inv-root" className="mobile-padding-10" style={{ margin: '-20px', padding: '20px', background: '#060e1a', minHeight: 'calc(100vh - 60px)', fontFamily: 'Cairo, sans-serif', direction: 'rtl', color: 'white' }}>
             {/* ── Force Cairo font on all children ── */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
@@ -249,7 +249,7 @@ export default function InventoryPage() {
             `}</style>
 
             {/* Page Title */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: '15px' }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: 'white', letterSpacing: '-0.3px' }}>
                         <Package size={20} style={{ display: 'inline', marginLeft: 8, color: '#3b82f6', verticalAlign: 'middle' }} />
@@ -259,7 +259,7 @@ export default function InventoryPage() {
                         {filtered.length} صنف من {products.length} — آخر تحديث: الآن
                     </p>
                 </div>
-                <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'flex-start', flexWrap: 'wrap' }}>
                     <button onClick={load}
                         style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid rgba(59,130,246,0.2)', background: 'rgba(59,130,246,0.07)', cursor: 'pointer', color: '#60a5fa', fontFamily: 'Cairo', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <RefreshCw size={13} /> تحديث
@@ -391,7 +391,8 @@ export default function InventoryPage() {
                                 padding: '7px 10px', borderRadius: 50,
                                 border: '1.5px solid rgba(255,255,255,0.07)',
                                 background: 'rgba(255,255,255,0.04)',
-                                color: '#475569', cursor: 'pointer', transition: 'all 0.18s'
+                                color: '#475569', cursor: 'pointer', transition: 'all 0.18s',
+                                marginLeft: '10px'
                             }}
                             title="إدارة الأقسام"
                             onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = '#94a3b8'; }}
@@ -403,7 +404,7 @@ export default function InventoryPage() {
                 </div>
 
                 {/* ═══ Search Bar ═══ */}
-                <div style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
+                <div className="mobile-grid-1" style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, background: '#0b1424', borderRadius: 12, padding: '10px 16px', border: '1px solid rgba(59,130,246,0.15)' }}>
                         <Search size={15} color="#475569" />
                         <input type="text" value={search} onChange={e => setSearch(e.target.value)}
@@ -421,7 +422,7 @@ export default function InventoryPage() {
                                 background: `${catColor(categories.find(c => c.id === activeCat)?.name || '')}12`,
                                 color: catColor(categories.find(c => c.id === activeCat)?.name || ''),
                                 fontFamily: 'Cairo', fontSize: '0.78rem', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: 5
+                                display: 'flex', alignItems: 'center', gap: 5, width: 'fit-content'
                             }}>
                             <X size={11} /> مسح الفلتر
                         </button>
@@ -430,147 +431,149 @@ export default function InventoryPage() {
 
                 {/* Table */}
                 <div style={{ background: '#0b1424', borderRadius: 16, border: '1px solid rgba(59,130,246,0.12)', overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo', tableLayout: 'fixed' }}>
-                        <colgroup>
-                            <col style={{ width: '28%' }} />{/* المنتج */}
-                            <col style={{ width: '13%' }} />{/* القسم */}
-                            <col style={{ width: '14%' }} />{/* الكمية + ± */}
-                            <col style={{ width: '10%' }} />{/* التكلفة */}
-                            <col style={{ width: '11%' }} />{/* سعر البيع */}
-                            <col style={{ width: '10%' }} />{/* الحالة */}
-                            <col style={{ width: '14%' }} />{/* إجراءات */}
-                        </colgroup>
-                        <thead>
-                            <tr style={{ background: 'rgba(59,130,246,0.06)', borderBottom: '1px solid rgba(59,130,246,0.12)' }}>
-                                {[
-                                    { l: 'المنتج', f: 'name' },
-                                    { l: 'القسم', f: null },
-                                    { l: 'الكمية / ±', f: 'qty' },
-                                    { l: 'التكلفة', f: null },
-                                    { l: 'سعر البيع', f: 'price' },
-                                    { l: 'الحالة', f: null },
-                                    { l: 'إجراءات', f: null },
-                                ].map(({ l, f }) => (
-                                    <th key={l} onClick={f ? () => toggleSort(f) : null}
-                                        style={{ padding: '11px 10px', textAlign: 'center', color: '#475569', fontWeight: 600, fontSize: '0.7rem', cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                                            {l} {f && <SortIco f={f} />}
-                                        </span>
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan={7}>
-                                    <div style={{ padding: 60, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
-                                        <RefreshCw size={26} style={{ display: 'block', margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#3b82f6' }} />
-                                        جاري تحميل البيانات...
-                                    </div>
-                                </td></tr>
-                            ) : filtered.length === 0 ? (
-                                <tr><td colSpan={7}>
-                                    <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
-                                        <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
-                                        لا توجد منتجات مطابقة
-                                    </div>
-                                </td></tr>
-                            ) : groupedRows.length === 0 ? (
-                                <tr><td colSpan={7}>
-                                    <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
-                                        <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
-                                        لا توجد منتجات مطابقة
-                                    </div>
-                                </td></tr>
-                            ) : groupedRows.map((item, idx) => {
-                                if (item.type === 'header') {
+                    <div className="table-responsive">
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo', tableLayout: 'fixed', minWidth: '900px' }}>
+                            <colgroup>
+                                <col style={{ width: '280px' }} />{/* المنتج */}
+                                <col style={{ width: '130px' }} />{/* القسم */}
+                                <col style={{ width: '160px' }} />{/* الكمية + ± */}
+                                <col style={{ width: '100px' }} />{/* التكلفة */}
+                                <col style={{ width: '120px' }} />{/* سعر البيع */}
+                                <col style={{ width: '100px' }} />{/* الحالة */}
+                                <col style={{ width: '140px' }} />{/* إجراءات */}
+                            </colgroup>
+                            <thead>
+                                <tr style={{ background: 'rgba(59,130,246,0.06)', borderBottom: '1px solid rgba(59,130,246,0.12)' }}>
+                                    {[
+                                        { l: 'المنتج', f: 'name' },
+                                        { l: 'القسم', f: null },
+                                        { l: 'الكمية / ±', f: 'qty' },
+                                        { l: 'التكلفة', f: null },
+                                        { l: 'سعر البيع', f: 'price' },
+                                        { l: 'الحالة', f: null },
+                                        { l: 'إجراءات', f: null },
+                                    ].map(({ l, f }) => (
+                                        <th key={l} onClick={f ? () => toggleSort(f) : null}
+                                            style={{ padding: '11px 10px', textAlign: 'center', color: '#475569', fontWeight: 600, fontSize: '0.7rem', cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                                {l} {f && <SortIco f={f} />}
+                                            </span>
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr><td colSpan={7}>
+                                        <div style={{ padding: 60, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
+                                            <RefreshCw size={26} style={{ display: 'block', margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#3b82f6' }} />
+                                            جاري تحميل البيانات...
+                                        </div>
+                                    </td></tr>
+                                ) : filtered.length === 0 ? (
+                                    <tr><td colSpan={7}>
+                                        <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
+                                            <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
+                                            لا توجد منتجات مطابقة
+                                        </div>
+                                    </td></tr>
+                                ) : groupedRows.length === 0 ? (
+                                    <tr><td colSpan={7}>
+                                        <div style={{ padding: 70, textAlign: 'center', color: '#334155', fontFamily: 'Cairo' }}>
+                                            <Package size={40} style={{ display: 'block', margin: '0 auto 12px', opacity: 0.15 }} />
+                                            لا توجد منتجات مطابقة
+                                        </div>
+                                    </td></tr>
+                                ) : groupedRows.map((item, idx) => {
+                                    if (item.type === 'header') {
+                                        return (
+                                            <tr key={`cat-${item.catId}`}>
+                                                <td colSpan={7} style={{ padding: '8px 16px', background: `${item.color}10`, borderTop: idx > 0 ? `2px solid ${item.color}30` : 'none', borderBottom: `1px solid ${item.color}20` }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, display: 'inline-block', boxShadow: `0 0 6px ${item.color}` }} />
+                                                        <span style={{ fontWeight: 700, fontSize: '0.78rem', color: item.color, letterSpacing: '0.05em' }}>
+                                                            {item.catName}
+                                                        </span>
+                                                        <span style={{ fontSize: '0.68rem', color: '#334155', marginRight: 4 }}>
+                                                            ({filtered.filter(p => (p.categoryId || '__none__') === item.catId).length} صنف)
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+                                    const p = item.product;
+                                    const dummy_idx = idx;
+                                    {/* same row render below */ }
+                                    const qty = p.stocks?.[0]?.quantity ?? 0;
+                                    const cc = p.category ? catColor(p.category.name) : '#3b82f6';
+                                    const st = qty === 0
+                                        ? { l: 'نفد', bg: 'rgba(239,68,68,0.12)', cr: '#f87171', dot: '#ef4444' }
+                                        : qty < 10
+                                            ? { l: 'منخفض', bg: 'rgba(245,158,11,0.12)', cr: '#fbbf24', dot: '#f59e0b' }
+                                            : { l: 'متوفر', bg: 'rgba(16,185,129,0.12)', cr: '#34d399', dot: '#10b981' };
+
                                     return (
-                                        <tr key={`cat-${item.catId}`}>
-                                            <td colSpan={7} style={{ padding: '8px 16px', background: `${item.color}10`, borderTop: idx > 0 ? `2px solid ${item.color}30` : 'none', borderBottom: `1px solid ${item.color}20` }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, display: 'inline-block', boxShadow: `0 0 6px ${item.color}` }} />
-                                                    <span style={{ fontWeight: 700, fontSize: '0.78rem', color: item.color, letterSpacing: '0.05em' }}>
-                                                        {item.catName}
-                                                    </span>
-                                                    <span style={{ fontSize: '0.68rem', color: '#334155', marginRight: 4 }}>
-                                                        ({filtered.filter(p => (p.categoryId || '__none__') === item.catId).length} صنف)
-                                                    </span>
+                                        <tr key={`row-${p.id}`}
+                                            style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', height: 48, opacity: saving === p.id ? 0.5 : 1, transition: 'background 0.12s', borderRight: `3px solid ${cc}` }}
+                                            onMouseOver={e => e.currentTarget.style.background = 'rgba(59,130,246,0.05)'}
+                                            onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
+
+                                            {/* Product — single line, truncated */}
+                                            <td style={{ padding: '0 14px', textAlign: 'right', maxWidth: 0 }}>
+                                                <div title={p.name} style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.84rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {p.name}
+                                                </div>
+                                            </td>
+
+                                            {/* Category */}
+                                            <td style={{ padding: '0 8px', textAlign: 'center' }}>
+                                                {p.category
+                                                    ? <span style={{ padding: '2px 9px', borderRadius: 20, fontSize: '0.66rem', fontWeight: 700, background: `${cc}15`, color: cc, border: `1px solid ${cc}25`, whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.category.name}</span>
+                                                    : <span style={{ color: '#1e2d3d' }}>—</span>}
+                                            </td>
+
+                                            {/* Qty + ± merged */}
+                                            <td style={{ padding: '0 6px', textAlign: 'center' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                                                    <InlineQty product={p} onSave={setQty} />
+                                                    <QuickPM product={p} onAdjust={quickAdj} />
+                                                </div>
+                                            </td>
+
+                                            {/* Cost */}
+                                            <td style={{ padding: '0 8px', textAlign: 'center', color: '#475569', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
+                                                {p.cost.toLocaleString()}
+                                            </td>
+
+                                            {/* Price */}
+                                            <td style={{ padding: '0 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                <span style={{ fontWeight: 700, color: '#10b981', fontSize: '0.88rem' }}>{p.price.toLocaleString()}</span>
+                                                <span style={{ fontSize: '0.62rem', color: '#334155', marginRight: 2 }}>ر.س</span>
+                                            </td>
+
+                                            {/* Status */}
+                                            <td style={{ padding: '0 8px', textAlign: 'center' }}>
+                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 9px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700, background: st.bg, color: st.cr, whiteSpace: 'nowrap' }}>
+                                                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: st.dot, flexShrink: 0, boxShadow: `0 0 4px ${st.dot}` }} />
+                                                    {st.l}
+                                                </span>
+                                            </td>
+
+                                            {/* Actions */}
+                                            <td style={{ padding: '0 8px', textAlign: 'center' }}>
+                                                <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                                                    <ActionBtn title="تعديل الكمية" clr="#3b82f6" onClick={() => { setSel(p); setAdjForm({ quantity: 1, type: 'ADD' }); setModal('adj'); }}><BarChart3 size={12} /></ActionBtn>
+                                                    <ActionBtn title="تعديل البيانات" clr="#a855f7" onClick={() => { setSel(p); setPForm({ name: p.name, cost: p.cost, price: p.price, quantity: p.stocks?.[0]?.quantity ?? 0, categoryId: p.categoryId || '' }); setErr(''); setModal('edit-p'); }}><Edit3 size={12} /></ActionBtn>
+                                                    <ActionBtn title="حذف" clr="#ef4444" onClick={() => delProduct(p.id)}><Trash2 size={12} /></ActionBtn>
                                                 </div>
                                             </td>
                                         </tr>
                                     );
-                                }
-                                const p = item.product;
-                                const dummy_idx = idx;
-                                {/* same row render below */ }
-                                const qty = p.stocks?.[0]?.quantity ?? 0;
-                                const cc = p.category ? catColor(p.category.name) : '#3b82f6';
-                                const st = qty === 0
-                                    ? { l: 'نفد', bg: 'rgba(239,68,68,0.12)', cr: '#f87171', dot: '#ef4444' }
-                                    : qty < 10
-                                        ? { l: 'منخفض', bg: 'rgba(245,158,11,0.12)', cr: '#fbbf24', dot: '#f59e0b' }
-                                        : { l: 'متوفر', bg: 'rgba(16,185,129,0.12)', cr: '#34d399', dot: '#10b981' };
-
-                                return (
-                                    <tr key={`row-${p.id}`}
-                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', height: 48, opacity: saving === p.id ? 0.5 : 1, transition: 'background 0.12s', borderRight: `3px solid ${cc}` }}
-                                        onMouseOver={e => e.currentTarget.style.background = 'rgba(59,130,246,0.05)'}
-                                        onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
-
-                                        {/* Product — single line, truncated */}
-                                        <td style={{ padding: '0 14px', textAlign: 'right', maxWidth: 0 }}>
-                                            <div title={p.name} style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.84rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {p.name}
-                                            </div>
-                                        </td>
-
-                                        {/* Category */}
-                                        <td style={{ padding: '0 8px', textAlign: 'center' }}>
-                                            {p.category
-                                                ? <span style={{ padding: '2px 9px', borderRadius: 20, fontSize: '0.66rem', fontWeight: 700, background: `${cc}15`, color: cc, border: `1px solid ${cc}25`, whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.category.name}</span>
-                                                : <span style={{ color: '#1e2d3d' }}>—</span>}
-                                        </td>
-
-                                        {/* Qty + ± merged */}
-                                        <td style={{ padding: '0 6px', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                                                <InlineQty product={p} onSave={setQty} />
-                                                <QuickPM product={p} onAdjust={quickAdj} />
-                                            </div>
-                                        </td>
-
-                                        {/* Cost */}
-                                        <td style={{ padding: '0 8px', textAlign: 'center', color: '#475569', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
-                                            {p.cost.toLocaleString()}
-                                        </td>
-
-                                        {/* Price */}
-                                        <td style={{ padding: '0 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                                            <span style={{ fontWeight: 700, color: '#10b981', fontSize: '0.88rem' }}>{p.price.toLocaleString()}</span>
-                                            <span style={{ fontSize: '0.62rem', color: '#334155', marginRight: 2 }}>ر.س</span>
-                                        </td>
-
-                                        {/* Status */}
-                                        <td style={{ padding: '0 8px', textAlign: 'center' }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 9px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700, background: st.bg, color: st.cr, whiteSpace: 'nowrap' }}>
-                                                <span style={{ width: 5, height: 5, borderRadius: '50%', background: st.dot, flexShrink: 0, boxShadow: `0 0 4px ${st.dot}` }} />
-                                                {st.l}
-                                            </span>
-                                        </td>
-
-                                        {/* Actions */}
-                                        <td style={{ padding: '0 8px', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-                                                <ActionBtn title="تعديل الكمية" clr="#3b82f6" onClick={() => { setSel(p); setAdjForm({ quantity: 1, type: 'ADD' }); setModal('adj'); }}><BarChart3 size={12} /></ActionBtn>
-                                                <ActionBtn title="تعديل البيانات" clr="#a855f7" onClick={() => { setSel(p); setPForm({ name: p.name, cost: p.cost, price: p.price, quantity: p.stocks?.[0]?.quantity ?? 0, categoryId: p.categoryId || '' }); setErr(''); setModal('edit-p'); }}><Edit3 size={12} /></ActionBtn>
-                                                <ActionBtn title="حذف" clr="#ef4444" onClick={() => delProduct(p.id)}><Trash2 size={12} /></ActionBtn>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
 
                     {filtered.length > 0 && (
                         <div style={{ padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', color: '#334155', fontSize: '0.74rem', fontFamily: 'Cairo' }}>

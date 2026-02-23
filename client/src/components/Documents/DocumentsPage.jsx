@@ -203,7 +203,7 @@ const DocumentsPage = () => {
 
     return (
         <div className="fade-in" style={{ direction: 'rtl', fontFamily: 'Cairo, sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
                 <div>
                     <h2 style={{ margin: '0 0 5px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <Folder size={28} style={{ color: '#2563eb' }} />
@@ -217,7 +217,7 @@ const DocumentsPage = () => {
                         background: '#2563eb', color: 'white', border: 'none',
                         padding: '12px 24px', borderRadius: '12px', cursor: 'pointer',
                         display: 'flex', gap: '10px', alignItems: 'center', fontWeight: 'bold',
-                        boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
+                        boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)', width: 'fit-content'
                     }}
                 >
                     <Plus size={20} /> إضافة مستند جديد
@@ -225,8 +225,8 @@ const DocumentsPage = () => {
             </div>
 
             {/* Filters & Search */}
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '25px', alignItems: 'center', background: 'white', padding: '15px', borderRadius: '15px', border: '1px solid #f1f5f9' }}>
-                <div style={{ position: 'relative', flex: 1 }}>
+            <div className="mobile-grid-1" style={{ display: 'flex', gap: '15px', marginBottom: '25px', alignItems: 'center', background: 'white', padding: '15px', borderRadius: '15px', border: '1px solid #f1f5f9' }}>
+                <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
                     <Search size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                     <input
                         type="text"
@@ -236,7 +236,7 @@ const DocumentsPage = () => {
                         style={{ width: '100%', padding: '10px 40px 10px 15px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'Cairo' }}
                     />
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 0', maxWidth: '100%' }}>
                     {Object.entries(categories).map(([key, label]) => (
                         <button
                             key={key}
@@ -246,7 +246,7 @@ const DocumentsPage = () => {
                                 background: filter === key ? '#eff6ff' : 'transparent',
                                 color: filter === key ? '#2563eb' : '#64748b',
                                 fontWeight: filter === key ? 'bold' : 'normal',
-                                cursor: 'pointer', transition: 'all 0.2s'
+                                cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap'
                             }}
                         >
                             {label}
@@ -256,7 +256,7 @@ const DocumentsPage = () => {
             </div>
 
             {/* Documents Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                 {filteredDocs.map(doc => (
                     <div key={doc.id} className="card-hover" style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', position: 'relative' }}>
                         <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
@@ -427,7 +427,7 @@ const DocumentsPage = () => {
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '10px' }}>
+                            <div className="mobile-grid-1" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                                 <button
                                     type="button"
                                     onClick={() => setShowUpload(false)}
@@ -455,13 +455,13 @@ const DocumentsPage = () => {
             {previewDoc && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px' }}>
                     <div className="fade-in" style={{ background: 'white', borderRadius: '24px', width: '90%', maxWidth: '1000px', height: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <div style={{ padding: '20px 30px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+                        <div className="mobile-grid-1" style={{ padding: '20px 30px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', gap: '15px' }}>
                             <div>
                                 <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1e293b' }}>{previewDoc.title}</h3>
                                 <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{categories[previewDoc.category]} - {new Date(previewDoc.createdAt).toLocaleDateString('ar-SA')}</span>
                             </div>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <button onClick={() => handleDownload(previewDoc)} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold' }}>
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                <button onClick={() => handleDownload(previewDoc)} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold', fontSize: '0.85rem' }}>
                                     <Download size={18} /> تحميل
                                 </button>
                                 <button
@@ -477,7 +477,7 @@ const DocumentsPage = () => {
                                             window.print();
                                         }
                                     }}
-                                    style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold' }}
+                                    style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold', fontSize: '0.85rem' }}
                                 >
                                     <Printer size={18} /> طباعة
                                 </button>

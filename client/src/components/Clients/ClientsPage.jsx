@@ -70,7 +70,7 @@ const ClientsPage = () => {
     return (
         <div className="fade-in">
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
                 <div>
                     <h2 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>العملاء</h2>
                     <p style={{ margin: 0, color: '#64748b' }}>إدارة بيانات العملاء وكشوفات الحسابات</p>
@@ -81,7 +81,7 @@ const ClientsPage = () => {
                     style={{
                         background: '#2563eb', color: 'white', border: 'none', padding: '12px 24px',
                         borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold',
-                        display: 'flex', alignItems: 'center', gap: '8px'
+                        display: 'flex', alignItems: 'center', gap: '8px', width: 'fit-content'
                     }}
                 >
                     <Plus size={20} /> إضافة عميل جديد
@@ -101,7 +101,7 @@ const ClientsPage = () => {
             </div>
 
             {/* Clients Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
                 {filteredClients.map(client => (
                     <div
                         key={client.id}
@@ -141,8 +141,8 @@ const ClientsPage = () => {
 
             {/* Create Client Modal */}
             {showForm && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50 }}>
-                    <div className="fade-in" style={{ background: 'white', padding: '30px', borderRadius: '16px', width: '450px' }}>
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50, padding: '20px' }}>
+                    <div className="fade-in" style={{ background: 'white', padding: '30px', borderRadius: '16px', width: '100%', maxWidth: '450px' }}>
                         <h3 style={{ margin: '0 0 20px 0' }}>إضافة عميل جديد</h3>
                         <form onSubmit={handleCreate}>
                             <div style={{ marginBottom: '15px' }}><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>الاسم</label><input required type="text" value={newClient.name} onChange={e => setNewClient({ ...newClient, name: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} /></div>
@@ -160,8 +160,8 @@ const ClientsPage = () => {
 
             {/* Client Details Modal */}
             {selectedClient && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 60 }} onClick={() => setSelectedClient(null)}>
-                    <div className="fade-in" style={{ background: 'white', borderRadius: '16px', width: '600px', maxHeight: '90vh', overflowY: 'auto', padding: '0' }} onClick={e => e.stopPropagation()}>
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 60, padding: '20px' }} onClick={() => setSelectedClient(null)}>
+                    <div className="fade-in" style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', padding: '0' }} onClick={e => e.stopPropagation()}>
                         <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h3 style={{ margin: 0 }}>{selectedClient.name}</h3>
                             <button onClick={() => setSelectedClient(null)} style={{ background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
@@ -169,29 +169,31 @@ const ClientsPage = () => {
                         <div style={{ padding: '24px' }}>
                             <h4 style={{ margin: '0 0 15px 0', color: '#64748b' }}>سجل الفواتير (آخر 10 عمليات)</h4>
                             {selectedClient.invoices && selectedClient.invoices.length > 0 ? (
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-                                            <th style={{ textAlign: 'right', padding: '10px', fontSize: '0.9rem', color: '#64748b' }}>رقم الفاتورة</th>
-                                            <th style={{ textAlign: 'right', padding: '10px', fontSize: '0.9rem', color: '#64748b' }}>التاريخ</th>
-                                            <th style={{ textAlign: 'right', padding: '10px', fontSize: '0.9rem', color: '#64748b' }}>القيمة</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {selectedClient.invoices.slice(0, 10).map(inv => (
-                                            <tr key={inv.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                                                <td style={{ padding: '10px', fontWeight: 'bold' }}>{inv.invoiceNumber}</td>
-                                                <td style={{ padding: '10px', fontSize: '0.9rem' }}>{new Date(inv.date).toLocaleDateString('ar-SA')}</td>
-                                                <td style={{ padding: '10px', fontWeight: 'bold', color: '#10b981' }}>{inv.total.toFixed(2)}</td>
+                                <div className="table-responsive">
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
+                                                <th style={{ textAlign: 'right', padding: '10px', fontSize: '0.9rem', color: '#64748b' }}>رقم الفاتورة</th>
+                                                <th style={{ textAlign: 'right', padding: '10px', fontSize: '0.9rem', color: '#64748b' }}>التاريخ</th>
+                                                <th style={{ textAlign: 'right', padding: '10px', fontSize: '0.9rem', color: '#64748b' }}>القيمة</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {selectedClient.invoices.slice(0, 10).map(inv => (
+                                                <tr key={inv.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                                    <td style={{ padding: '10px', fontWeight: 'bold' }}>{inv.invoiceNumber}</td>
+                                                    <td style={{ padding: '10px', fontSize: '0.9rem' }}>{new Date(inv.date).toLocaleDateString('ar-SA')}</td>
+                                                    <td style={{ padding: '10px', fontWeight: 'bold', color: '#10b981' }}>{inv.total.toFixed(2)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             ) : (
                                 <p style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>لا توجد فواتير مسجلة لهذا العميل</p>
                             )}
                         </div>
-                        <div style={{ padding: '24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                        <div className="mobile-grid-1" style={{ padding: '24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button
                                 onClick={() => handleArchive(selectedClient)}
                                 style={{ background: 'white', color: '#64748b', border: '1px solid #e2e8f0', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}

@@ -209,11 +209,94 @@ body {
         width: 100% !important;
     }
 
-    /* Hide sidebar, header, etc. */
     nav,
     aside,
     header,
     .print-hide {
         display: none !important;
+    }
+}
+
+/* --- Responsive Layout Enhancements --- */
+
+/* Mobile Sidebar Toggle state */
+.sidebar-closed {
+    transform: translateX(100%);
+    width: 0 !important;
+    padding: 0 !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-open {
+    transform: translateX(0);
+    width: 280px !important;
+    opacity: 1;
+}
+
+/* Responsive Utilities */
+@media (max-width: 1024px) {
+    .hide-tablet {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none !important;
+    }
+
+    .show-mobile {
+        display: block !important;
+    }
+
+    /* Table Responsiveness */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 1rem;
+    }
+
+    /* Grid layout for cards in mobile */
+    .mobile-grid-1 {
+        grid-template-columns: 1fr !important;
+        flex-direction: column !important;
+    }
+
+    .mobile-w-full {
+        width: 100% !important;
+    }
+
+    /* Adjust main padding for smaller screens */
+    main {
+        padding: 16px !important;
+    }
+
+    /* Sidebar Overlay for mobile */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9;
+        display: block;
+        backdrop-filter: blur(4px);
+    }
+}
+
+@media (min-width: 769px) {
+    .show-mobile {
+        display: none !important;
+    }
+
+    .sidebar-closed {
+        transform: none !important;
+        width: 280px !important;
+        padding: 24px !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
     }
 }

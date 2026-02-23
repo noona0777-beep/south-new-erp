@@ -88,10 +88,10 @@ const RealEstatePage = () => {
 
     return (
         <div className="fade-in" style={{ direction: 'rtl', fontFamily: 'Cairo, sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
                 <div>
                     <h2 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>إدارة الأملاك والعقارات</h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.9rem' }}>
                         <span style={{ cursor: 'pointer' }} onClick={() => setView('PROPERTIES')}>العقارات</span>
                         {selectedProperty && (
                             <>
@@ -101,21 +101,23 @@ const RealEstatePage = () => {
                         )}
                     </div>
                 </div>
-                {view === 'PROPERTIES' && (
-                    <button onClick={() => setShowPropForm(true)} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <Plus size={18} /> إضافة عقار جديد
-                    </button>
-                )}
-                {view === 'UNITS' && (
-                    <button onClick={() => setShowUnitForm(true)} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <Plus size={18} /> إضافة وحدة جديدة
-                    </button>
-                )}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    {view === 'PROPERTIES' && (
+                        <button onClick={() => setShowPropForm(true)} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '8px', alignItems: 'center', fontSize: '0.9rem' }}>
+                            <Plus size={18} /> إضافة عقار جديد
+                        </button>
+                    )}
+                    {view === 'UNITS' && (
+                        <button onClick={() => setShowUnitForm(true)} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '8px', alignItems: 'center', fontSize: '0.9rem' }}>
+                            <Plus size={18} /> إضافة وحدة جديدة
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* View: Properties List */}
             {view === 'PROPERTIES' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
                     {properties.map(prop => (
                         <div key={prop.id} onClick={() => { setSelectedProperty(prop); fetchUnits(prop.id); }} style={{ background: 'white', padding: '20px', borderRadius: '15px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', cursor: 'pointer', border: '1px solid #f1f5f9' }} className="card-hover">
                             <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
@@ -146,48 +148,50 @@ const RealEstatePage = () => {
 
             {/* View: Units List */}
             {view === 'UNITS' && (
-                <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+                <div style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h3 style={{ margin: 0 }}>وحدات {selectedProperty?.name}</h3>
+                        <h3 style={{ margin: 0, fontSize: '1.2rem' }}>وحدات {selectedProperty?.name}</h3>
                     </div>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead style={{ background: '#f8fafc' }}>
-                            <tr>
-                                <th style={{ padding: '12px', textAlign: 'right' }}>رقم الوحدة</th>
-                                <th style={{ padding: '12px', textAlign: 'right' }}>الدور</th>
-                                <th style={{ padding: '12px', textAlign: 'right' }}>النوع</th>
-                                <th style={{ padding: '12px', textAlign: 'right' }}>الحالة</th>
-                                <th style={{ padding: '12px', textAlign: 'center' }}>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {units.map(unit => (
-                                <tr key={unit.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{unit.unitNumber}</td>
-                                    <td style={{ padding: '12px' }}>{unit.floor || '-'}</td>
-                                    <td style={{ padding: '12px' }}>{unit.type === 'APARTMENT' ? 'شقة' : 'محل/مكتب'}</td>
-                                    <td style={{ padding: '12px' }}>
-                                        <span style={{
-                                            background: unit.status === 'VACANT' ? '#ecfdf5' : '#fef2f2',
-                                            color: unit.status === 'VACANT' ? '#059669' : '#dc2626',
-                                            padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold'
-                                        }}>
-                                            {unit.status === 'VACANT' ? 'شاغرة' : 'مؤجرة'}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                                        {unit.status === 'VACANT' ? (
-                                            <button onClick={() => { setContractData({ ...contractData, unitId: unit.id }); setView('CONTRACT_FORM'); }} style={{ background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}>
-                                                تأجير الوحدة
-                                            </button>
-                                        ) : (
-                                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>مؤجرة لـ {unit.contracts?.[0]?.tenant?.name}</span>
-                                        )}
-                                    </td>
+                    <div className="table-responsive">
+                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
+                            <thead style={{ background: '#f8fafc' }}>
+                                <tr>
+                                    <th style={{ padding: '12px', textAlign: 'right' }}>رقم الوحدة</th>
+                                    <th style={{ padding: '12px', textAlign: 'right' }}>الدور</th>
+                                    <th style={{ padding: '12px', textAlign: 'right' }}>النوع</th>
+                                    <th style={{ padding: '12px', textAlign: 'right' }}>الحالة</th>
+                                    <th style={{ padding: '12px', textAlign: 'center' }}>الإجراءات</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {units.map(unit => (
+                                    <tr key={unit.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                        <td style={{ padding: '12px', fontWeight: 'bold' }}>{unit.unitNumber}</td>
+                                        <td style={{ padding: '12px' }}>{unit.floor || '-'}</td>
+                                        <td style={{ padding: '12px' }}>{unit.type === 'APARTMENT' ? 'شقة' : 'محل/مكتب'}</td>
+                                        <td style={{ padding: '12px' }}>
+                                            <span style={{
+                                                background: unit.status === 'VACANT' ? '#ecfdf5' : '#fef2f2',
+                                                color: unit.status === 'VACANT' ? '#059669' : '#dc2626',
+                                                padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold'
+                                            }}>
+                                                {unit.status === 'VACANT' ? 'شاغرة' : 'مؤجرة'}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                                            {unit.status === 'VACANT' ? (
+                                                <button onClick={() => { setContractData({ ...contractData, unitId: unit.id }); setView('CONTRACT_FORM'); }} style={{ background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                                                    تأجير الوحدة
+                                                </button>
+                                            ) : (
+                                                <span style={{ color: '#64748b', fontSize: '0.85rem' }}>مؤجرة لـ {unit.contracts?.[0]?.tenant?.name}</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
@@ -197,7 +201,7 @@ const RealEstatePage = () => {
                     <h3 style={{ marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <Calendar /> إنشاء عقد إيجار جديد
                     </h3>
-                    <form onSubmit={handleCreateContract} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <form onSubmit={handleCreateContract} className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                         <div>
                             <label style={{ display: 'block', marginBottom: '8px', color: '#64748b' }}>المستأجر</label>
                             <select value={contractData.tenantId} onChange={e => setContractData({ ...contractData, tenantId: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }} required>
@@ -219,7 +223,7 @@ const RealEstatePage = () => {
                         </div>
                         <div style={{ gridColumn: '1/-1', display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
                             <button type="button" onClick={() => setView('UNITS')} style={{ padding: '12px 30px', borderRadius: '8px', border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer' }}>إلغاء</button>
-                            <button type="submit" style={{ padding: '12px 40px', borderRadius: '8px', background: '#2563eb', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>حفظ العقد وتفعيل العقد</button>
+                            <button type="submit" style={{ padding: '12px 40px', borderRadius: '8px', background: '#2563eb', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>حفظ العقد وتفعيله</button>
                         </div>
                     </form>
                 </div>
@@ -227,28 +231,28 @@ const RealEstatePage = () => {
 
             {/* Modal: New Property */}
             {showPropForm && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div style={{ background: 'white', padding: '30px', borderRadius: '16px', width: '450px' }}>
-                        <h3>إضافة عقار جديد</h3>
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+                    <div className="fade-in" style={{ background: 'white', padding: '30px', borderRadius: '16px', width: '450px', maxWidth: '100%' }}>
+                        <h3 style={{ marginTop: 0 }}>إضافة عقار جديد</h3>
                         <form onSubmit={handleCreateProperty}>
                             <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px' }}>اسم العقار</label>
-                                <input type="text" value={propData.name} onChange={e => setPropData({ ...propData, name: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '8px' }} required placeholder="مثال: برج الشمال" />
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#64748b' }}>اسم العقار</label>
+                                <input type="text" value={propData.name} onChange={e => setPropData({ ...propData, name: e.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }} required placeholder="مثال: برج الشمال" />
                             </div>
                             <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px' }}>النوع</label>
-                                <select value={propData.type} onChange={e => setPropData({ ...propData, type: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '8px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#64748b' }}>النوع</label>
+                                <select value={propData.type} onChange={e => setPropData({ ...propData, type: e.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', background: 'white' }}>
                                     <option value="RESIDENTIAL">سكني</option>
                                     <option value="COMMERCIAL">تجاري</option>
                                 </select>
                             </div>
                             <div style={{ marginBottom: '20px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px' }}>العنوان</label>
-                                <input type="text" value={propData.address} onChange={e => setPropData({ ...propData, address: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '8px' }} placeholder="المدينة، الحي..." />
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#64748b' }}>العنوان</label>
+                                <input type="text" value={propData.address} onChange={e => setPropData({ ...propData, address: e.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }} placeholder="المدينة، الحي..." />
                             </div>
                             <div style={{ display: 'flex', gap: '10px' }}>
-                                <button type="button" onClick={() => setShowPropForm(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}>إلغاء</button>
-                                <button type="submit" style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#2563eb', color: 'white', border: 'none' }}>حفظ</button>
+                                <button type="button" onClick={() => setShowPropForm(false)} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ddd', background: 'white', cursor: 'pointer' }}>إلغاء</button>
+                                <button type="submit" style={{ flex: 1, padding: '12px', borderRadius: '8px', background: '#2563eb', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>حفظ</button>
                             </div>
                         </form>
                     </div>
@@ -257,29 +261,29 @@ const RealEstatePage = () => {
 
             {/* Modal: New Unit */}
             {showUnitForm && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div style={{ background: 'white', padding: '30px', borderRadius: '16px', width: '450px' }}>
-                        <h3>إضافة وحدة لـ {selectedProperty?.name}</h3>
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+                    <div className="fade-in" style={{ background: 'white', padding: '30px', borderRadius: '16px', width: '450px', maxWidth: '100%' }}>
+                        <h3 style={{ marginTop: 0 }}>إضافة وحدة لـ {selectedProperty?.name}</h3>
                         <form onSubmit={handleCreateUnit}>
                             <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px' }}>رقم الوحدة</label>
-                                <input type="text" value={unitData.unitNumber} onChange={e => setUnitData({ ...unitData, unitNumber: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '8px' }} required />
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#64748b' }}>رقم الوحدة</label>
+                                <input type="text" value={unitData.unitNumber} onChange={e => setUnitData({ ...unitData, unitNumber: e.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }} required />
                             </div>
                             <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px' }}>الدور</label>
-                                <input type="text" value={unitData.floor} onChange={e => setUnitData({ ...unitData, floor: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '8px' }} />
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#64748b' }}>الدور</label>
+                                <input type="text" value={unitData.floor} onChange={e => setUnitData({ ...unitData, floor: e.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }} />
                             </div>
                             <div style={{ marginBottom: '20px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px' }}>نوع الوحدة</label>
-                                <select value={unitData.type} onChange={e => setUnitData({ ...unitData, type: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '8px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#64748b' }}>نوع الوحدة</label>
+                                <select value={unitData.type} onChange={e => setUnitData({ ...unitData, type: e.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', background: 'white' }}>
                                     <option value="APARTMENT">شقة</option>
                                     <option value="OFFICE">مكتب</option>
                                     <option value="STORE">محل تجاري</option>
                                 </select>
                             </div>
                             <div style={{ display: 'flex', gap: '10px' }}>
-                                <button type="button" onClick={() => setShowUnitForm(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}>إلغاء</button>
-                                <button type="submit" style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#2563eb', color: 'white', border: 'none' }}>حفظ الوحدة</button>
+                                <button type="button" onClick={() => setShowUnitForm(false)} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ddd', background: 'white', cursor: 'pointer' }}>إلغاء</button>
+                                <button type="submit" style={{ flex: 1, padding: '12px', borderRadius: '8px', background: '#2563eb', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>حفظ الوحدة</button>
                             </div>
                         </form>
                     </div>

@@ -149,14 +149,14 @@ export default function ReportsPage() {
 
     const renderOverview = () => (
         <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
                 <StatCard title="إجمالي الإيرادات" value={formatMoney(totalRevenue)} sub={`${filteredInvoices.length} فاتورة`} icon={<DollarSign />} color="#2563eb" trend="up" />
                 <StatCard title="ضريبة القيمة المضافة" value={formatMoney(totalTax)} sub="15% من المبيعات" icon={<TrendingUp />} color="#8b5cf6" />
                 <StatCard title="العملاء النشطون" value={data.partners.length} sub={`${topClients.length} عميل لديه فواتير`} icon={<Users />} color="#10b981" trend="up" />
                 <StatCard title="الموظفون" value={data.employees.length} sub={`${data.employees.filter(e => e.status === 'ACTIVE').length} نشط`} icon={<Users />} color="#f59e0b" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '32px' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '32px' }}>
                 <div style={{ background: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                     <SectionTitle title="الإيرادات الشهرية (آخر 6 أشهر)" icon={<TrendingUp />} />
                     <BarChart data={monthlyRevenue} color="#2563eb" />
@@ -178,7 +178,7 @@ export default function ReportsPage() {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
                 <div style={{ background: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #f1f5f9' }}>
                     <SectionTitle title="أعلى العملاء مبيعاً" icon={<Users />} />
                     {topClients.map(([name, total], i) => (
@@ -212,18 +212,18 @@ export default function ReportsPage() {
 
     return (
         <div style={{ fontFamily: 'Cairo, sans-serif', direction: 'rtl' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px' }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 'bold', color: '#0f172a' }}>التقارير المالية والإدارية</h1>
                     <p style={{ margin: 0, color: '#64748b' }}>نظرة شاملة على أداء المؤسسة</p>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', background: '#f1f5f9', borderRadius: '12px', padding: '4px' }}>
+                <div style={{ display: 'flex', gap: '8px', background: '#f1f5f9', borderRadius: '12px', padding: '4px', overflowX: 'auto', maxWidth: '100%', whiteSpace: 'nowrap' }}>
                     {[['overview', 'نظرة عامة'], ['trial', 'ميزان المراجعة'], ['income', 'قائمة الدخل'], ['balance', 'الميزانية'], ['ledger', 'كشف حساب']].map(([k, l]) => (
                         <button key={k} onClick={() => setActiveTab(k)} style={{
                             padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer',
                             background: activeTab === k ? 'white' : 'transparent',
                             color: activeTab === k ? '#2563eb' : '#64748b',
-                            fontFamily: 'Cairo', fontWeight: 'bold', fontSize: '0.9rem'
+                            fontFamily: 'Cairo', fontWeight: 'bold', fontSize: '0.9rem', flexShrink: 0
                         }}>{l}</button>
                     ))}
                 </div>

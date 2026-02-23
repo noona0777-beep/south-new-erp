@@ -35,16 +35,16 @@ const BalanceSheet = () => {
 
     return (
         <div style={{ direction: 'rtl' }}>
-            <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', background: 'white', padding: '16px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+            <div className="no-print mobile-grid-1" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', background: 'white', padding: '16px', borderRadius: '16px', border: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
                 <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>الميزانية العمومية</h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', width: 'fit-content' }}>
                     <label style={{ fontSize: '0.85rem', color: '#64748b' }}>حتى تاريخ:</label>
-                    <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} style={{ border: 'none', background: 'transparent', fontFamily: 'Cairo', outline: 'none' }} />
+                    <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} style={{ border: 'none', background: 'transparent', fontFamily: 'Cairo', outline: 'none', width: '130px' }} />
                 </div>
-                <button onClick={() => window.print()} style={{ marginRight: 'auto', background: 'white', border: '1px solid #e2e8f0', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo' }}>🖨️ طباعة</button>
+                <button onClick={() => window.print()} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', width: 'fit-content' }}>🖨️ طباعة</button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                 {/* Assets */}
                 <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
                     <h3 style={{ borderBottom: '2px solid #2563eb', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>

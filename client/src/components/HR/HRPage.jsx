@@ -117,7 +117,7 @@ const HRPage = () => {
 
     return (
         <div className="fade-in" style={{ direction: 'rtl', fontFamily: 'Cairo, sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
                 <div>
                     <h2 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>الموارد البشرية</h2>
                     <p style={{ margin: 0, color: '#64748b' }}>إدارة الموظفين، الرواتب، والهيكل الإداري</p>
@@ -128,7 +128,7 @@ const HRPage = () => {
                         background: '#2563eb', color: 'white', border: 'none', padding: '12px 24px',
                         borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold',
                         display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgb(37 99 235 / 0.3)',
-                        fontFamily: 'Cairo'
+                        fontFamily: 'Cairo', width: 'fit-content'
                     }}
                 >
                     <Plus size={20} /> إضافة موظف جديد
@@ -136,7 +136,7 @@ const HRPage = () => {
             </div>
 
             {/* Stats Overview */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
                 <div style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{ background: '#eff6ff', padding: '10px', borderRadius: '12px', color: '#3b82f6' }}><Users size={24} /></div>
                     <div>
@@ -156,8 +156,8 @@ const HRPage = () => {
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '40px' }}>جاري التحميل...</div>
             ) : (
-                <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <div className="table-responsive" style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
                         <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                             <tr>
                                 <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b' }}>الموظف</th>
@@ -219,7 +219,7 @@ const HRPage = () => {
                     <div style={{ background: 'white', padding: '30px', borderRadius: '20px', width: '100%', maxWidth: '800px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', position: 'relative' }}>
                         <button onClick={closeForm} style={{ position: 'absolute', top: '20px', left: '20px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><X size={24} /></button>
                         <h3 style={{ margin: '0 0 25px 0', fontSize: '1.5rem' }}>{isEdit ? 'تعديل بيانات الموظف' : 'إضافة موظف جديد'}</h3>
-                        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+                        <form onSubmit={handleSubmit} className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#475569' }}>اسم الموظف كاملاً</label>
                                 <input type="text" required value={employeeData.name} onChange={(e) => setEmployeeData({ ...employeeData, name: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
@@ -279,7 +279,7 @@ const HRPage = () => {
                             <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>{selectedEmployee.jobTitle} - {selectedEmployee.department}</p>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '20px', background: '#f8fafc', borderRadius: '15px' }}>
+                        <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '20px', background: '#f8fafc', borderRadius: '15px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <Briefcase size={18} color="#64748b" />
                                 <div>

@@ -140,10 +140,10 @@ const QuotesPage = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
                     <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
                         <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#334155' }}>بيانات العرض</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', color: '#64748b', fontSize: '0.9rem' }}>العميل</label>
                                 <select
@@ -155,7 +155,7 @@ const QuotesPage = () => {
                                     {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </select>
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '8px', color: '#64748b', fontSize: '0.9rem' }}>التاريخ</label>
                                     <input
@@ -215,57 +215,59 @@ const QuotesPage = () => {
 
                 <div style={{ marginTop: '20px', background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
                     <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#334155' }}>الأصناف والخدمات</h3>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                            <tr>
-                                <th style={{ padding: '12px', textAlign: 'right', width: '30%' }}>الصنف / الخدمة</th>
-                                <th style={{ padding: '12px', textAlign: 'center', width: '15%' }}>الكمية</th>
-                                <th style={{ padding: '12px', textAlign: 'center', width: '20%' }}>السعر</th>
-                                <th style={{ padding: '12px', textAlign: 'center', width: '20%' }}>الإجمالي</th>
-                                <th style={{ padding: '12px', textAlign: 'center', width: '10%' }}>حذف</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {quoteData.items.map((item, index) => (
-                                <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td style={{ padding: '10px' }}>
-                                        <select
-                                            value={item.productId}
-                                            onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
-                                            style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                                        >
-                                            <option value="">اختر المنتج...</option>
-                                            {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                        </select>
-                                    </td>
-                                    <td style={{ padding: '10px' }}>
-                                        <input
-                                            type="number"
-                                            value={item.quantity}
-                                            onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                                            style={{ width: '100%', padding: '8px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                                        />
-                                    </td>
-                                    <td style={{ padding: '10px' }}>
-                                        <input
-                                            type="number"
-                                            value={item.unitPrice}
-                                            onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
-                                            style={{ width: '100%', padding: '8px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                                        />
-                                    </td>
-                                    <td style={{ padding: '10px', textAlign: 'center', fontWeight: 'bold' }}>
-                                        {(item.quantity * item.unitPrice).toFixed(2)}
-                                    </td>
-                                    <td style={{ padding: '10px', textAlign: 'center' }}>
-                                        <button onClick={() => handleRemoveItem(index)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </td>
+                    <div className="table-responsive">
+                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                            <thead style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                                <tr>
+                                    <th style={{ padding: '12px', textAlign: 'right', width: '30%' }}>الصنف / الخدمة</th>
+                                    <th style={{ padding: '12px', textAlign: 'center', width: '15%' }}>الكمية</th>
+                                    <th style={{ padding: '12px', textAlign: 'center', width: '20%' }}>السعر</th>
+                                    <th style={{ padding: '12px', textAlign: 'center', width: '20%' }}>الإجمالي</th>
+                                    <th style={{ padding: '12px', textAlign: 'center', width: '10%' }}>حذف</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {quoteData.items.map((item, index) => (
+                                    <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                        <td style={{ padding: '10px' }}>
+                                            <select
+                                                value={item.productId}
+                                                onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
+                                                style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                            >
+                                                <option value="">اختر المنتج...</option>
+                                                {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                            </select>
+                                        </td>
+                                        <td style={{ padding: '10px' }}>
+                                            <input
+                                                type="number"
+                                                value={item.quantity}
+                                                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                                                style={{ width: '100%', padding: '8px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                            />
+                                        </td>
+                                        <td style={{ padding: '10px' }}>
+                                            <input
+                                                type="number"
+                                                value={item.unitPrice}
+                                                onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
+                                                style={{ width: '100%', padding: '8px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                            />
+                                        </td>
+                                        <td style={{ padding: '10px', textAlign: 'center', fontWeight: 'bold' }}>
+                                            {(item.quantity * item.unitPrice).toFixed(2)}
+                                        </td>
+                                        <td style={{ padding: '10px', textAlign: 'center' }}>
+                                            <button onClick={() => handleRemoveItem(index)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                     <button onClick={handleAddItem} style={{ marginTop: '15px', background: 'transparent', border: '1px dashed #94a3b8', color: '#64748b', width: '100%', padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                         <Plus size={18} /> إضافة صنف جديد
                     </button>
@@ -298,60 +300,62 @@ const QuotesPage = () => {
                 <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>جاري التحميل...</div>
             ) : (
                 <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                            <tr>
-                                <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>رقم العرض</th>
-                                <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>العميل</th>
-                                <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>التاريخ</th>
-                                <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الحالة</th>
-                                <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الإجمالي</th>
-                                <th style={{ padding: '16px 24px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {quotes.length === 0 ? (
+                    <div className="table-responsive">
+                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+                            <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                                 <tr>
-                                    <td colSpan="6" style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                                            <FileText size={40} strokeWidth={1.5} color="#cbd5e1" />
-                                            <p>لا توجد عروض أسعار حتى الآن.</p>
-                                        </div>
-                                    </td>
+                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>رقم العرض</th>
+                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>العميل</th>
+                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>التاريخ</th>
+                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الحالة</th>
+                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الإجمالي</th>
+                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الإجراءات</th>
                                 </tr>
-                            ) : (
-                                quotes.map(qt => {
-                                    const style = getStatusStyle(qt.status);
-                                    return (
-                                        <tr key={qt.id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.background = 'white'}>
-                                            <td style={{ padding: '16px 24px', fontWeight: 'bold', color: '#0f172a' }}>{qt.quoteNumber}</td>
-                                            <td style={{ padding: '16px 24px', color: '#334155' }}>{qt.partner?.name || '-'}</td>
-                                            <td style={{ padding: '16px 24px', color: '#64748b', fontSize: '0.9rem' }}>{new Date(qt.date).toLocaleDateString('ar-SA')}</td>
-                                            <td style={{ padding: '16px 24px' }}>
-                                                <span style={{ background: style.bg, color: style.color, padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                                                    {style.label}
-                                                </span>
-                                            </td>
-                                            <td style={{ padding: '16px 24px', color: '#0f172a', fontWeight: 'bold' }}>{qt.total.toFixed(2)} ر.س</td>
-                                            <td style={{ padding: '16px 24px', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-                                                    <button onClick={() => updateStatus(qt.id, 'ACCEPTED')} title="قبول" style={{ background: '#ecfdf5', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><CheckCircle size={16} /></button>
-                                                    <button onClick={() => updateStatus(qt.id, 'REJECTED')} title="رفض" style={{ background: '#fef2f2', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><XCircle size={16} /></button>
-                                                    <button
-                                                        onClick={() => window.open(`/quotes/${qt.id}/print`, '_blank')}
-                                                        title="طباعة"
-                                                        style={{ background: '#f8fafc', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                                                    >
-                                                        <Printer size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {quotes.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                                                <FileText size={40} strokeWidth={1.5} color="#cbd5e1" />
+                                                <p>لا توجد عروض أسعار حتى الآن.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    quotes.map(qt => {
+                                        const style = getStatusStyle(qt.status);
+                                        return (
+                                            <tr key={qt.id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.background = 'white'}>
+                                                <td style={{ padding: '16px 24px', fontWeight: 'bold', color: '#0f172a' }}>{qt.quoteNumber}</td>
+                                                <td style={{ padding: '16px 24px', color: '#334155' }}>{qt.partner?.name || '-'}</td>
+                                                <td style={{ padding: '16px 24px', color: '#64748b', fontSize: '0.9rem' }}>{new Date(qt.date).toLocaleDateString('ar-SA')}</td>
+                                                <td style={{ padding: '16px 24px' }}>
+                                                    <span style={{ background: style.bg, color: style.color, padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                                        {style.label}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '16px 24px', color: '#0f172a', fontWeight: 'bold' }}>{qt.total.toFixed(2)} ر.س</td>
+                                                <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                                                        <button onClick={() => updateStatus(qt.id, 'ACCEPTED')} title="قبول" style={{ background: '#ecfdf5', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><CheckCircle size={16} /></button>
+                                                        <button onClick={() => updateStatus(qt.id, 'REJECTED')} title="رفض" style={{ background: '#fef2f2', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><XCircle size={16} /></button>
+                                                        <button
+                                                            onClick={() => window.open(`/quotes/${qt.id}/print`, '_blank')}
+                                                            title="طباعة"
+                                                            style={{ background: '#f8fafc', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                        >
+                                                            <Printer size={16} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
         </div>

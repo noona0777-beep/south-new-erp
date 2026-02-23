@@ -28,33 +28,17 @@ axios.interceptors.request.use((config) => {
     return config;
 });
 
-import {
-    LayoutDashboard,
-    ShoppingCart,
-    Package,
-    Users,
-    Briefcase,
-    Building2,
-    FileBarChart2,
-    Settings,
-    Bell,
-    Search,
-    LogOut,
-    Clock,
-    ChevronLeft,
-    DollarSign,
-    TrendingUp,
-    AlertOctagon,
-    UserPlus,
-    FileText,
-    Folder
+FileText,
+    Folder,
+    Menu,
+    X
 } from 'lucide-react';
 
 /* --- UI Components --- */
 
-const NavLink = ({ to, icon, label, active }) => {
+const NavLink = ({ to, icon, label, active, onClick }) => {
     return (
-        <Link to={to} className="card-hover" style={{
+        <Link to={to} onClick={onClick} className="card-hover" style={{
             display: 'flex', alignItems: 'center', gap: '12px',
             padding: '14px 18px',
             color: active ? '#fff' : '#94a3b8',
@@ -152,14 +136,14 @@ const Dashboard = () => {
                 <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8', fontSize: '1.1rem' }}>⏳ جاري تحميل الإحصائيات...</div>
             ) : (
                 <>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+                    <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '30px' }}>
                         <HeaderStat title="إجمالي الإيرادات" value={`${formatMoney(stats?.totals?.revenue)} ر.س`} subtext={`${stats?.totals?.invoices || 0} فاتورة`} icon={<DollarSign />} color="#2563eb" />
                         <HeaderStat title="العملاء المسجلون" value={stats?.totals?.clients || 0} subtext={`+${stats?.quickStats?.activeProjects || 0} مشروع نشط`} icon={<UserPlus />} color="#10b981" />
                         <HeaderStat title="عروض الأسعار" value={stats?.totals?.quotes || 0} subtext={`${stats?.quickStats?.pendingQuotes || 0} معلقة`} icon={<FileText />} color="#8b5cf6" />
                         <HeaderStat title="المنتجات في المخزن" value={stats?.totals?.products || 0} subtext={stats?.quickStats?.lowStockCount > 0 ? `⚠️ ${stats.quickStats.lowStockCount} نقص` : '✅ مخزون جيد'} icon={<Package />} color="#f59e0b" />
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
+                    <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '24px' }}>
                         <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', alignItems: 'center' }}>
                                 <div>
@@ -173,7 +157,7 @@ const Dashboard = () => {
                             <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '12px', paddingBottom: '16px', minHeight: '200px' }}>
                                 {chartData.map((d, i) => (
                                     <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-                                        <div style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#2563eb', marginBottom: '4px' }}>
+                                        <div className="hide-mobile" style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#2563eb', marginBottom: '4px' }}>
                                             {d.value > 0 ? formatMoney(d.value) : ''}
                                         </div>
                                         <div style={{
@@ -221,7 +205,7 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                         <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                                 <h3 style={{ margin: 0, fontSize: '1rem', color: '#1e293b' }}>آخر الفواتير</h3>
@@ -282,21 +266,17 @@ const Layout = ({ user, onLogout }) => {
     const [showSearchResults, setShowSearchResults] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState([]);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         const fetchNotifications = () => {
-            // First trigger a refresh on the server
             axios.post(`${API_URL}/notifications/refresh`)
-                .then(() => {
-                    return axios.get(`${API_URL}/notifications`);
-                })
+                .then(() => axios.get(`${API_URL}/notifications`))
                 .then(res => setNotifications(res.data))
                 .catch(err => console.error('Notifications fetch failed', err));
         };
         const fetchCompany = () => {
-            axios.get(`${API_URL}/settings/companyInfo`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            })
+            axios.get(`${API_URL}/settings/companyInfo`)
                 .then(res => setCompanyInfo(res.data))
                 .catch(() => { });
         };
@@ -310,6 +290,9 @@ const Layout = ({ user, onLogout }) => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
+
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const closeSidebar = () => setIsSidebarOpen(false);
 
     const handleSearch = async (e) => {
         const query = e.target.value;
@@ -329,30 +312,36 @@ const Layout = ({ user, onLogout }) => {
     };
 
     return (
-        <div style={{ display: 'flex', height: '100vh', direction: 'rtl', fontFamily: 'Cairo, sans-serif', background: '#f8fafc' }}>
+        <div style={{ display: 'flex', height: '100vh', direction: 'rtl', fontFamily: 'Cairo, sans-serif', background: '#f8fafc', position: 'relative' }}>
+            {/* Sidebar Overlay for Mobile */}
+            {isSidebarOpen && <div className="sidebar-overlay show-mobile" onClick={closeSidebar} />}
+
             {/* Sidebar */}
-            <div className="sidebar-scroll no-print" style={{
+            <div className={`sidebar-scroll no-print ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} style={{
                 width: '280px', background: '#0f172a', color: 'white', padding: '24px',
                 display: 'flex', flexDirection: 'column', overflowY: 'auto',
-                boxShadow: '4px 0 20px rgb(0 0 0 / 0.05)', zIndex: 10
+                boxShadow: '4px 0 20px rgb(0 0 0 / 0.05)', zIndex: 50,
+                position: 'fixed', top: 0, right: 0, bottom: 0, transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
             }}>
-                <div style={{ marginBottom: '40px', textAlign: 'center', paddingBottom: '24px', borderBottom: '1px solid #1e293b' }}>
+                <div style={{ marginBottom: '40px', textAlign: 'center', paddingBottom: '24px', borderBottom: '1px solid #1e293b', position: 'relative' }}>
+                    <button className="show-mobile" onClick={closeSidebar} style={{ position: 'absolute', left: '-10px', top: '-10px', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                        <X size={24} />
+                    </button>
                     <div className="logo-emblem" style={{ marginBottom: '20px' }}>
                         <img src="/logo.png" alt="Logo" style={{ width: '150px', height: 'auto', display: 'block', margin: '0 auto' }} />
                     </div>
                     <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700', color: '#fff' }}>{companyInfo.name || 'مؤسسة الجنوب الجديد'}</h2>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '0.8rem', color: '#64748b', letterSpacing: '1px' }}>ENTERPRISE ERP</p>
                 </div>
 
                 <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <NavLink to="/" icon={<LayoutDashboard />} label="لوحة القيادة" active={isActive('/')} />
-                    <NavLink to="/invoices" icon={<ShoppingCart />} label="المبيعات والفواتير" active={isActive('/invoices')} />
-                    <NavLink to="/quotes" icon={<FileText />} label="عروض الأسعار" active={isActive('/quotes')} />
-                    <NavLink to="/inventory" icon={<Package />} label="المخزون" active={isActive('/inventory')} />
-                    <NavLink to="/clients" icon={<Users />} label="العملاء" active={isActive('/clients')} />
-                    <NavLink to="/projects" icon={<Briefcase />} label="المشاريع والمقاولات" active={isActive('/projects')} />
-                    <NavLink to="/accounting" icon={<DollarSign />} label="المحاسبة والمالية" active={isActive('/accounting')} />
-                    <NavLink to="/hr" icon={<Users />} label="الموارد البشرية" active={isActive('/hr')} />
+                    <NavLink to="/" icon={<LayoutDashboard />} label="لوحة القيادة" active={isActive('/')} onClick={closeSidebar} />
+                    <NavLink to="/invoices" icon={<ShoppingCart />} label="المبيعات والفواتير" active={isActive('/invoices')} onClick={closeSidebar} />
+                    <NavLink to="/quotes" icon={<FileText />} label="عروض الأسعار" active={isActive('/quotes')} onClick={closeSidebar} />
+                    <NavLink to="/inventory" icon={<Package />} label="المخزون" active={isActive('/inventory')} onClick={closeSidebar} />
+                    <NavLink to="/clients" icon={<Users />} label="العملاء" active={isActive('/clients')} onClick={closeSidebar} />
+                    <NavLink to="/projects" icon={<Briefcase />} label="المشاريع والمقاولات" active={isActive('/projects')} onClick={closeSidebar} />
+                    <NavLink to="/accounting" icon={<DollarSign />} label="المحاسبة والمالية" active={isActive('/accounting')} onClick={closeSidebar} />
+                    <NavLink to="/hr" icon={<Users />} label="الموارد البشرية" active={isActive('/hr')} onClick={closeSidebar} />
                     <NavLink to="/real-estate" icon={<Building2 />} label="إدارة الأملاك" active={isActive('/real-estate')} />
                     <NavLink to="/archive" icon={<Folder />} label="الأرشيف والوثائق" active={isActive('/archive')} />
                     <NavLink to="/reports" icon={<FileBarChart2 />} label="التقارير" active={isActive('/reports')} />
@@ -369,61 +358,63 @@ const Layout = ({ user, onLogout }) => {
                             <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{user.role}</div>
                         </div>
                     </div>
-                    <button onClick={onLogout} style={{ width: '100%', background: 'transparent', color: '#ef4444', border: '1px solid #ef4444', padding: '10px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                        <LogOut size={16} /> تسجيل خروج
-                    </button>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-                <header className="fade-in no-print" style={{ background: 'white', padding: '16px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                    <div style={{ position: 'relative', width: '400px' }}>
-                        <Search size={20} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                        <input type="text" placeholder="بحث..." value={searchQuery} onChange={handleSearch} style={{ width: '100%', padding: '12px 45px 12px 15px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc', outline: 'none', fontFamily: 'Cairo' }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', paddingRight: '0', transition: 'padding 0.4s' }}>
+                <header className="fade-in no-print" style={{ background: 'white', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', zIndex: 20 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <button className="show-mobile" onClick={toggleSidebar} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', color: '#1e293b', cursor: 'pointer' }}>
+                            <Menu size={20} />
+                        </button>
+                        <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+                            <Search size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <input type="text" placeholder="بحث..." value={searchQuery} onChange={handleSearch} style={{ width: '100%', padding: '10px 40px 10px 15px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', outline: 'none', fontFamily: 'Cairo', fontSize: '0.9rem' }} />
+                        </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                        <div style={{ textAlign: 'left' }}>
-                            <div style={{ color: '#64748b', fontSize: '0.85rem' }}>{currentTime.toLocaleDateString('ar-SA')}</div>
-                            <div style={{ color: '#2563eb', fontSize: '1rem', fontWeight: 'bold' }}>{currentTime.toLocaleTimeString('ar-SA')}</div>
+
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                        <div className="hide-mobile" style={{ textAlign: 'left' }}>
+                            <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{currentTime.toLocaleDateString('ar-SA')}</div>
+                            <div style={{ color: '#2563eb', fontSize: '0.9rem', fontWeight: 'bold' }}>{currentTime.toLocaleTimeString('ar-SA')}</div>
                         </div>
 
                         {/* Notifications */}
                         <div style={{ position: 'relative' }}>
-                            <div onClick={() => setShowNotifications(!showNotifications)} style={{ cursor: 'pointer', padding: '10px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', position: 'relative' }}>
-                                <Bell size={22} color={notifications.some(n => !n.isRead) ? '#2563eb' : '#64748b'} />
+                            <div onClick={() => setShowNotifications(!showNotifications)} style={{ cursor: 'pointer', padding: '8px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', position: 'relative' }}>
+                                <Bell size={20} color={notifications.some(n => !n.isRead) ? '#2563eb' : '#64748b'} />
                                 {notifications.some(n => !n.isRead) && (
-                                    <span style={{ position: 'absolute', top: '8px', right: '8px', width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }} />
+                                    <span style={{ position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }} />
                                 )}
                             </div>
 
                             {showNotifications && (
                                 <div style={{
-                                    position: 'absolute', top: '55px', left: '0', width: '320px', background: 'white',
-                                    borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9',
-                                    zIndex: 100, padding: '16px', direction: 'rtl'
+                                    position: 'absolute', top: '50px', left: '0', width: '280px', background: 'white',
+                                    borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9',
+                                    zIndex: 100, padding: '12px', direction: 'rtl'
                                 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
-                                        <h4 style={{ margin: 0, fontSize: '1rem' }}>التنبيهات</h4>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
+                                        <h4 style={{ margin: 0, fontSize: '0.9rem' }}>التنبيهات</h4>
                                         <button
                                             onClick={async () => {
                                                 await axios.put(`${API_URL}/notifications/read-all`);
                                                 setNotifications(notifications.map(n => ({ ...n, isRead: true })));
                                             }}
-                                            style={{ color: '#2563eb', border: 'none', background: 'none', fontSize: '0.8rem', cursor: 'pointer' }}
-                                        >تحديد الكل كمقروء</button>
+                                            style={{ color: '#2563eb', border: 'none', background: 'none', fontSize: '0.75rem', cursor: 'pointer' }}
+                                        >تحديد الكل</button>
                                     </div>
-                                    <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                         {notifications.length === 0 ? (
-                                            <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '0.9rem' }}>لا توجد تنبيهات</div>
+                                            <div style={{ textAlign: 'center', padding: '15px', color: '#94a3b8', fontSize: '0.8rem' }}>لا توجد تنبيهات</div>
                                         ) : notifications.map(n => (
                                             <div key={n.id} style={{
-                                                padding: '12px', borderRadius: '10px', background: n.isRead ? 'transparent' : '#f0f7ff',
-                                                border: `1px solid ${n.isRead ? '#f1f5f9' : '#dbeafe'}`, fontSize: '0.85rem'
+                                                padding: '10px', borderRadius: '8px', background: n.isRead ? 'transparent' : '#f0f7ff',
+                                                border: `1px solid ${n.isRead ? '#f1f5f9' : '#dbeafe'}`, fontSize: '0.8rem'
                                             }}>
-                                                <div style={{ fontWeight: 'bold', color: '#0f172a', marginBottom: '4px' }}>{n.title}</div>
-                                                <div style={{ color: '#64748b' }}>{n.message}</div>
-                                                <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '6px' }}>{new Date(n.createdAt).toLocaleString('ar-SA')}</div>
+                                                <div style={{ fontWeight: 'bold', color: '#0f172a', marginBottom: '2px' }}>{n.title}</div>
+                                                <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{n.message}</div>
                                             </div>
                                         ))}
                                     </div>
@@ -432,21 +423,23 @@ const Layout = ({ user, onLogout }) => {
                         </div>
                     </div>
                 </header>
-                <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
-                    <Routes>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/invoices" element={<InvoicesPage />} />
-                        <Route path="/quotes" element={<QuotesPage />} />
-                        <Route path="/inventory" element={<InventoryPage />} />
-                        <Route path="/clients" element={<ClientsPage />} />
-                        <Route path="/projects" element={<ProjectsPage />} />
-                        <Route path="/hr" element={<HRPage />} />
-                        <Route path="/accounting" element={<AccountingPage />} />
-                        <Route path="/real-estate" element={<RealEstatePage />} />
-                        <Route path="/archive" element={<DocumentsPage />} />
-                        <Route path="/reports" element={<ReportsPage />} />
-                        <Route path="/users" element={<SettingsPage />} />
-                    </Routes>
+                <main style={{ flex: 1, padding: '24px 40px', overflowY: 'auto', position: 'relative' }}>
+                    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+                        <Routes>
+                            <Route path="/" element={<Dashboard />} />
+                            <Route path="/invoices" element={<InvoicesPage />} />
+                            <Route path="/quotes" element={<QuotesPage />} />
+                            <Route path="/inventory" element={<InventoryPage />} />
+                            <Route path="/clients" element={<ClientsPage />} />
+                            <Route path="/projects" element={<ProjectsPage />} />
+                            <Route path="/hr" element={<HRPage />} />
+                            <Route path="/accounting" element={<AccountingPage />} />
+                            <Route path="/real-estate" element={<RealEstatePage />} />
+                            <Route path="/archive" element={<DocumentsPage />} />
+                            <Route path="/reports" element={<ReportsPage />} />
+                            <Route path="/users" element={<SettingsPage />} />
+                        </Routes>
+                    </div>
                 </main>
             </div>
         </div>

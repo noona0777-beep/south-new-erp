@@ -57,20 +57,20 @@ const TrialBalance = () => {
 
     return (
         <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '15px' }}>
+                <div className="mobile-grid-1" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold' }}>ميزان المراجعة</h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', width: 'fit-content' }}>
                         <label style={{ fontSize: '0.85rem', color: '#64748b' }}>حتى تاريخ:</label>
                         <input
                             type="date"
                             value={asOfDate}
                             onChange={(e) => setAsOfDate(e.target.value)}
-                            style={{ border: 'none', background: 'transparent', fontFamily: 'Cairo', fontSize: '0.9rem', outline: 'none', color: '#1e293b' }}
+                            style={{ border: 'none', background: 'transparent', fontFamily: 'Cairo', fontSize: '0.9rem', outline: 'none', color: '#1e293b', width: '130px' }}
                         />
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                     <button onClick={() => window.print()} className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
                         <Printer size={16} /> طباعة
                     </button>
@@ -80,38 +80,39 @@ const TrialBalance = () => {
                 </div>
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', direction: 'rtl' }}>
-                <thead>
-                    <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                        <th style={{ padding: '12px', textAlign: 'right' }}>كود الحساب</th>
-                        <th style={{ padding: '12px', textAlign: 'right' }}>اسم الحساب</th>
-                        <th style={{ padding: '12px', textAlign: 'center' }}>مدين (Debit)</th>
-                        <th style={{ padding: '12px', textAlign: 'center' }}>دائن (Credit)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {accounts.map(acc => (
-                        <tr key={acc.id} style={{ borderBottom: '1px solid #f1f5f9', fontSize: '0.9rem' }}>
-                            <td style={{ padding: '12px', color: '#64748b' }}>{acc.code}</td>
-                            <td style={{ padding: '12px', fontWeight: '600' }}>{acc.name}</td>
-                            <td style={{ padding: '12px', textAlign: 'center', color: '#10b981', fontWeight: 'bold' }}>
-                                {acc.balance > 0 ? format(acc.balance) : '-'}
-                            </td>
-                            <td style={{ padding: '12px', textAlign: 'center', color: '#ef4444', fontWeight: 'bold' }}>
-                                {acc.balance < 0 ? format(Math.abs(acc.balance)) : '-'}
-                            </td>
+            <div className="table-responsive">
+                <table style={{ width: '100%', borderCollapse: 'collapse', direction: 'rtl', minWidth: '700px' }}>
+                    <thead>
+                        <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                            <th style={{ padding: '12px', textAlign: 'right' }}>كود الحساب</th>
+                            <th style={{ padding: '12px', textAlign: 'right' }}>اسم الحساب</th>
+                            <th style={{ padding: '12px', textAlign: 'center' }}>مدين (Debit)</th>
+                            <th style={{ padding: '12px', textAlign: 'center' }}>دائن (Credit)</th>
                         </tr>
-                    ))}
-                </tbody>
-                tfoot
-                <tfoot>
-                    <tr style={{ background: '#f8fafc', fontWeight: 'bold', fontSize: '1.1rem', borderTop: '2px solid #e2e8f0' }}>
-                        <td colSpan="2" style={{ padding: '15px', textAlign: 'left' }}>المجموع الإجمالي:</td>
-                        <td style={{ padding: '15px', textAlign: 'center', color: '#10b981' }}>{format(totalDebit)}</td>
-                        <td style={{ padding: '15px', textAlign: 'center', color: '#ef4444' }}>{format(totalCredit)}</td>
-                    </tr>
-                </tfoot>
-            </table>
+                    </thead>
+                    <tbody>
+                        {accounts.map(acc => (
+                            <tr key={acc.id} style={{ borderBottom: '1px solid #f1f5f9', fontSize: '0.9rem' }}>
+                                <td style={{ padding: '12px', color: '#64748b' }}>{acc.code}</td>
+                                <td style={{ padding: '12px', fontWeight: '600' }}>{acc.name}</td>
+                                <td style={{ padding: '12px', textAlign: 'center', color: '#10b981', fontWeight: 'bold' }}>
+                                    {acc.balance > 0 ? format(acc.balance) : '-'}
+                                </td>
+                                <td style={{ padding: '12px', textAlign: 'center', color: '#ef4444', fontWeight: 'bold' }}>
+                                    {acc.balance < 0 ? format(Math.abs(acc.balance)) : '-'}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot>
+                        <tr style={{ background: '#f8fafc', fontWeight: 'bold', fontSize: '1.1rem', borderTop: '2px solid #e2e8f0' }}>
+                            <td colSpan="2" style={{ padding: '15px', textAlign: 'left' }}>المجموع الإجمالي:</td>
+                            <td style={{ padding: '15px', textAlign: 'center', color: '#10b981' }}>{format(totalDebit)}</td>
+                            <td style={{ padding: '15px', textAlign: 'center', color: '#ef4444' }}>{format(totalCredit)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     );
 };

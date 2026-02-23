@@ -82,7 +82,7 @@ const CompanyTab = () => {
     return (
         <div>
             <h3 style={{ margin: '0 0 24px 0', color: '#1e293b', fontWeight: '700' }}>معلومات المنشأة</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', maxWidth: '700px' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', maxWidth: '700px' }}>
                 <InputField label="اسم المنشأة" value={form.name || ''} onChange={update('name')} placeholder="مؤسسة الجنوب الجديد" />
                 <InputField label="الرقم الضريبي (VAT)" value={form.vatNumber || ''} onChange={update('vatNumber')} placeholder="3XXXXXXXXXXX" />
                 <InputField label="رقم الجوال" value={form.phone || ''} onChange={update('phone')} placeholder="+966 5X XXX XXXX" />
@@ -157,12 +157,12 @@ const UsersTab = () => {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
                 <h3 style={{ margin: 0, color: '#1e293b', fontWeight: '700' }}>إدارة المستخدمين</h3>
                 <button onClick={() => setShowForm(!showForm)} style={{
                     padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none',
                     borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '600',
-                    display: 'flex', alignItems: 'center', gap: '8px'
+                    display: 'flex', alignItems: 'center', gap: '8px', width: 'fit-content'
                 }}>
                     <Plus size={16} /> إضافة مستخدم
                 </button>
@@ -177,7 +177,7 @@ const UsersTab = () => {
             {showForm && (
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '20px', marginBottom: '20px' }}>
                     <h4 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>مستخدم جديد</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                         <InputField label="الاسم الكامل" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="اسم المستخدم" />
                         <InputField label="البريد الإلكتروني" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="user@company.com" type="email" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
@@ -219,8 +219,8 @@ const UsersTab = () => {
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>جاري التحميل...</div>
             ) : (
-                <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo' }}>
+                <div className="table-responsive" style={{ background: 'white', borderRadius: '14px', border: '1px solid #f1f5f9', overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo', minWidth: '700px' }}>
                         <thead>
                             <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
                                 {['الاسم', 'البريد الإلكتروني', 'الصلاحية', 'تاريخ الإنشاء', 'إجراء'].map(h => (
@@ -316,7 +316,7 @@ const SystemTab = () => {
                 {/* Currency */}
                 <div style={{ background: 'white', padding: '20px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
                     <h4 style={{ margin: '0 0 16px 0', color: '#374151', fontSize: '0.95rem' }}>💰 العملة والضريبة</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>العملة</label>
                             <select value={prefs.currency || 'SAR'} onChange={update('currency')} style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo' }}>
@@ -416,7 +416,7 @@ export default function SettingsPage() {
                 <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>إدارة إعدادات النظام والمنشأة</p>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '28px', background: '#f8fafc', padding: '6px', borderRadius: '14px', width: 'fit-content' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '28px', background: '#f8fafc', padding: '6px', borderRadius: '14px', width: 'fit-content', flexWrap: 'wrap' }}>
                 {tabs.map(t => (
                     <TabBtn key={t.key} active={activeTab === t.key} onClick={() => setActiveTab(t.key)} icon={t.icon}>
                         {t.label}
@@ -424,7 +424,7 @@ export default function SettingsPage() {
                 ))}
             </div>
 
-            <div style={{ background: 'white', borderRadius: '16px', padding: '28px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', minHeight: '400px' }}>
+            <div style={{ background: 'white', borderRadius: '16px', padding: window.innerWidth < 600 ? '20px' : '28px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', minHeight: '400px' }}>
                 {activeTab === 'company' && <CompanyTab />}
                 {activeTab === 'users' && <UsersTab />}
                 {activeTab === 'logs' && <AuditLogs />}

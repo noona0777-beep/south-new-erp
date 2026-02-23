@@ -43,32 +43,36 @@ const AccountItem = ({ account, level = 0 }) => {
                     background: level === 0 ? '#f8fafc' : 'transparent',
                     borderBottom: level === 0 ? '1px solid #e2e8f0' : 'none',
                     marginBottom: '2px',
+                    gap: '8px',
+                    flexWrap: 'wrap'
                 }}
                 onClick={() => hasChildren && setIsOpen(!isOpen)}
                 onMouseEnter={e => { if (level > 0) e.currentTarget.style.background = '#f8fafc'; }}
                 onMouseLeave={e => { if (level > 0) e.currentTarget.style.background = 'transparent'; }}
             >
-                <div style={{ color: '#94a3b8', marginLeft: '6px', minWidth: '16px' }}>
-                    {hasChildren ? (isOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />) : null}
+                <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: '200px' }}>
+                    <div style={{ color: '#94a3b8', marginLeft: '6px', minWidth: '16px' }}>
+                        {hasChildren ? (isOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />) : null}
+                    </div>
+                    {hasChildren
+                        ? <Folder size={17} style={{ color: typeColor, marginLeft: '8px', flexShrink: 0 }} />
+                        : <FileText size={17} style={{ color: '#cbd5e1', marginLeft: '8px', flexShrink: 0 }} />
+                    }
+                    <div style={{ flex: 1, display: 'flex', gap: '10px', alignItems: 'center', overflow: 'hidden' }}>
+                        <span style={{ fontWeight: level === 0 ? 'bold' : '500', color: level === 0 ? '#1e293b' : '#334155', whiteSpace: 'nowrap' }}>
+                            {account.name}
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8', background: '#f1f5f9', padding: '1px 8px', borderRadius: '10px', flexShrink: 0 }}>
+                            {account.code}
+                        </span>
+                    </div>
+                    {level === 0 && (
+                        <span style={{ fontSize: '0.72rem', color: typeColor, background: `${typeColor}15`, padding: '2px 8px', borderRadius: '10px', marginLeft: '8px', flexShrink: 0 }}>
+                            {typeLabel}
+                        </span>
+                    )}
                 </div>
-                {hasChildren
-                    ? <Folder size={17} style={{ color: typeColor, marginLeft: '8px', flexShrink: 0 }} />
-                    : <FileText size={17} style={{ color: '#cbd5e1', marginLeft: '8px', flexShrink: 0 }} />
-                }
-                <div style={{ flex: 1, display: 'flex', gap: '10px', alignItems: 'center', overflow: 'hidden' }}>
-                    <span style={{ fontWeight: level === 0 ? 'bold' : '500', color: level === 0 ? '#1e293b' : '#334155', whiteSpace: 'nowrap' }}>
-                        {account.name}
-                    </span>
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8', background: '#f1f5f9', padding: '1px 8px', borderRadius: '10px', flexShrink: 0 }}>
-                        {account.code}
-                    </span>
-                </div>
-                {level === 0 && (
-                    <span style={{ fontSize: '0.72rem', color: typeColor, background: `${typeColor}15`, padding: '2px 8px', borderRadius: '10px', marginLeft: '8px', flexShrink: 0 }}>
-                        {typeLabel}
-                    </span>
-                )}
-                <div style={{ fontWeight: 'bold', color: (account.balance || 0) < 0 ? '#ef4444' : '#10b981', marginLeft: '16px', fontFamily: 'monospace', fontSize: '0.9rem', flexShrink: 0 }}>
+                <div style={{ fontWeight: 'bold', color: (account.balance || 0) < 0 ? '#ef4444' : '#10b981', marginLeft: 'auto', fontFamily: 'monospace', fontSize: '0.9rem', flexShrink: 0 }}>
                     {(account.balance || 0).toLocaleString('ar-SA', { minimumFractionDigits: 2 })} ر.س
                 </div>
             </div>
@@ -197,7 +201,7 @@ const JournalModal = ({ accounts, onClose, onSave }) => {
                 {/* Body */}
                 <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
                     {/* Meta Fields */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                    <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
                         {[
                             { label: 'التاريخ', key: 'date', type: 'date' },
                             { label: 'الوصف*', key: 'description', type: 'text', placeholder: 'مثال: تسجيل فاتورة مبيعات' },
@@ -217,8 +221,8 @@ const JournalModal = ({ accounts, onClose, onSave }) => {
                     </div>
 
                     {/* Lines Table */}
-                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', marginBottom: '16px' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', marginBottom: '16px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
                             <thead style={{ background: '#f8fafc' }}>
                                 <tr>
                                     {['الحساب', 'وصف السطر', 'مدين (ر.س)', 'دائن (ر.س)', ''].map((h, i) => (
@@ -299,16 +303,16 @@ const JournalModal = ({ accounts, onClose, onSave }) => {
                 </div>
 
                 {/* Footer */}
-                <div style={{ padding: '16px 28px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="mobile-grid-1" style={{ padding: '16px 28px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {isBalanced
                             ? <span style={{ color: '#10b981', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}><Check size={16} /> القيد متوازن</span>
                             : <span style={{ color: '#f59e0b', fontSize: '0.85rem' }}>⚖️ الفرق: {Math.abs(totalDebit - totalCredit).toLocaleString('ar-SA', { minimumFractionDigits: 2 })} ر.س</span>
                         }
                     </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={onClose} style={{ padding: '10px 24px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontFamily: 'Cairo' }}>إلغاء</button>
-                        <button onClick={handleSave} disabled={saving || !isBalanced} style={{ padding: '10px 28px', borderRadius: '10px', border: 'none', background: isBalanced ? '#2563eb' : '#94a3b8', color: 'white', cursor: isBalanced ? 'pointer' : 'not-allowed', fontFamily: 'Cairo', fontWeight: 'bold' }}>
+                    <div style={{ display: 'flex', gap: '10px', width: '100%', justifyContent: 'flex-end' }}>
+                        <button onClick={onClose} style={{ flex: 1, maxWidth: '120px', padding: '10px 24px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontFamily: 'Cairo' }}>إلغاء</button>
+                        <button onClick={handleSave} disabled={saving || !isBalanced} style={{ flex: 1, maxWidth: '160px', padding: '10px 28px', borderRadius: '10px', border: 'none', background: isBalanced ? '#2563eb' : '#94a3b8', color: 'white', cursor: isBalanced ? 'pointer' : 'not-allowed', fontFamily: 'Cairo', fontWeight: 'bold' }}>
                             {saving ? '...جاري الحفظ' : '💾 حفظ القيد'}
                         </button>
                     </div>
@@ -492,7 +496,7 @@ export default function AccountingPage() {
     return (
         <div style={{ fontFamily: 'Cairo, sans-serif', direction: 'rtl' }}>
             {/* Header */}
-            <div style={{ marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="mobile-grid-1" style={{ marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 'bold', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <Landmark size={26} style={{ color: '#2563eb' }} />
@@ -500,7 +504,7 @@ export default function AccountingPage() {
                     </h1>
                     <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>إدارة الحسابات والقيود • متصل بالسحابة</p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                     <button onClick={fetchData} title="تحديث" style={{ background: 'white', border: '1px solid #e2e8f0', padding: '10px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         <RefreshCw size={18} color="#64748b" />
                     </button>
@@ -514,17 +518,17 @@ export default function AccountingPage() {
             </div>
 
             {/* Stat Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '18px', marginBottom: '28px' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '18px', marginBottom: '28px' }}>
                 {statCards.map((s, i) => (
                     <div key={i} style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
                                 <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '6px' }}>{s.label}</div>
-                                <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: s.color, fontFamily: 'monospace' }}>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: s.color, fontFamily: 'monospace' }}>
                                     {s.value.toLocaleString('ar-SA', { minimumFractionDigits: 0 })} ر.س
                                 </div>
                             </div>
-                            <div style={{ padding: '10px', background: s.bg, borderRadius: '12px', color: s.color }}>
+                            <div style={{ padding: '10px', background: s.bg, borderRadius: '12px', color: s.color, flexShrink: 0 }}>
                                 {s.icon}
                             </div>
                         </div>
@@ -586,8 +590,8 @@ export default function AccountingPage() {
                             {activeTab === 'journal' && (
                                 <div>
                                     {journal.length > 0 ? (
-                                        <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
-                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
                                                 <thead style={{ background: '#f8fafc' }}>
                                                     <tr>
                                                         <th style={{ padding: '12px 14px', textAlign: 'right', fontSize: '0.8rem', color: '#64748b', width: '40px' }}></th>
