@@ -1401,6 +1401,170 @@ app.post('/api/contracts', async (req, res) => {
     }
 });
 
+// --- Construction Contracts Routes (SCA Standards) ---
+
+// Get All Construction Contracts
+app.get('/api/construction-contracts', authenticate, async (req, res) => {
+    try {
+        const contracts = await prisma.constructionContract.findMany({
+            include: {
+                partner: true,
+                project: true,
+                items: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(contracts);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get Single Construction Contract
+app.get('/api/construction-contracts/:id', authenticate, async (req, res) => {
+    try {
+        const contract = await prisma.constructionContract.findUnique({
+            where: { id: parseInt(req.params.id) },
+            include: {
+                partner: true,
+                project: true,
+                items: true
+            }
+        });
+        if (!contract) return res.status(404).json({ error: 'Contract not found' });
+        res.json(contract);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create New Construction Contract
+app.post('/api/construction-contracts', authenticate, async (req, res) => {
+    const { partnerId, projectId, title, type, startDate, endDate, advancePayment, retentionPercent, items, clauses } = req.body;
+
+    try {
+        // Calculate Totals from Items
+        let netValue = 0;
+        const contractItems = items.map(item => {
+            const total = Number(item.quantity) * Number(item.unitPrice);
+            netValue += total;
+            return {
+                description: item.description,
+                unit: item.unit,
+                quantity: Number(item.quantity),
+                unitPrice: Number(item.unitPrice),
+                total
+            };
+        });
+
+        const taxAmount = netValue * 0.15;
+        const totalValue = netValue + taxAmount;
+
+        const result = await prisma.$transaction(async (tx) => {
+            const contract = await tx.constructionContract.create({
+                data: {
+                    contractNumber: `CONT-SCA-${Date.now()}`,
+                    title,
+                    type,
+                    partnerId: parseInt(partnerId),
+                    projectId: projectId ? parseInt(projectId) : null,
+                    startDate: new Date(startDate),
+                    endDate: new Date(endDate),
+                    advancePayment: parseFloat(advancePayment || 0),
+                    retentionPercent: parseFloat(retentionPercent || 0),
+                    netValue,
+                    taxAmount,
+                    totalValue,
+                    clauses: clauses || {},
+                    items: {
+                        create: contractItems
+                    }
+                }
+            });
+            return contract;
+        });
+
+        await logActivity(req.user.id, 'CREATE', 'CONSTRUCTION_CONTRACT', result.id, `إنشاء عقد مقاولات #${result.contractNumber}`);
+        res.json(result);
+    } catch (error) {
+        console.error('Contract Create Error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update Construction Contract
+app.put('/api/construction-contracts/:id', authenticate, async (req, res) => {
+    const { id } = req.params;
+    const { partnerId, projectId, title, type, startDate, endDate, advancePayment, retentionPercent, items, clauses, status } = req.body;
+
+    try {
+        let netValue = 0;
+        const contractItems = items.map(item => {
+            const total = Number(item.quantity) * Number(item.unitPrice);
+            netValue += total;
+            return {
+                description: item.description,
+                unit: item.unit,
+                quantity: Number(item.quantity),
+                unitPrice: Number(item.unitPrice),
+                total
+            };
+        });
+
+        const taxAmount = netValue * 0.15;
+        const totalValue = netValue + taxAmount;
+
+        const result = await prisma.$transaction(async (tx) => {
+            // Delete old items
+            await tx.constructionContractItem.deleteMany({ where: { contractId: parseInt(id) } });
+
+            // Update contract
+            const contract = await tx.constructionContract.update({
+                where: { id: parseInt(id) },
+                data: {
+                    title,
+                    type,
+                    status,
+                    partnerId: parseInt(partnerId),
+                    projectId: projectId ? parseInt(projectId) : null,
+                    startDate: new Date(startDate),
+                    endDate: new Date(endDate),
+                    advancePayment: parseFloat(advancePayment || 0),
+                    retentionPercent: parseFloat(retentionPercent || 0),
+                    netValue,
+                    taxAmount,
+                    totalValue,
+                    clauses: clauses || {},
+                    items: {
+                        create: contractItems
+                    }
+                }
+            });
+            return contract;
+        });
+
+        await logActivity(req.user.id, 'UPDATE', 'CONSTRUCTION_CONTRACT', result.id, `تعديل عقد مقاولات #${result.contractNumber}`);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete Construction Contract
+app.delete('/api/construction-contracts/:id', authenticate, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        await prisma.$transaction(async (tx) => {
+            await tx.constructionContractItem.deleteMany({ where: { contractId: id } });
+            await tx.constructionContract.delete({ where: { id } });
+        });
+        await logActivity(req.user.id, 'DELETE', 'CONSTRUCTION_CONTRACT', id, `حذف عقد مقاولات رقم ${id}`);
+        res.json({ message: 'Contract deleted' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- Settings Routes ---
 app.get('/api/settings/:key', async (req, res) => {
     try {
