@@ -376,10 +376,18 @@ const Layout = ({ user, onLogout }) => {
             </div>
 
             {/* Main Content */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', paddingRight: isSidebarOpen ? '280px' : '0', transition: 'padding 0.4s ease' }}>
+            <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100vh',
+                overflow: 'hidden',
+                paddingRight: window.innerWidth > 768 ? '280px' : '0',
+                transition: 'padding 0.4s ease'
+            }}>
                 <header className="fade-in no-print" style={{ background: 'white', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', zIndex: 20 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <button onClick={toggleSidebar} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', color: '#1e293b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <button className="show-mobile" onClick={toggleSidebar} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', color: '#1e293b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Menu size={20} />
                         </button>
                         <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
