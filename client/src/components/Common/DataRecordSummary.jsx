@@ -110,73 +110,76 @@ const DataRecordSummary = () => {
             {/* A4 Page */}
             <div id="printable-area" className="print-page" style={{
                 background: 'white', width: '100%', maxWidth: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box',
-                direction: 'rtl', textAlign: 'right'
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', color: '#0f172a', boxSizing: 'border-box',
+                direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
             }}>
 
-                {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #0f172a', paddingBottom: '25px', marginBottom: '35px' }}>
-                    <div>
-                        <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#0f172a', fontWeight: '800' }}>{companyInfo.name}</h1>
-                        <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '0.95rem' }}>بيانات الأرشفة والوثائق</p>
-                    </div>
-                    <div style={{ textAlign: 'left' }}>
-                        <h2 style={{ margin: 0, color: '#2563eb', fontWeight: 'bold' }}>سجل بيانات نظام</h2>
-                        <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '5px' }}>تاريخ الأرشفة: {new Date().toLocaleDateString('ar-SA')}</div>
-                    </div>
-                </div>
-
-                {/* Entity Info */}
-                <div style={{ background: '#f8fafc', padding: '30px', borderRadius: '16px', marginBottom: '40px', border: '1px solid #eff6ff' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '25px' }}>
-                        <div style={{ background: '#2563eb', color: 'white', padding: '20px', borderRadius: '15px' }}>
-                            {type === 'CLIENT' ? <Users size={40} /> : type === 'PROJECT' ? <Briefcase size={40} /> : <User size={40} />}
-                        </div>
+                <div style={{ flex: 1 }}>
+                    {/* Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #0f172a', paddingBottom: '25px', marginBottom: '35px' }}>
                         <div>
-                            <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#1e293b' }}>{data.name}</h2>
-                            <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>
-                                {type === 'CLIENT' ? 'عميل مسجل' : type === 'PROJECT' ? 'مشروع عقاري/مقاولات' : 'موظف مؤسسة'}
-                            </p>
+                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#0f172a', fontWeight: '800' }}>{companyInfo.name}</h1>
+                            <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '0.95rem' }}>بيانات الأرشفة والوثائق</p>
+                        </div>
+                        <div style={{ textAlign: 'left' }}>
+                            <h2 style={{ margin: 0, color: '#2563eb', fontWeight: 'bold' }}>سجل بيانات نظام</h2>
+                            <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '5px' }}>تاريخ الأرشفة: {new Date().toLocaleDateString('ar-SA')}</div>
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 40px' }}>
-                        {type === 'CLIENT' && (
-                            <>
-                                <InfoRow icon={<Phone size={18} />} label="رقم الجوار" value={data.phone} />
-                                <InfoRow icon={<MapPin size={18} />} label="العنوان" value={data.address} />
-                                <InfoRow icon={<Building size={18} />} label="الرقم الضريبي" value={data.vatNumber} />
-                                <InfoRow icon={<Users size={18} />} label="نوع العميل" value={data.type === 'COMPANY' ? 'شركة' : 'فرد'} />
-                            </>
-                        )}
-                        {type === 'PROJECT' && (
-                            <>
-                                <InfoRow icon={<MapPin size={18} />} label="موقع المشروع" value={data.location} />
-                                <InfoRow icon={<Briefcase size={18} />} label="حالة المشروع" value={data.status} />
-                                <InfoRow icon={<Briefcase size={18} />} label="القيمة التعاقدية" value={`${data.contractValue?.toLocaleString()} ر.س`} />
-                                <InfoRow icon={<Briefcase size={18} />} label="تاريخ البدء" value={data.startDate ? new Date(data.startDate).toLocaleDateString('ar-SA') : '-'} />
-                            </>
-                        )}
-                        {type === 'EMPLOYEE' && (
-                            <>
-                                <InfoRow icon={<Briefcase size={18} />} label="المسمى الوظيفي" value={data.jobTitle} />
-                                <InfoRow icon={<Building size={18} />} label="القسم" value={data.department} />
-                                <InfoRow icon={<User size={18} />} label="الراتب الأساسي" value={`${data.salary?.toLocaleString()} ر.س`} />
-                                <InfoRow icon={<Briefcase size={18} />} label="حالة الموظف" value={data.status === 'ACTIVE' ? 'نشط' : 'إجازة / منقطع'} />
-                            </>
-                        )}
-                    </div>
-                </div>
+                    {/* Entity Info */}
+                    <div style={{ background: '#f8fafc', padding: '30px', borderRadius: '16px', marginBottom: '40px', border: '1px solid #eff6ff' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '25px' }}>
+                            <div style={{ background: '#2563eb', color: 'white', padding: '20px', borderRadius: '15px' }}>
+                                {type === 'CLIENT' ? <Users size={40} /> : type === 'PROJECT' ? <Briefcase size={40} /> : <User size={40} />}
+                            </div>
+                            <div>
+                                <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#1e293b' }}>{data.name}</h2>
+                                <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>
+                                    {type === 'CLIENT' ? 'عميل مسجل' : type === 'PROJECT' ? 'مشروع عقاري/مقاولات' : 'موظف مؤسسة'}
+                                </p>
+                            </div>
+                        </div>
 
-                {type === 'PROJECT' && data.description && (
-                    <div style={{ marginBottom: '40px' }}>
-                        <h4 style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '10px', marginBottom: '15px' }}>وصف المشروع</h4>
-                        <p style={{ lineHeight: '1.8', color: '#475569', textAlign: 'justify' }}>{data.description}</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 40px' }}>
+                            {type === 'CLIENT' && (
+                                <>
+                                    <InfoRow icon={<Phone size={18} />} label="رقم الجوار" value={data.phone} />
+                                    <InfoRow icon={<MapPin size={18} />} label="العنوان" value={data.address} />
+                                    <InfoRow icon={<Building size={18} />} label="الرقم الضريبي" value={data.vatNumber} />
+                                    <InfoRow icon={<Users size={18} />} label="نوع العميل" value={data.type === 'COMPANY' ? 'شركة' : 'فرد'} />
+                                </>
+                            )}
+                            {type === 'PROJECT' && (
+                                <>
+                                    <InfoRow icon={<MapPin size={18} />} label="موقع المشروع" value={data.location} />
+                                    <InfoRow icon={<Briefcase size={18} />} label="حالة المشروع" value={data.status} />
+                                    <InfoRow icon={<Briefcase size={18} />} label="القيمة التعاقدية" value={`${data.contractValue?.toLocaleString()} ر.س`} />
+                                    <InfoRow icon={<Briefcase size={18} />} label="تاريخ البدء" value={data.startDate ? new Date(data.startDate).toLocaleDateString('ar-SA') : '-'} />
+                                </>
+                            )}
+                            {type === 'EMPLOYEE' && (
+                                <>
+                                    <InfoRow icon={<Briefcase size={18} />} label="المسمى الوظيفي" value={data.jobTitle} />
+                                    <InfoRow icon={<Building size={18} />} label="القسم" value={data.department} />
+                                    <InfoRow icon={<User size={18} />} label="الراتب الأساسي" value={`${data.salary?.toLocaleString()} ر.س`} />
+                                    <InfoRow icon={<Briefcase size={18} />} label="حالة الموظف" value={data.status === 'ACTIVE' ? 'نشط' : 'إجازة / منقطع'} />
+                                </>
+                            )}
+                        </div>
                     </div>
-                )}
+
+                    {type === 'PROJECT' && data.description && (
+                        <div style={{ marginBottom: '40px' }}>
+                            <h4 style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '10px', marginBottom: '15px' }}>وصف المشروع</h4>
+                            <p style={{ lineHeight: '1.8', color: '#475569', textAlign: 'justify' }}>{data.description}</p>
+                        </div>
+                    )}
+
+                </div>
 
                 {/* Footer fixed to be at the bottom of the first page area if content is short */}
-                <div style={{ position: 'absolute', bottom: '10mm', left: '15mm', right: '15mm', borderTop: '1px solid #e2e8f0', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8' }}>
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8', marginTop: '30px' }}>
                     <div>تم استخراج هذا السجل آلياً من نظام مؤسسة الجنوب الجديد</div>
                     <div>صفحة 1 من 1</div>
                 </div>
