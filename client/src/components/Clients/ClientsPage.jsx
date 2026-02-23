@@ -58,7 +58,8 @@ const ClientsPage = () => {
             setShowForm(false);
             setNewClient({ name: '', phone: '', address: '', vatNumber: '' });
         } catch (err) {
-            alert('Failed to add client');
+            const errorMsg = err.response?.data?.error || err.message;
+            alert('❌ فشل إضافة العميل: ' + errorMsg);
         }
     };
 
