@@ -777,6 +777,22 @@ app.post('/api/invoices', authenticate, async (req, res) => {
                 }
             }
 
+            // 4. Auto Archive in Documents
+            try {
+                await tx.document.create({
+                    data: {
+                        title: `فاتورة مبيعات رقم ${invoice.invoiceNumber}`,
+                        category: 'OTHER',
+                        fileUrl: '', // This acts as a database record for now
+                        partnerId: invoice.partnerId,
+                        projectId: invoice.projectId,
+                        createdAt: invoice.createdAt
+                    }
+                });
+            } catch (archiveErr) {
+                console.warn('⚠️ Auto-archive failed:', archiveErr.message);
+            }
+
             return invoice;
         });
 
@@ -999,6 +1015,22 @@ app.post('/api/quotes', async (req, res) => {
                 partner: true
             }
         });
+
+        // 3. Auto Archive in Documents
+        try {
+            await prisma.document.create({
+                data: {
+                    title: `عرض سعر رقم ${quote.quoteNumber}`,
+                    category: 'OTHER',
+                    fileUrl: '', // This acts as a database record for now
+                    partnerId: quote.partnerId,
+                    createdAt: quote.createdAt
+                }
+            });
+        } catch (archiveErr) {
+            console.warn('⚠️ Auto-archive skipped:', archiveErr.message);
+        }
+
         res.json(quote);
     } catch (error) {
         console.error(error);
