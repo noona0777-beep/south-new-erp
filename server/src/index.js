@@ -530,10 +530,10 @@ app.delete('/api/products/:id', async (req, res) => {
 });
 
 // Helper: Get or create default warehouse
-async function getOrCreateWarehouse() {
-    let warehouse = await prisma.warehouse.findFirst();
+async function getOrCreateWarehouse(prismaInstance = prisma) {
+    let warehouse = await prismaInstance.warehouse.findFirst();
     if (!warehouse) {
-        warehouse = await prisma.warehouse.create({
+        warehouse = await prismaInstance.warehouse.create({
             data: { name: 'المستودع الرئيسي', location: 'المقر الرئيسي' }
         });
     }
@@ -682,10 +682,10 @@ app.post('/api/invoices', authenticate, async (req, res) => {
                 data: {
                     invoiceNumber: `INV-${Date.now()}`,
                     uuid: require('crypto').randomUUID(),
-                    date: new Date(date),
+                    date: date ? new Date(date) : new Date(),
                     type: type || 'SALES_TAX',
                     status: 'POSTED',
-                    partnerId: partnerId ? Number(partnerId) : null,
+                    partnerId: (partnerId && partnerId !== "") ? Number(partnerId) : null,
                     subtotal,
                     discount: Number(discount) || 0,
                     taxAmount,
@@ -693,7 +693,7 @@ app.post('/api/invoices', authenticate, async (req, res) => {
                     qrCode: generateZatcaTLV(
                         companyInfo.name,
                         companyInfo.vatNumber,
-                        new Date(date).toISOString(),
+                        (date ? new Date(date) : new Date()).toISOString(),
                         total.toFixed(2),
                         taxAmount.toFixed(2)
                     ),
@@ -739,7 +739,7 @@ app.post('/api/invoices', authenticate, async (req, res) => {
             // 3. Update Stock and Check for Low Stock
             for (const item of invoiceItemsData) {
                 if (item.productId) {
-                    const warehouse = await getOrCreateWarehouse();
+                    const warehouse = await getOrCreateWarehouse(tx);
                     const stock = await tx.stock.findFirst({
                         where: { productId: item.productId, warehouseId: warehouse.id }
                     });
@@ -1348,6 +1348,7 @@ app.post('/api/journal', async (req, res) => {
         });
         res.json(result);
     } catch (error) {
+        console.error('Invoice Creation Failed:', error);
         res.status(500).json({ error: error.message });
     }
 });
