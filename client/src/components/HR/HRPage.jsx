@@ -42,7 +42,7 @@ const HRPage = () => {
             await axios.post(`${API_URL}/documents`, {
                 title: `سجل بيانات الموظف: ${employee.name}`,
                 category: 'OTHER',
-                fileUrl: '',
+                fileUrl: `INTERNAL:EMPLOYEE:${employee.id}`,
                 employeeId: employee.id
             });
             alert('✅ تم أرشفة بيانات الموظف في الوثائق');

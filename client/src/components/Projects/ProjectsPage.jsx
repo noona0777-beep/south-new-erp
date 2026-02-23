@@ -72,7 +72,7 @@ const ProjectsPage = () => {
             await axios.post(`${API_URL}/documents`, {
                 title: `سجل بيانات المشروع: ${project.name}`,
                 category: 'OTHER',
-                fileUrl: '',
+                fileUrl: `INTERNAL:PROJECT:${project.id}`,
                 partnerId: project.partnerId,
                 projectId: project.id
             });

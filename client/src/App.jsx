@@ -16,6 +16,7 @@ import ReportsPage from './components/Reports/ReportsPage';
 import SettingsPage from './components/Settings/SettingsPage';
 import AccountingPage from './components/Accounting/AccountingPage';
 import DocumentsPage from './components/Documents/DocumentsPage';
+import DataRecordSummary from './components/Common/DataRecordSummary';
 import API_URL from './config';
 
 // Global Axios Config
@@ -498,6 +499,7 @@ function App() {
                     <Route path="/invoices/:id/print" element={<InvoicePrint />} />
                     <Route path="/quotes/:id/print" element={<QuotePrint />} />
                     <Route path="/clients/:id/statement" element={<ClientStatement />} />
+                    <Route path="/archive/summary/:type/:id" element={<DataRecordSummary />} />
                     <Route path="/*" element={<Layout user={user} onLogout={handleLogout} />} />
                 </Routes>
             )}

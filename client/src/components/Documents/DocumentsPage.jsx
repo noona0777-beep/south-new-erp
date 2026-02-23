@@ -40,9 +40,20 @@ const DocumentsPage = () => {
     useEffect(() => {
         if (previewDoc && !previewDoc.fileUrl) {
             setResolvedUrl(null); // Reset
-            axios.get(`${API_URL}/resolve-document?title=${encodeURIComponent(previewDoc.title)}`)
-                .then(res => setResolvedUrl(res.data.url))
-                .catch(() => setResolvedUrl(false));
+
+            // Prioritize resolution by IDs (Fastest)
+            if (previewDoc.partnerId && previewDoc.title.includes('العميل')) {
+                setResolvedUrl(`INTERNAL:CLIENT:${previewDoc.partnerId}`);
+            } else if (previewDoc.projectId && previewDoc.title.includes('المشروع')) {
+                setResolvedUrl(`INTERNAL:PROJECT:${previewDoc.projectId}`);
+            } else if (previewDoc.employeeId && previewDoc.title.includes('الموظف')) {
+                setResolvedUrl(`INTERNAL:EMPLOYEE:${previewDoc.employeeId}`);
+            } else {
+                // Fallback to API resolver by title (for Invoices/Quotes)
+                axios.get(`${API_URL}/resolve-document?title=${encodeURIComponent(previewDoc.title)}`)
+                    .then(res => setResolvedUrl(res.data.url))
+                    .catch(() => setResolvedUrl(false));
+            }
         } else {
             setResolvedUrl(null);
         }
@@ -463,11 +474,15 @@ const DocumentsPage = () => {
 
                                 if (currentUrl && currentUrl.startsWith('INTERNAL:')) {
                                     const [, type, id] = currentUrl.split(':');
-                                    const path = type === 'INVOICE' ? `/invoices/${id}/print` : `/quotes/${id}/print`;
+                                    let path = '';
+                                    if (type === 'INVOICE') path = `/invoices/${id}/print`;
+                                    else if (type === 'QUOTE') path = `/quotes/${id}/print`;
+                                    else path = `/archive/summary/${type}/${id}`;
+
                                     return (
                                         <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
                                             <div style={{ background: '#fffbeb', padding: '10px', borderRadius: '8px', border: '1px solid #fef3c7', color: '#b45309', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center' }}>
-                                                📄 هذا مستند مُنشأ تلقائياً من النظام. يمكنك عرضه وطباعته مباشرة.
+                                                📄 هذا سجل بيانات مستخرج من النظام. يمكنك عرضه وطباعته مباشرة.
                                             </div>
                                             <iframe
                                                 src={path}

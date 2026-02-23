@@ -41,7 +41,7 @@ const ClientsPage = () => {
             await axios.post(`${API_URL}/documents`, {
                 title: `سجل بيانات العميل: ${client.name}`,
                 category: 'OTHER',
-                fileUrl: '',
+                fileUrl: `INTERNAL:CLIENT:${client.id}`,
                 partnerId: client.id
             });
             alert('✅ تم أرشفة بيانات العميل في الوثائق');
