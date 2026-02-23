@@ -28,10 +28,10 @@ axios.interceptors.request.use((config) => {
     return config;
 });
 
-FileText,
-    Folder,
-    Menu,
-    X
+import {
+    LayoutDashboard, ShoppingCart, Users, Briefcase, Building2,
+    DollarSign, FileBarChart2, Settings, Bell, Search, Menu, X,
+    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon
 } from 'lucide-react';
 
 /* --- UI Components --- */
