@@ -330,7 +330,7 @@ const ContractsPage = () => {
                             {/* BOQ Editor */}
                             <div style={{ marginBottom: '30px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                                    <h4 style={{ margin: 0 }}>جدول الكميات والمواصفات (BOQ)</h4>
+                                    <h4 style={{ margin: 0, color: '#1e3a8a' }}>جدول الكميات والمواصفات (BOQ)</h4>
                                     <button type="button" onClick={handleAddItem} style={{ color: '#2563eb', background: '#eff6ff', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
                                         + إضافة بند أعمال
                                     </button>
@@ -390,6 +390,32 @@ const ContractsPage = () => {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+
+                            {/* Legal Clauses Section */}
+                            <div style={{ marginBottom: '30px', padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                    <h4 style={{ margin: 0, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <ShieldCheck size={20} /> بنود العقد المعتمدة (SCA)
+                                    </h4>
+                                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>تم إدراج 21 بنداً قياسياً</span>
+                                </div>
+                                <div style={{ maxHeight: '200px', overflowY: 'auto', padding: '10px', background: 'white', borderRadius: '10px', border: '1px solid #f1f5f9' }}>
+                                    {formData.clauses.map((clause, idx) => (
+                                        <div key={idx} style={{ marginBottom: '15px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
+                                            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#1e3a8a', marginBottom: '5px' }}>مادة ({clause.id}): {clause.title}</div>
+                                            <textarea
+                                                value={clause.content}
+                                                onChange={(e) => {
+                                                    const newClauses = [...formData.clauses];
+                                                    newClauses[idx].content = e.target.value;
+                                                    setFormData({ ...formData, clauses: newClauses });
+                                                }}
+                                                style={{ width: '100%', border: 'none', background: '#f8fafc', padding: '8px', borderRadius: '5px', fontSize: '0.8rem', resize: 'vertical', fontFamily: 'Cairo' }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
                             <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end' }}>
