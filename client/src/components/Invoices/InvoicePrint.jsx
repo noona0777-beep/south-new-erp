@@ -204,24 +204,22 @@ const InvoicePrint = () => {
             <style>{`
                 @media print {
                     .no-print { display: none !important; }
-                    @page { 
-                        size: A4; 
-                        margin: 0 !important; 
-                    }
-                    body { 
-                        background: white !important; 
-                        margin: 0 !important; 
-                        padding: 0 !important; 
-                    }
-                    #printable-area { 
+                    body { background: white !important; margin: 0; padding: 0 !important; }
+                    .print-page { 
                         box-shadow: none !important; 
                         margin: 0 !important; 
-                        width: 210mm !important; 
-                        height: 297mm !important;
-                        padding: 20mm !important; 
+                        width: 100% !important; 
+                        max-width: none !important;
+                        min-height: auto !important;
+                        height: auto !important;
+                        max-height: 297mm !important;
+                        padding: 10mm !important; 
                         border: none !important; 
                         position: relative !important;
-                        overflow: hidden !important;
+                    }
+                    @page { 
+                        size: A4; 
+                        margin: 10mm 0; 
                     }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }
