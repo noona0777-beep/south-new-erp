@@ -104,7 +104,7 @@ const InvoicePrint = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #0f172a', paddingBottom: '25px', marginBottom: '35px' }}>
                         <div>
                             <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#0f172a', fontWeight: '800' }}>{companyInfo.name || 'مؤسسة الجنوب الجديد'}</h1>
-                            <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '0.95rem' }}>للمقاولات العامة والديكور وإدارة الأملاك</p>
+                            <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '0.95rem' }}>للتطوير و الاستثمار و التسويق العقاري</p>
                             <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#334155' }}>الرقم الضريبي: <span dir="ltr">{companyInfo.vatNumber || '310123456700003'}</span></p>
                             <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#334155' }}>الموقع: أحد المسارحة، جازان</p>
                         </div>
