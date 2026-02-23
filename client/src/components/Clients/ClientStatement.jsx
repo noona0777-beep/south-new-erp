@@ -63,6 +63,7 @@ const ClientStatement = () => {
                             <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#1e3a8a', fontWeight: '800' }}>مؤسسة الجنوب الجديد</h1>
                             <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '0.95rem' }}>للتطوير و الاستثمار و التسويق العقاري</p>
                             <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#475569' }}>الرقم الضريبي: <span dir="ltr">310123456700003</span></p>
+                            <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#475569' }}>العنوان: أحد المسارحة ، جازان</p>
                         </div>
                         <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <div style={{ background: '#1e3a8a', color: 'white', padding: '10px 20px', borderRadius: '4px', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '10px' }}>كشف حساب عميل</div>
@@ -94,7 +95,7 @@ const ClientStatement = () => {
                                 <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '0.9rem' }}>التاريخ</th>
                                 <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '0.9rem' }}>رقم العملية</th>
                                 <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '0.9rem' }}>البيان</th>
-                                <th style={{ padding: '12px 15px', textAlign: 'center', fontSize: '0.9rem' }}>المبلغ</th>
+                                <th style={{ padding: '12px 15px', textAlign: 'center', fontSize: '0.9rem' }}>المجموع</th>
                             </tr>
                         </thead>
                         <tbody>

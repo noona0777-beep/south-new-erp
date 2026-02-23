@@ -115,7 +115,7 @@ const InvoicePrint = () => {
                             <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#1e3a8a', fontWeight: '900' }}>{companyInfo.name || 'مؤسسة الجنوب الجديد'}</h1>
                             <p style={{ margin: '5px 0', color: '#64748b', fontSize: '1rem', fontWeight: 'bold' }}>للتطوير و الاستثمار و التسويق العقاري</p>
                             <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>الرقم الضريبي: <span dir="ltr">{companyInfo.vatNumber || '310123456700003'}</span></p>
-                            <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>الموقع: أحد المسارحة، جازان</p>
+                            <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>العنوان: أحد المسارحة ، جازان</p>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ background: '#1e3a8a', color: '#fff', padding: '12px 30px', borderRadius: '50px', fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '8px' }}>
@@ -153,7 +153,7 @@ const InvoicePrint = () => {
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '40px' }}>
                         <thead>
                             <tr style={{ background: '#1e3a8a', color: '#fff' }}>
-                                <th style={{ padding: '15px', textAlign: 'right', fontSize: '0.9rem' }}>وصف السلعة / الخدمة</th>
+                                <th style={{ padding: '15px', textAlign: 'right', fontSize: '0.9rem' }}>الصنف / الخدمة</th>
                                 <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.9rem', width: '10%' }}>الكمية</th>
                                 <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.9rem', width: '18%' }}>سعر الوحدة</th>
                                 <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.9rem', width: '18%' }}>المجموع</th>

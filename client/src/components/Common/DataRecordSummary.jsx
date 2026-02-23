@@ -129,6 +129,7 @@ const DataRecordSummary = () => {
                         <div>
                             <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#1e3a8a', fontWeight: '900' }}>{companyInfo.name}</h1>
                             <p style={{ margin: '5px 0', color: '#64748b', fontSize: '1rem', fontWeight: 'bold' }}>للتطوير و الاستثمار و التسويق العقاري</p>
+                            <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>العنوان: أحد المسارحة ، جازان</p>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ background: '#1e3a8a', color: 'white', padding: '12px 30px', borderRadius: '50px', fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '8px' }}>
