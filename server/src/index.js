@@ -142,41 +142,38 @@ app.get('/api/dashboard/stats', async (req, res) => {
             recentQuotes,
             lowStockItems,
             invoiceStats,
+            contractStats
+        ] = await Promise.all([
+            prisma.invoice.count(),
+            prisma.quote.count(),
+            prisma.partner.count({ where: { type: 'CUSTOMER' } }),
+            prisma.product.count(),
+            prisma.project.count(),
+            prisma.employee.count(),
+            prisma.invoice.findMany({
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: { partner: true }
+            }),
+            prisma.quote.findMany({
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: { partner: true }
+            }),
+            prisma.stock.findMany({
+                where: { quantity: { lt: 10 } },
+                include: { product: true },
+                take: 5
+            }),
+            prisma.invoice.aggregate({
+                _sum: { total: true },
+                where: { status: { not: 'CANCELLED' } }
+            }),
             prisma.constructionContract.aggregate({
                 _sum: { totalValue: true },
                 _count: { id: true }
             })
-        ] = await Promise.all([
-                prisma.invoice.count(),
-                prisma.quote.count(),
-                prisma.partner.count({ where: { type: 'CUSTOMER' } }),
-                prisma.product.count(),
-                prisma.project.count(),
-                prisma.employee.count(),
-                prisma.invoice.findMany({
-                    take: 5,
-                    orderBy: { createdAt: 'desc' },
-                    include: { partner: true }
-                }),
-                prisma.quote.findMany({
-                    take: 5,
-                    orderBy: { createdAt: 'desc' },
-                    include: { partner: true }
-                }),
-                prisma.stock.findMany({
-                    where: { quantity: { lt: 10 } },
-                    include: { product: true },
-                    take: 5
-                }),
-                prisma.invoice.aggregate({
-                    _sum: { total: true },
-                    where: { status: { not: 'CANCELLED' } }
-                }),
-                prisma.constructionContract.aggregate({
-                    _sum: { totalValue: true },
-                    _count: { id: true }
-                })
-            ]);
+        ]);
 
         // Monthly revenue (last 6 months)
         const now = new Date();
@@ -209,7 +206,9 @@ app.get('/api/dashboard/stats', async (req, res) => {
                 products: totalProducts,
                 projects: totalProjects,
                 employees: totalEmployees,
-                revenue: invoiceStats._sum.total || 0
+                revenue: invoiceStats._sum.total || 0,
+                contractsCount: contractStats._count.id || 0,
+                contractsValue: contractStats._sum.totalValue || 0
             },
             recentInvoices: recentInvoices.map(inv => ({
                 id: inv.id,
