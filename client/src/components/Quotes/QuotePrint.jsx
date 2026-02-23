@@ -44,7 +44,7 @@ const QuotePrint = () => {
     const print = () => window.print();
 
     return (
-        <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '40px', fontFamily: 'Cairo, sans-serif' }}>
+        <div style={{ background: '#ffffff', minHeight: '100vh', padding: '40px', fontFamily: 'Cairo, sans-serif' }}>
             {/* Toolbar (Don't Print) */}
             {!hideToolbar && (
                 <div className="no-print" style={{ maxWidth: '210mm', margin: '0 auto 20px', display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
@@ -73,27 +73,27 @@ const QuotePrint = () => {
                     {/* Header Section */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                         <div>
-                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#000', fontWeight: '900' }}>مؤسسة الجنوب الجديد</h1>
+                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#1e3a8a', fontWeight: '900' }}>مؤسسة الجنوب الجديد</h1>
                             <p style={{ margin: '5px 0', color: '#64748b', fontSize: '1rem', fontWeight: 'bold' }}>للتطوير و الاستثمار و التسويق العقاري</p>
                             <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>الرقم الضريبي: <span dir="ltr">310123456700003</span></p>
                             <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>الموقع: أحد المسارحة، جازان</p>
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                            <div style={{ background: '#000', color: '#fff', padding: '12px 30px', borderRadius: '50px', fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '8px' }}>
+                            <div style={{ background: '#1e3a8a', color: '#fff', padding: '12px 30px', borderRadius: '50px', fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '8px' }}>
                                 عرض سعر
                             </div>
-                            <div style={{ fontSize: '0.9rem', color: '#000', fontWeight: 'bold' }}>{new Date(quote.date).toLocaleDateString('en-GB')}</div>
+                            <div style={{ fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 'bold' }}>{new Date(quote.date).toLocaleDateString('en-GB')}</div>
                         </div>
                     </div>
 
                     {/* Thick Separator Line */}
-                    <div style={{ borderBottom: '4px solid #000', marginBottom: '25px' }}></div>
+                    <div style={{ borderBottom: '4px solid #1e3a8a', marginBottom: '25px' }}></div>
 
                     {/* Client & Amount Box */}
                     <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px', border: '1px solid #f1f5f9' }}>
                         <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.9rem', marginBottom: '10px' }}>
-                                <div style={{ background: '#000', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                                <div style={{ background: '#1e3a8a', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                                     <span style={{ fontSize: '12px' }}>👤</span>
                                 </div>
                                 معلومات العميل
@@ -113,7 +113,7 @@ const QuotePrint = () => {
                     {/* Items Table */}
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '40px' }}>
                         <thead>
-                            <tr style={{ background: '#000', color: '#fff' }}>
+                            <tr style={{ background: '#1e3a8a', color: '#fff' }}>
                                 <th style={{ padding: '15px', textAlign: 'right', fontSize: '0.9rem' }}>وصف البند / الخدمة</th>
                                 <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.9rem', width: '10%' }}>الكمية</th>
                                 <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.9rem', width: '18%' }}>سعر الوحدة</th>
@@ -146,7 +146,7 @@ const QuotePrint = () => {
                                 <span style={{ color: '#64748b', fontWeight: 'bold' }}>ضريبة القيمة المضافة (15%):</span>
                                 <span style={{ fontWeight: 'bold' }}>{quote.taxAmount.toFixed(2)} ر.س</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 20px', background: '#f8fafc', fontSize: '1.2rem', fontWeight: '900', color: '#000' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 20px', background: '#f8fafc', fontSize: '1.2rem', fontWeight: '900', color: '#1e3a8a' }}>
                                 <span>المجموع الكلي:</span>
                                 <span>{quote.total.toFixed(2)} ر.س</span>
                             </div>

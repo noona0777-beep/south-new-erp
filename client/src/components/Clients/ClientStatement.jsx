@@ -29,7 +29,7 @@ const ClientStatement = () => {
     const totalBalance = client.invoices?.reduce((acc, inv) => acc + inv.total, 0) || 0;
 
     return (
-        <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '40px', fontFamily: 'Cairo, sans-serif' }}>
+        <div style={{ background: '#ffffff', minHeight: '100vh', padding: '40px', fontFamily: 'Cairo, sans-serif' }}>
             {/* Toolbar (Don't Print) */}
             <div className="no-print" style={{ maxWidth: '210mm', margin: '0 auto 20px', display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
                 <Link to="/clients" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#64748b', fontWeight: 'bold' }}>
@@ -49,13 +49,13 @@ const ClientStatement = () => {
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '3px solid #0f172a', paddingBottom: '25px', marginBottom: '35px' }}>
                     <div>
-                        <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#0f172a', fontWeight: '800' }}>مؤسسة الجنوب الجديد</h1>
+                        <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#1e3a8a', fontWeight: '800' }}>مؤسسة الجنوب الجديد</h1>
                         <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '0.95rem' }}>للتطوير و الاستثمار و التسويق العقاري</p>
-                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#334155' }}>الرقم الضريبي: <span dir="ltr">310123456700003</span></p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#475569' }}>الرقم الضريبي: <span dir="ltr">310123456700003</span></p>
                     </div>
                     <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <div style={{ background: '#0f172a', color: 'white', padding: '10px 20px', borderRadius: '4px', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '10px' }}>كشف حساب عميل</div>
-                        <div style={{ fontSize: '0.9rem', color: '#64748b' }}>تاريخ التقرير: {new Date().toLocaleDateString('ar-SA')}</div>
+                        <div style={{ background: '#1e3a8a', color: 'white', padding: '10px 20px', borderRadius: '4px', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '10px' }}>كشف حساب عميل</div>
+                        <div style={{ fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 'bold' }}>{new Date().toLocaleDateString('ar-SA')}</div>
                     </div>
                 </div>
 
@@ -76,9 +76,10 @@ const ClientStatement = () => {
                 </div>
 
                 {/* Table Section */}
+                <div style={{ borderBottom: '4px solid #1e3a8a', marginBottom: '35px' }}></div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '40px' }}>
                     <thead>
-                        <tr style={{ background: '#0f172a', color: 'white' }}>
+                        <tr style={{ background: '#1e3a8a', color: 'white' }}>
                             <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '0.9rem' }}>التاريخ</th>
                             <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '0.9rem' }}>رقم العملية</th>
                             <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '0.9rem' }}>البيان</th>

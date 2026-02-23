@@ -70,7 +70,7 @@ const DataRecordSummary = () => {
     );
 
     return (
-        <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '40px', fontFamily: 'Cairo, sans-serif' }}>
+        <div style={{ background: '#ffffff', minHeight: '100vh', padding: '40px', fontFamily: 'Cairo, sans-serif' }}>
             <style>
                 {`
                 @media print {
@@ -115,22 +115,27 @@ const DataRecordSummary = () => {
             }}>
 
                 <div style={{ flex: 1 }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #0f172a', paddingBottom: '25px', marginBottom: '35px' }}>
+                    {/* Header Section */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                         <div>
-                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#0f172a', fontWeight: '800' }}>{companyInfo.name}</h1>
-                            <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '0.95rem' }}>للتطوير و الاستثمار و التسويق العقاري</p>
+                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#1e3a8a', fontWeight: '900' }}>{companyInfo.name}</h1>
+                            <p style={{ margin: '5px 0', color: '#64748b', fontSize: '1rem', fontWeight: 'bold' }}>للتطوير و الاستثمار و التسويق العقاري</p>
                         </div>
-                        <div style={{ textAlign: 'left' }}>
-                            <h2 style={{ margin: 0, color: '#2563eb', fontWeight: 'bold' }}>سجل بيانات نظام</h2>
-                            <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '5px' }}>تاريخ الأرشفة: {new Date().toLocaleDateString('ar-SA')}</div>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ background: '#1e3a8a', color: 'white', padding: '12px 30px', borderRadius: '50px', fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '8px' }}>
+                                سجل بيانات نظام
+                            </div>
+                            <div style={{ fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 'bold' }}>{new Date().toLocaleDateString('ar-SA')}</div>
                         </div>
                     </div>
+
+                    {/* Thick Separator Line */}
+                    <div style={{ borderBottom: '4px solid #1e3a8a', marginBottom: '35px' }}></div>
 
                     {/* Entity Info */}
                     <div style={{ background: '#f8fafc', padding: '30px', borderRadius: '16px', marginBottom: '40px', border: '1px solid #eff6ff' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '25px' }}>
-                            <div style={{ background: '#2563eb', color: 'white', padding: '20px', borderRadius: '15px' }}>
+                            <div style={{ background: '#1e3a8a', color: 'white', padding: '20px', borderRadius: '15px' }}>
                                 {type === 'CLIENT' ? <Users size={40} /> : type === 'PROJECT' ? <Briefcase size={40} /> : <User size={40} />}
                             </div>
                             <div>
