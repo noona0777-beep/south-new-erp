@@ -1440,7 +1440,7 @@ app.get('/api/construction-contracts/:id', authenticate, async (req, res) => {
 
 // Create New Construction Contract
 app.post('/api/construction-contracts', authenticate, async (req, res) => {
-    const { partnerId, projectId, title, type, startDate, endDate, advancePayment, retentionPercent, items, clauses } = req.body;
+    const { partnerId, projectId, title, type, startDate, endDate, advancePayment, retentionPercent, items, clauses, location, signatureName } = req.body;
 
     try {
         // Calculate Totals from Items
@@ -1476,6 +1476,8 @@ app.post('/api/construction-contracts', authenticate, async (req, res) => {
                     taxAmount,
                     totalValue,
                     clauses: clauses || {},
+                    location: location || '',
+                    signatureName: signatureName || '',
                     items: {
                         create: contractItems
                     }
@@ -1495,7 +1497,7 @@ app.post('/api/construction-contracts', authenticate, async (req, res) => {
 // Update Construction Contract
 app.put('/api/construction-contracts/:id', authenticate, async (req, res) => {
     const { id } = req.params;
-    const { partnerId, projectId, title, type, startDate, endDate, advancePayment, retentionPercent, items, clauses, status } = req.body;
+    const { partnerId, projectId, title, type, startDate, endDate, advancePayment, retentionPercent, items, clauses, status, location, signatureName } = req.body;
 
     try {
         let netValue = 0;
@@ -1535,6 +1537,8 @@ app.put('/api/construction-contracts/:id', authenticate, async (req, res) => {
                     taxAmount,
                     totalValue,
                     clauses: clauses || {},
+                    location: location || '',
+                    signatureName: signatureName || '',
                     items: {
                         create: contractItems
                     }

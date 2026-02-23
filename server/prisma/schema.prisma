@@ -441,6 +441,9 @@ model ConstructionContract {
   advancePayment  Float     @default(0)
   retentionPercent Float    @default(0)
   
+  location        String?   // موقع المشروع
+  signatureName   String?   // اسم الشخص المفوض بالتوقيع
+  
   // Clauses Content (Stored as JSON or large text)
   clauses         Json?     
   

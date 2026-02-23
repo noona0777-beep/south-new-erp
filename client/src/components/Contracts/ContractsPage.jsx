@@ -22,11 +22,13 @@ const ContractsPage = () => {
         projectId: '',
         startDate: '',
         endDate: '',
+        location: '', // Adding location
         advancePayment: 0,
         retentionPercent: 5,
         items: [{ description: '', unit: 'متر', quantity: 1, unitPrice: 0, total: 0 }],
         clauses: SCA_CLAUSES.MAIN,
-        signatureName: ''
+        signatureName: '',
+        status: 'DRAFT' // Default status
     });
 
     useEffect(() => {
@@ -58,10 +60,13 @@ const ContractsPage = () => {
             projectId: '',
             startDate: '',
             endDate: '',
+            location: '',
             advancePayment: 0,
             retentionPercent: 5,
             items: [{ description: '', unit: 'متر', quantity: 1, unitPrice: 0, total: 0 }],
-            clauses: SCA_CLAUSES.MAIN
+            clauses: SCA_CLAUSES.MAIN,
+            signatureName: '',
+            status: 'DRAFT'
         });
         setIsEditing(false);
         setEditingId(null);
@@ -122,7 +127,9 @@ const ContractsPage = () => {
             retentionPercent: contract.retentionPercent,
             items: contract.items,
             clauses: contract.clauses || SCA_CLAUSES.MAIN,
-            signatureName: contract.signatureName || ''
+            signatureName: contract.signatureName || '',
+            location: contract.location || '',
+            status: contract.status || 'DRAFT'
         });
         setEditingId(contract.id);
         setIsEditing(true);
@@ -244,13 +251,26 @@ const ContractsPage = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>تاريخ الانتهاء</label>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>موقع المشروع / العنوان</label>
                                     <input
-                                        type="date"
-                                        value={formData.endDate}
-                                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
+                                        type="text"
+                                        placeholder="مثال: الرياض - حي الملقا - شارع..."
+                                        value={formData.location}
+                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none' }}
                                     />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>حالة العقد الحالي</label>
+                                    <select
+                                        value={formData.status}
+                                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
+                                    >
+                                        <option value="DRAFT">مسودة (قيد المراجعة)</option>
+                                        <option value="ACTIVE">نشط (تم التعميد)</option>
+                                        <option value="COMPLETED">مكتمل (تم التسليم)</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
