@@ -100,54 +100,54 @@ const InvoicePrint = () => {
             }} className="print-page">
 
                 <div style={{ flex: 1 }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #0f172a', paddingBottom: '25px', marginBottom: '35px' }}>
+                    {/* Header Section */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                         <div>
-                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#0f172a', fontWeight: '800' }}>{companyInfo.name || 'مؤسسة الجنوب الجديد'}</h1>
-                            <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '0.95rem' }}>للتطوير و الاستثمار و التسويق العقاري</p>
-                            <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#334155' }}>الرقم الضريبي: <span dir="ltr">{companyInfo.vatNumber || '310123456700003'}</span></p>
-                            <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#334155' }}>الموقع: أحد المسارحة، جازان</p>
+                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#000', fontWeight: '900' }}>{companyInfo.name || 'مؤسسة الجنوب الجديد'}</h1>
+                            <p style={{ margin: '5px 0', color: '#64748b', fontSize: '1rem', fontWeight: 'bold' }}>للتطوير و الاستثمار و التسويق العقاري</p>
+                            <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>الرقم الضريبي: <span dir="ltr">{companyInfo.vatNumber || '310123456700003'}</span></p>
+                            <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>الموقع: أحد المسارحة، جازان</p>
                         </div>
-                        <div style={{ textAlign: 'left' }}>
-                            <h2 style={{ margin: 0, color: '#2563eb', fontWeight: 'bold' }}>فاتورة ضريبية</h2>
-                            <h3 style={{ margin: '5px 0', fontSize: '1.2rem', color: '#64748b' }}>#{invoice.id.toString().padStart(6, '0')}</h3>
-                            <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{invoice.invoiceNumber}</div>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ background: '#000', color: '#fff', padding: '12px 30px', borderRadius: '50px', fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '8px' }}>
+                                فاتورة ضريبية
+                            </div>
+                            <div style={{ fontSize: '0.9rem', color: '#000', fontWeight: 'bold' }}>{new Date(invoice.date).toLocaleDateString('en-GB')}</div>
                         </div>
                     </div>
 
-                    {/* Details Section */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px', alignItems: 'flex-start' }}>
-                        <div style={{ flex: 1, paddingRight: '20px' }}>
-                            <h4 style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '0.9rem', fontWeight: 'bold' }}>معلومات العميل</h4>
-                            <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '5px' }}>{invoice.partner?.name || 'عميل نقدي'}</div>
-                            <div style={{ color: '#475569', fontSize: '0.9rem', lineHeight: '1.6' }}>
-                                {invoice.partner?.address || 'غير محدد'}<br />
-                                {invoice.partner?.phone || ''}
+                    {/* Thick Separator Line */}
+                    <div style={{ borderBottom: '4px solid #000', marginBottom: '25px' }}></div>
+
+                    {/* Client & Amount Box */}
+                    <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px', border: '1px solid #f1f5f9' }}>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.9rem', marginBottom: '10px' }}>
+                                <div style={{ background: '#000', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                                    <span style={{ fontSize: '12px' }}>👤</span>
+                                </div>
+                                معلومات العميل
                             </div>
-                            {invoice.partner?.vatNumber && (
-                                <div style={{ marginTop: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>الرقم الضريبي: {invoice.partner.vatNumber}</div>
-                            )}
+                            <div style={{ fontWeight: '900', fontSize: '1.3rem', color: '#0f172a', marginBottom: '5px' }}>{invoice.partner?.name || 'عميل نقدي'}</div>
+                            <div style={{ color: '#64748b', fontSize: '0.9rem' }}>{invoice.partner?.phone || '0.......'}</div>
                         </div>
-                        <div style={{ flex: 1, textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                            <div style={{ marginBottom: '15px', textAlign: 'right' }}>
-                                <div style={{ fontSize: '0.9rem', color: '#64748b' }}>تاريخ الإصدار</div>
-                                <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>{new Date(invoice.date).toLocaleDateString('en-GB')}</div>
-                            </div>
-                            {/* QR Code */}
-                            <div style={{ padding: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                                <QRCode value={qrValue} size={110} />
+                        <div style={{ textAlign: 'left' }}>
+                            <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '5px' }}>المبلغ المستحق</div>
+                            <div style={{ fontSize: '2rem', fontWeight: '900', color: '#1e40af' }}>
+                                {invoice.total.toFixed(2)} <span style={{ fontSize: '1.2rem' }}>ر.س</span>
                             </div>
                         </div>
                     </div>
+
 
                     {/* Items Table */}
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '40px' }}>
                         <thead>
-                            <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #0f172a' }}>
-                                <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '0.9rem', color: '#334155' }}>وصف السلعة / الخدمة</th>
-                                <th style={{ padding: '12px 15px', textAlign: 'center', fontSize: '0.9rem', color: '#334155', width: '15%' }}>الكمية</th>
-                                <th style={{ padding: '12px 15px', textAlign: 'center', fontSize: '0.9rem', color: '#334155', width: '20%' }}>سعر الوحدة</th>
-                                <th style={{ padding: '12px 15px', textAlign: 'center', fontSize: '0.9rem', color: '#334155', width: '20%' }}>المجموع (شامل الضريبة)</th>
+                            <tr style={{ background: '#000', color: '#fff' }}>
+                                <th style={{ padding: '15px', textAlign: 'right', fontSize: '0.9rem' }}>وصف السلعة / الخدمة</th>
+                                <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.9rem', width: '10%' }}>الكمية</th>
+                                <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.9rem', width: '18%' }}>سعر الوحدة</th>
+                                <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.9rem', width: '18%' }}>المجموع</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -163,22 +163,21 @@ const InvoicePrint = () => {
                     </table>
 
                     {/* Totals Section */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <div style={{ width: '350px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #e2e8f0' }}>
-                                <span style={{ color: '#64748b' }}>الإجمالي (غير شامل الضريبة):</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '20px' }}>
+                        <div style={{ padding: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                            <QRCode value={qrValue} size={100} />
+                        </div>
+                        <div style={{ width: '350px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid #f1f5f9' }}>
+                                <span style={{ color: '#64748b', fontWeight: 'bold' }}>المجموع الفرعي:</span>
                                 <span style={{ fontWeight: 'bold' }}>{invoice.subtotal.toFixed(2)} ر.س</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #e2e8f0' }}>
-                                <span style={{ color: '#64748b' }}>الخصم:</span>
-                                <span style={{ color: '#ef4444' }}>- {invoice.discount.toFixed(2)} ر.س</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '2px solid #0f172a' }}>
-                                <span style={{ color: '#64748b' }}>ضريبة القيمة المضافة (15%):</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid #f1f5f9' }}>
+                                <span style={{ color: '#64748b', fontWeight: 'bold' }}>ضريبة القيمة المضافة (15%):</span>
                                 <span style={{ fontWeight: 'bold' }}>{invoice.taxAmount.toFixed(2)} ر.س</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 0', fontSize: '1.3rem', fontWeight: '800', color: '#2563eb' }}>
-                                <span>المبلغ المستحق:</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 20px', background: '#f8fafc', fontSize: '1.2rem', fontWeight: '900', color: '#000' }}>
+                                <span>المجموع الكلي:</span>
                                 <span>{invoice.total.toFixed(2)} ر.س</span>
                             </div>
                         </div>
