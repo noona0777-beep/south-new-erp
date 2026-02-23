@@ -18,6 +18,15 @@ import AccountingPage from './components/Accounting/AccountingPage';
 import DocumentsPage from './components/Documents/DocumentsPage';
 import API_URL from './config';
 
+// Global Axios Config
+axios.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 import {
     LayoutDashboard,
     ShoppingCart,
