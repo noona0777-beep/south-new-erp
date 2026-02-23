@@ -378,32 +378,59 @@ const Layout = ({ user, onLogout }) => {
             </div>
 
             {/* Main Content */}
-            <div style={{
+            <div className={window.innerWidth > 768 ? 'main-content-fluid' : ''} style={{
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100vh',
                 overflow: 'hidden',
-                marginRight: window.innerWidth > 768 ? '280px' : '0',
-                transition: 'margin 0.4s ease',
-                width: window.innerWidth > 768 ? 'calc(100% - 280px)' : '100%'
+                transition: 'all 0.4s ease'
             }}>
                 <header className="fade-in no-print" style={{
                     background: 'white',
-                    padding: '12px 20px',
+                    padding: '12px 30px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.01), 0 2px 4px -1px rgba(0,0,0,0.01)',
+                    borderBottom: '1px solid #f1f5f9',
                     zIndex: 20
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
-                        <button className="show-mobile" onClick={toggleSidebar} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', color: '#1e293b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1, justifyContent: 'center' }}>
+                        <button className="show-mobile" onClick={toggleSidebar} style={{ position: 'absolute', right: '20px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', color: '#1e293b', cursor: 'pointer' }}>
                             <Menu size={20} />
                         </button>
-                        <div style={{ position: 'relative', width: '100%', maxWidth: '350px' }}>
-                            <Search size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                            <input type="text" placeholder="بحث شامل في النظام..." value={searchQuery} onChange={handleSearch} style={{ width: '100%', padding: '10px 40px 10px 15px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', outline: 'none', fontFamily: 'Cairo', fontSize: '0.9rem' }} />
+
+                        <div style={{ position: 'relative', width: '100%', maxWidth: '450px', transition: 'all 0.3s' }}>
+                            <Search size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <input
+                                type="text"
+                                placeholder="بحث شامل في أرشيف المشروع والنظام..."
+                                value={searchQuery}
+                                onChange={handleSearch}
+                                style={{
+                                    width: '100%',
+                                    padding: '12px 45px 12px 15px',
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    background: '#f8fafc',
+                                    outline: 'none',
+                                    fontFamily: 'Cairo',
+                                    fontSize: '0.95rem',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)'
+                                }}
+                                onFocus={e => {
+                                    e.target.style.borderColor = '#3b82f6';
+                                    e.target.style.background = 'white';
+                                    e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.1)';
+                                }}
+                                onBlur={e => {
+                                    e.target.style.borderColor = '#e2e8f0';
+                                    e.target.style.background = '#f8fafc';
+                                    e.target.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.02)';
+                                }}
+                            />
 
                             {showSearchResults && (
                                 <div style={{

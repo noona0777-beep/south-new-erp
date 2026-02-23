@@ -268,6 +268,23 @@ body {
         width: 100% !important;
     }
 
+    /* Fixed Sidebar width and alignment */
+    .sidebar {
+        width: 280px !important;
+        right: 0;
+        position: fixed;
+        height: 100vh;
+        z-index: 50;
+    }
+
+    /* Main layout container - Perfect docking to sidebar */
+    .main-content-fluid {
+        margin-right: 280px !important;
+        width: calc(100% - 280px) !important;
+        flex: none !important;
+        /* Prevent flex interference */
+    }
+
     /* Adjust main padding for smaller screens */
     main {
         padding: 16px !important;
