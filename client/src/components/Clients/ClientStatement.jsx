@@ -158,12 +158,11 @@ const ClientStatement = () => {
                     #printable-area { 
                         box-shadow: none !important; 
                         margin: 0 !important; 
-                        width: 210mm !important; 
-                        height: 297mm !important;
-                        padding: 20mm !important; 
+                        width: 100% !important; 
+                        padding: 10mm !important; 
                         border: none !important; 
                         position: relative !important;
-                        overflow: hidden !important;
+                        height: auto !important;
                     }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }

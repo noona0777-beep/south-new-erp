@@ -94,7 +94,7 @@ const InvoicePrint = () => {
 
             {/* A4 Page */}
             <div id="printable-area" style={{
-                background: 'white', width: '100%', maxWidth: '210mm', minHeight: '260mm', margin: '0 auto', padding: '20mm',
+                background: 'white', width: '100%', maxWidth: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', color: '#0f172a', boxSizing: 'border-box',
                 direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                 position: 'relative', overflow: 'hidden'
@@ -216,12 +216,11 @@ const InvoicePrint = () => {
                     #printable-area { 
                         box-shadow: none !important; 
                         margin: 0 !important; 
-                        width: 210mm !important; 
-                        height: 297mm !important;
-                        padding: 20mm !important; 
+                        width: 100% !important; 
+                        padding: 10mm !important; 
                         border: none !important; 
                         position: relative !important;
-                        overflow: hidden !important;
+                        height: auto !important;
                     }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }
