@@ -494,9 +494,9 @@ const DocumentsPage = () => {
                                 if (currentUrl && currentUrl.startsWith('INTERNAL:')) {
                                     const [, type, id] = currentUrl.split(':');
                                     let path = '';
-                                    if (type === 'INVOICE') path = `/invoices/${id}/print`;
-                                    else if (type === 'QUOTE') path = `/quotes/${id}/print`;
-                                    else path = `/archive/summary/${type}/${id}`;
+                                    if (type === 'INVOICE') path = `/invoices/${id}/print?hideToolbar=true`;
+                                    else if (type === 'QUOTE') path = `/quotes/${id}/print?hideToolbar=true`;
+                                    else path = `/archive/summary/${type}/${id}?hideToolbar=true`;
 
                                     return (
                                         <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>

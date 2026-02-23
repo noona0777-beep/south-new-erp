@@ -9,6 +9,7 @@ const DataRecordSummary = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [companyInfo, setCompanyInfo] = useState({ name: 'مؤسسة الجنوب الوثيق', vatNumber: '310123456700003' });
+    const hideToolbar = new URLSearchParams(window.location.search).get('hideToolbar') === 'true';
 
     useEffect(() => {
         // Fetch Company Info
@@ -79,7 +80,7 @@ const DataRecordSummary = () => {
                         box-shadow: none !important; 
                         margin: 0 auto !important; 
                         width: 210mm !important; 
-                        min-height: 297mm !important; 
+                        min-height: 280mm !important; 
                         padding: 15mm !important;
                         position: relative !important;
                     }
@@ -89,23 +90,25 @@ const DataRecordSummary = () => {
             </style>
 
             {/* Toolbar */}
-            <div className="no-print" style={{ maxWidth: '210mm', margin: '0 auto 20px', display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
-                <Link to="/archive" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#64748b', gap: '5px' }}>
-                    <ChevronRight size={18} /> العودة للأرشيف
-                </Link>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={handleDownloadPDF} style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                        <Download size={18} /> تحميل PDF
-                    </button>
-                    <button onClick={print} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                        <Printer size={18} /> طباعة السجل
-                    </button>
+            {!hideToolbar && (
+                <div className="no-print" style={{ maxWidth: '210mm', margin: '0 auto 20px', display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
+                    <Link to="/archive" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#64748b', gap: '5px' }}>
+                        <ChevronRight size={18} /> العودة للأرشيف
+                    </Link>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={handleDownloadPDF} style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                            <Download size={18} /> تحميل PDF
+                        </button>
+                        <button onClick={print} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                            <Printer size={18} /> طباعة السجل
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* A4 Page */}
             <div id="printable-area" className="print-page" style={{
-                background: 'white', width: '210mm', minHeight: '296mm', margin: '0 auto', padding: '20mm',
+                background: 'white', width: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box'
             }}>
 
@@ -171,7 +174,7 @@ const DataRecordSummary = () => {
                 )}
 
                 {/* Footer fixed to be at the bottom of the first page area if content is short */}
-                <div style={{ position: 'absolute', bottom: '15mm', left: '15mm', right: '15mm', borderTop: '1px solid #e2e8f0', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8' }}>
+                <div style={{ position: 'absolute', bottom: '10mm', left: '15mm', right: '15mm', borderTop: '1px solid #e2e8f0', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8' }}>
                     <div>تم استخراج هذا السجل آلياً من نظام مؤسسة الجنوب الجديد</div>
                     <div>صفحة 1 من 1</div>
                 </div>

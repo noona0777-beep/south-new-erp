@@ -10,6 +10,7 @@ const QuotePrint = () => {
     const [quote, setQuote] = useState(null);
 
     const [qrContent, setQrContent] = useState('');
+    const hideToolbar = new URLSearchParams(window.location.search).get('hideToolbar') === 'true';
 
     useEffect(() => {
         axios.get(`${API_URL}/quotes/${id}`)
@@ -45,23 +46,25 @@ const QuotePrint = () => {
     return (
         <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '40px', fontFamily: 'Cairo, sans-serif' }}>
             {/* Toolbar (Don't Print) */}
-            <div className="no-print" style={{ maxWidth: '210mm', margin: '0 auto 20px', display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
-                <Link to="/quotes" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#64748b' }}>
-                    <ChevronRight size={18} /> العودة لعروض الأسعار
-                </Link>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={handleDownloadPDF} style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                        <Download size={18} /> تحميل PDF
-                    </button>
-                    <button onClick={print} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                        <Printer size={18} /> طباعة عرض السعر
-                    </button>
+            {!hideToolbar && (
+                <div className="no-print" style={{ maxWidth: '210mm', margin: '0 auto 20px', display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
+                    <Link to="/quotes" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#64748b' }}>
+                        <ChevronRight size={18} /> العودة لعروض الأسعار
+                    </Link>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={handleDownloadPDF} style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                            <Download size={18} /> تحميل PDF
+                        </button>
+                        <button onClick={print} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                            <Printer size={18} /> طباعة عرض السعر
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* A4 Page */}
             <div id="printable-area" style={{
-                background: 'white', width: '210mm', minHeight: '296mm', margin: '0 auto', padding: '20mm',
+                background: 'white', width: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box'
             }} className="print-page">
 
@@ -159,7 +162,7 @@ const QuotePrint = () => {
                 )}
 
                 {/* Footer */}
-                <div style={{ position: 'absolute', bottom: '20mm', left: '20mm', right: '20mm', textAlign: 'center', fontSize: '0.8rem', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+                <div style={{ position: 'absolute', bottom: '10mm', left: '20mm', right: '20mm', textAlign: 'center', fontSize: '0.8rem', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
                     <p style={{ margin: '0 0 5px 0' }}>يسري هذا العرض لمدة محددة من تاريخ الإصدار</p>
                     <p style={{ margin: 0 }}>مؤسسة الجنوب الجديد - نعتز بثقتكم</p>
                 </div>
@@ -173,7 +176,7 @@ const QuotePrint = () => {
                         box-shadow: none !important; 
                         margin: 0 auto !important; 
                         width: 210mm !important; 
-                        min-height: 296mm !important;
+                        min-height: 280mm !important;
                         padding: 15mm !important; 
                         border: none !important; 
                         position: relative !important;
