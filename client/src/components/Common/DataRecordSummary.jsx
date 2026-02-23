@@ -71,24 +71,27 @@ const DataRecordSummary = () => {
 
     return (
         <div style={{ background: '#ffffff', minHeight: '100vh', padding: '40px', fontFamily: 'Cairo, sans-serif' }}>
-            <style>
-                {`
+            <style>{`
                 @media print {
-                    body { background: white !important; padding: 0 !important; margin: 0 !important; }
                     .no-print { display: none !important; }
+                    body { background: white !important; margin: 0; padding: 0 !important; }
                     .print-page { 
                         box-shadow: none !important; 
                         margin: 0 !important; 
                         width: 100% !important; 
-                        max-width: none !important;
+                        padding: 10mm !important; 
+                        border: none !important; 
                         min-height: auto !important;
-                        padding: 0 !important;
-                        position: relative !important;
+                        height: auto !important;
+                        max-height: 297mm !important;
                     }
-                    @page { margin: 15mm; size: A4; }
+                    @page { 
+                        size: A4; 
+                        margin: 10mm 0; 
+                    }
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }
-                `}
-            </style>
+            `}</style>
 
             {/* Toolbar */}
             {!hideToolbar && (
@@ -109,7 +112,7 @@ const DataRecordSummary = () => {
 
             {/* A4 Page */}
             <div id="printable-area" style={{
-                background: 'white', width: '100%', maxWidth: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
+                background: 'white', width: '100%', maxWidth: '210mm', minHeight: '260mm', margin: '0 auto', padding: '20mm',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', color: '#0f172a', boxSizing: 'border-box',
                 direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                 position: 'relative', overflow: 'hidden'

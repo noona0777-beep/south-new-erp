@@ -42,7 +42,7 @@ const ClientStatement = () => {
 
             {/* A4 Page */}
             <div id="printable-area" style={{
-                background: 'white', width: '100%', maxWidth: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
+                background: 'white', width: '100%', maxWidth: '210mm', minHeight: '260mm', margin: '0 auto', padding: '20mm',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', color: '#0f172a', boxSizing: 'border-box',
                 direction: 'rtl', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                 position: 'relative', overflow: 'hidden'
@@ -153,10 +153,13 @@ const ClientStatement = () => {
                         width: 100% !important; 
                         padding: 10mm !important; 
                         border: none !important; 
+                        min-height: auto !important;
+                        height: auto !important;
+                        max-height: 297mm !important;
                     }
                     @page { 
                         size: A4; 
-                        margin: 0; 
+                        margin: 10mm 0; 
                     }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }
