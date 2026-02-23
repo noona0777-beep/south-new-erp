@@ -16,8 +16,6 @@ import ReportsPage from './components/Reports/ReportsPage';
 import SettingsPage from './components/Settings/SettingsPage';
 import AccountingPage from './components/Accounting/AccountingPage';
 import DocumentsPage from './components/Documents/DocumentsPage';
-import ContractsPage from './components/Contracts/ContractsPage';
-import ContractPrint from './components/Contracts/ContractPrint';
 import DataRecordSummary from './components/Common/DataRecordSummary';
 import API_URL from './config';
 
@@ -344,7 +342,6 @@ const Layout = ({ user, onLogout }) => {
                     <NavLink to="/inventory" icon={<Package />} label="المخزون" active={isActive('/inventory')} onClick={closeSidebar} />
                     <NavLink to="/clients" icon={<Users />} label="العملاء" active={isActive('/clients')} onClick={closeSidebar} />
                     <NavLink to="/projects" icon={<Briefcase />} label="المشاريع والمقاولات" active={isActive('/projects')} onClick={closeSidebar} />
-                    <NavLink to="/contracts" icon={<FileText />} label="عقود المقاولات" active={isActive('/contracts')} onClick={closeSidebar} />
                     <NavLink to="/accounting" icon={<DollarSign />} label="المحاسبة والمالية" active={isActive('/accounting')} onClick={closeSidebar} />
                     <NavLink to="/hr" icon={<Users />} label="الموارد البشرية" active={isActive('/hr')} onClick={closeSidebar} />
                     <NavLink to="/real-estate" icon={<Building2 />} label="إدارة الأملاك" active={isActive('/real-estate')} />
@@ -539,7 +536,6 @@ const Layout = ({ user, onLogout }) => {
                             <Route path="/inventory" element={<InventoryPage />} />
                             <Route path="/clients" element={<ClientsPage />} />
                             <Route path="/projects" element={<ProjectsPage />} />
-                            <Route path="/contracts" element={<ContractsPage />} />
                             <Route path="/hr" element={<HRPage />} />
                             <Route path="/accounting" element={<AccountingPage />} />
                             <Route path="/real-estate" element={<RealEstatePage />} />
@@ -599,7 +595,6 @@ function App() {
                 <Routes>
                     <Route path="/invoices/:id/print" element={<InvoicePrint />} />
                     <Route path="/quotes/:id/print" element={<QuotePrint />} />
-                    <Route path="/contracts/:id/print" element={<ContractPrint />} />
                     <Route path="/clients/:id/statement" element={<ClientStatement />} />
                     <Route path="/archive/summary/:type/:id" element={<DataRecordSummary />} />
                     <Route path="/*" element={<Layout user={user} onLogout={handleLogout} />} />
