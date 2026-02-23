@@ -3,24 +3,11 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../../config';
 
-// Architectural Background Pattern (SVG)
-const BuildingPattern = () => (
-    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.05, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
-                    <path d="M 100 0 L 0 0 0 100" fill="none" stroke="gray" strokeWidth="0.5" />
-                </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-            <g transform="scale(1.5) translate(100, 100)">
-                <path d="M0,400 L0,200 L50,150 L100,200 L100,400 M50,150 L50,400" stroke="gray" fill="none" strokeWidth="1" />
-                <path d="M120,400 L120,100 L180,50 L240,100 L240,400 M180,50 L180,400" stroke="gray" fill="none" strokeWidth="1" />
-                <path d="M260,400 L260,250 L310,200 L360,250 L360,400 M310,200 L310,400" stroke="gray" fill="none" strokeWidth="1" />
-            </g>
-        </svg>
-    </div>
-);
+/**
+ * @component ContractPrint
+ * @description Master Construction Contract Template - Optimized for PDF, Archiving, and Universal Printing.
+ * Adheres to Saudi Legal and Engineering Standards (SCA based).
+ */
 
 const ContractPrint = () => {
     const { id } = useParams();
@@ -38,245 +25,212 @@ const ContractPrint = () => {
                 setContract(cRes.data);
                 setCompanyInfo(sRes.data);
                 setLoading(false);
-                setTimeout(() => window.print(), 1200);
+                // Trigger print dialog after assets load
+                setTimeout(() => window.print(), 1500);
             } catch (err) {
-                console.error('Fetch error', err);
+                console.error('Master Print Fetch Error:', err);
                 setLoading(false);
             }
         };
         fetchData();
     }, [id]);
 
-    if (loading || !contract) return <div style={{ padding: '50px', textAlign: 'center', fontFamily: 'Cairo' }}>جاري تجهيز العقد الفاخر...</div>;
+    if (loading || !contract) return (
+        <div style={{ padding: '100px', textAlign: 'center', fontFamily: 'Cairo', color: '#2563eb' }}>
+            <div className="loader" style={{ marginBottom: '20px' }}>جاري تحضير المستند الرسمي...</div>
+        </div>
+    );
 
     return (
-        <div style={{
-            background: '#f1f5f9',
-            minHeight: '100vh',
-            padding: '40px 0',
-            display: 'flex',
-            justifyContent: 'center'
-        }}>
-            <div className="print-container" style={{
-                direction: 'rtl',
-                fontFamily: "'Cairo', sans-serif",
+        <div className="master-container" style={{ direction: 'rtl', background: '#f8fafc', minHeight: '100vh', padding: '20px 0' }}>
+            <div className="a4-sheet" style={{
                 width: '210mm',
-                minHeight: '297mm',
+                margin: '0 auto',
                 background: 'white',
-                padding: '15mm',
-                position: 'relative',
-                boxShadow: '0 0 20px rgba(0,0,0,0.1)',
-                border: '1px solid #d4a373', // Golden/Brown thin border as in image
-                overflow: 'hidden',
-                color: '#1a365d' // Navy text
+                boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                position: 'relative'
             }}>
-                <BuildingPattern />
-
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                    {/* Top Navy Block */}
-                    <div style={{
-                        width: '240px',
-                        height: '60px',
-                        background: '#1a365d',
-                        margin: '0 auto',
-                        borderRadius: '0 0 10px 10px',
-                        position: 'absolute',
-                        top: '-15mm',
-                        left: '50%',
-                        transform: 'translateX(-50%)'
-                    }}></div>
-
-                    {/* QR Code Placeholder */}
-                    <div style={{ position: 'absolute', top: 0, left: 0, width: '70px', height: '70px', border: '2px solid #1a365d', padding: '5px' }}>
-                        <div style={{ width: '100%', height: '100%', background: 'linear-gradient(45deg, #1a365d 25%, transparent 25%, transparent 50%, #1a365d 50%, #1a365d 75%, transparent 75%, transparent 100%)', backgroundSize: '10px 10px', opacity: 0.8 }}></div>
+                {/* --- HEADER --- */}
+                <header style={{ padding: '15mm 15mm 5mm', display: 'flex', justifyContent: 'space-between', borderBottom: '4px solid #1e3a8a' }}>
+                    <div style={{ flex: 1 }}>
+                        <h1 style={{ margin: '0 0 10px 0', color: '#c2410c', fontSize: '1.8rem', fontWeight: '900' }}>{companyInfo.name}</h1>
+                        <p style={{ margin: '2px 0', fontSize: '13px', color: '#475569' }}>سجل تجاري: {companyInfo.crNumber || '---'}</p>
+                        <p style={{ margin: '2px 0', fontSize: '13px', color: '#475569' }}>الرقم الضريبي: {companyInfo.vatNumber}</p>
+                        <p style={{ margin: '2px 0', fontSize: '13px', color: '#475569' }}>هاتف: {companyInfo.phone}</p>
                     </div>
 
-                    {/* Logo/Calligraphy Section */}
-                    <div style={{ textAlign: 'center', marginTop: '40px', marginBottom: '30px' }}>
-                        <h1 style={{
-                            fontSize: '2.8rem',
-                            color: '#c49b6d', // Golden color
-                            margin: 0,
-                            fontWeight: '900',
-                            fontFamily: "'Amiri', serif",
-                            textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
-                        }}>
-                            {companyInfo.name || 'مؤسسة الجنوب الجديد'}
-                        </h1>
-                        <div style={{ width: '150px', height: '2px', background: '#c49b6d', margin: '10px auto' }}></div>
-                    </div>
-
-                    {/* Main Title */}
-                    <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-                        <h2 style={{ fontSize: '2rem', color: '#1a365d', fontWeight: 'bold', margin: 0 }}>عقد مقاولات</h2>
-                    </div>
-
-                    {/* Section: Party 1 */}
-                    <div style={{ marginBottom: '40px' }}>
-                        <div style={{ background: '#e5e7eb', padding: '8px 20px', marginBottom: '20px', borderRight: '8px solid #1a365d' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1a365d' }}>الطرف الأول :</h3>
+                    <div style={{ flex: 1, textAlign: 'center' }}>
+                        <div style={{ border: '3px solid #1e3a8a', padding: '10px 20px', borderRadius: '4px', display: 'inline-block' }}>
+                            <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#1e3a8a' }}>عقد مقاولات إنشائية</h2>
+                            <span style={{ fontSize: '12px', color: '#64748b' }}>Construction Subcontract</span>
                         </div>
-                        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-                                <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>اسم صاحب العمل:</span>
-                                <div style={{ flex: 1, borderBottom: '1px dotted #94a3b8', paddingBottom: '2px', fontWeight: '600' }}>{contract.partner?.name}</div>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-                                <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>العنوان:</span>
-                                <div style={{ flex: 1, borderBottom: '1px dotted #94a3b8', paddingBottom: '2px' }}>{contract.partner?.address || 'المملكة العربية السعودية'}</div>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-                                <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>التفاصيل:</span>
-                                <div style={{ flex: 1, borderBottom: '1px dotted #94a3b8', paddingBottom: '2px' }}>عقد {contract.type} - {contract.title}</div>
+                        <p style={{ marginTop: '10px', fontSize: '14px', fontWeight: 'bold' }}>رقم المرجع: {contract.contractNumber}</p>
+                    </div>
+
+                    <div style={{ flex: 1, textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <div style={{ width: '80px', height: '80px', background: '#f1f5f9', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', color: '#94a3b8' }}>
+                            {/* Visual QR Indicator */}
+                            {id ? `ID-${id}` : 'VERIFY'}
+                        </div>
+                        <p style={{ marginTop: '5px', fontSize: '13px' }}>التاريخ: {new Date(contract.createdAt).toLocaleDateString('ar-SA')}</p>
+                        <p style={{ fontSize: '13px' }}>الصفحة: 1 من 2</p>
+                    </div>
+                </header>
+
+                <main style={{ padding: '10mm 15mm' }}>
+                    {/* Introduction Section */}
+                    <section style={{ marginBottom: '30px', textAlign: 'justify', lineHeight: '1.6' }}>
+                        <p style={{ textIndent: '30px', fontSize: '15px' }}>
+                            الحمد لله وحده، والصلاة والسلام على من لا نبي بعده، وبعد، فقد تم في هذا اليوم {new Date(contract.createdAt).toLocaleDateString('ar-SA', { weekday: 'long' })} الموافق {new Date(contract.createdAt).toLocaleDateString('ar-SA')}م، الاتفاق بين كل من:
+                        </p>
+
+                        <div style={{ marginTop: '20px', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
+                            <div style={{ padding: '12px', background: '#f8fafc', borderBottom: '1px solid #cbd5e1', fontWeight: 'bold', color: '#1e3a8a' }}>الطرف الأول (صاحب العمل):</div>
+                            <div style={{ padding: '12px' }}>
+                                <strong>{contract.partner?.name}</strong>، ويشار إليه في مواد هذا العقد بـ (صاحب العمل).
+                                <br />
+                                <span style={{ fontSize: '14px' }}>هاتف: {contract.partner?.phone} | عنوان: {contract.partner?.address || 'المملكة العربية السعودية'}</span>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Section: Party 2 */}
-                    <div style={{ marginBottom: '40px' }}>
-                        <div style={{ background: '#e5e7eb', padding: '8px 20px', marginBottom: '20px', borderRight: '8px solid #1a365d' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1a365d' }}>الطرف الثاني :</h3>
-                        </div>
-                        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-                                <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>اسم المقاول:</span>
-                                <div style={{ flex: 1, borderBottom: '1px dotted #94a3b8', paddingBottom: '2px', fontWeight: '600' }}>{companyInfo.name}</div>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-                                <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>السجل التجاري:</span>
-                                <div style={{ flex: 1, borderBottom: '1px dotted #94a3b8', paddingBottom: '2px' }}>{companyInfo.crNumber || '3101234567'}</div>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-                                <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>التواصل:</span>
-                                <div style={{ flex: 1, borderBottom: '1px dotted #94a3b8', paddingBottom: '2px' }}>{companyInfo.phone}</div>
+                        <div style={{ marginTop: '15px', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
+                            <div style={{ padding: '12px', background: '#f8fafc', borderBottom: '1px solid #cbd5e1', fontWeight: 'bold', color: '#1e3a8a' }}>الطرف الثاني (المقاول):</div>
+                            <div style={{ padding: '12px' }}>
+                                <strong>{companyInfo.name}</strong>، ممثلة بمديرها العام، ويشار إليه في مواد هذا العقد بـ (المقاول).
+                                <br />
+                                <span style={{ fontSize: '14px' }}>سجل تجاري: {companyInfo.crNumber} | هاتف: {companyInfo.phone}</span>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Clauses Summary or Intro */}
-                    <div style={{ padding: '0 20px', color: '#475569', fontSize: '0.95rem', textAlign: 'justify' }}>
-                        يلتزم الطرفان بكافة البنود والشروط النظامية الموضحة في ملحق بنود العقد المرفق، ويقر الطرفان بأهليتهما المعتبرة شرعاً ونظاماً للتعاقد.
-                    </div>
+                        <p style={{ marginTop: '20px', fontSize: '15px' }}>
+                            وحيث رغب الطرف الأول في تنفيذ أعمال: <strong>({contract.title})</strong>، وقد أبدى الطرف الثاني استعداده التام للتنفيذ طبقاً للشروط والمواصفات المتفق عليها...
+                        </p>
+                    </section>
 
-                    {/* Signatures Section */}
-                    <div style={{ position: 'absolute', bottom: '40px', left: 0, right: 0 }}>
-                        <div style={{ background: '#e5e7eb', padding: '8px 20px', marginBottom: '30px', borderRight: '8px solid #1a365d', margin: '0 15mm' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1a365d', textAlign: 'center' }}>التوقيعات والأختام</h3>
+                    {/* Clauses section with grid logic to prevent weird breaks */}
+                    <section>
+                        <h3 style={{ borderRight: '5px solid #1e3a8a', paddingRight: '10px', color: '#1e3a8a', fontSize: '1.2rem', marginBottom: '20px' }}>مواد العقد الأساسية:</h3>
+                        <div style={{ display: 'grid', gap: '15px' }}>
+                            {contract.clauses?.map((clause, idx) => (
+                                <div key={idx} style={{ textAlign: 'justify', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
+                                    <span style={{ fontWeight: 'bold', color: '#c2410c' }}>مادة {clause.id}: </span>
+                                    <span style={{ fontWeight: 'bold' }}>({clause.title})</span>
+                                    <p style={{ margin: '5px 0 0 0', fontSize: '14.5px', color: '#334155' }}>{clause.content}</p>
+                                </div>
+                            ))}
                         </div>
+                    </section>
+                </main>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '50px', padding: '0 40px', textAlign: 'center' }}>
-                            <div>
-                                <div style={{
-                                    width: '120px',
-                                    height: '120px',
-                                    border: '2px dashed #1a365d',
-                                    borderRadius: '50%',
-                                    margin: '0 auto 15px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#cbd5e1',
-                                    fontSize: '0.8rem'
-                                }}>ختم الطرف الأول</div>
-                                <div style={{ borderBottom: '1px solid #1a365d', width: '80%', margin: '0 auto' }}></div>
-                            </div>
-                            <div>
-                                <div style={{
-                                    width: '120px',
-                                    height: '120px',
-                                    border: '2px dashed #1a365d',
-                                    borderRadius: '50%',
-                                    margin: '0 auto 15px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#cbd5e1',
-                                    fontSize: '0.8rem'
-                                }}>ختم الطرف الثاني</div>
-                                <div style={{ borderBottom: '1px solid #1a365d', width: '80%', margin: '0 auto' }}></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {/* Footer fixed on each page logic via CSS */}
+                <footer style={{ padding: '5mm 15mm 15mm', borderTop: '1px solid #e2e8f0', marginTop: '20px', fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>
+                    مستند صادر من نظام إلكتروني معتمد - مؤسسة الجنوب الجديد لتقنية المعلومات والمقاولات
+                </footer>
             </div>
 
-            {/* Second Page for Clauses and BOQ */}
-            <div className="print-container second-page" style={{
-                direction: 'rtl',
-                fontFamily: "'Cairo', sans-serif",
+            {/* Second Page for BOQ & Signatures */}
+            <div className="a4-sheet" style={{
                 width: '210mm',
-                minHeight: '297mm',
+                margin: '20px auto',
                 background: 'white',
-                padding: '15mm',
-                margin: '40px 0',
+                boxShadow: '0 0 10px rgba(0,0,0,0.1)',
                 position: 'relative',
-                boxShadow: '0 0 20px rgba(0,0,0,0.1)',
-                border: '1px solid #d4a373',
                 pageBreakBefore: 'always'
             }}>
-                <BuildingPattern />
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                    <h3 style={{ borderBottom: '2px solid #1a365d', paddingBottom: '10px', color: '#1a365d' }}>ملحق (1): بنود العقد والشروط العامة</h3>
-                    <div style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
-                        {contract.clauses?.map((c, idx) => (
-                            <div key={idx} style={{ marginBottom: '15px' }}>
-                                <strong>المادة ({c.id}): {c.title}</strong>
-                                <p style={{ margin: '5px 0 0 0' }}>{c.content}</p>
-                            </div>
-                        ))}
-                    </div>
+                <header style={{ padding: '15mm 15mm 5mm', borderBottom: '2px solid #1e3a8a', display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: '12px' }}>ملحق رقم (1): جدول الكميات والأعمال</div>
+                    <div style={{ fontSize: '12px' }}>رقم العقد: {contract.contractNumber}</div>
+                    <div style={{ fontSize: '12px' }}>صفحة 2 من 2</div>
+                </header>
 
-                    <h3 style={{ borderBottom: '2px solid #1a365d', paddingBottom: '10px', color: '#1a365d', marginTop: '30px' }}>ملحق (2): جدول الكميات والأعمال (BOQ)</h3>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px', fontSize: '0.85rem' }}>
+                <main style={{ padding: '10mm 15mm' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1.5px solid #1e3a8a' }}>
                         <thead>
-                            <tr style={{ background: '#f8fafc' }}>
-                                <th style={{ border: '1px solid #e2e8f0', padding: '8px' }}>م</th>
-                                <th style={{ border: '1px solid #e2e8f0', padding: '8px' }}>الوصف</th>
-                                <th style={{ border: '1px solid #e2e8f0', padding: '8px' }}>الوحدة</th>
-                                <th style={{ border: '1px solid #e2e8f0', padding: '8px' }}>الكمية</th>
-                                <th style={{ border: '1px solid #e2e8f0', padding: '8px' }}>سعر الوحدة</th>
-                                <th style={{ border: '1px solid #e2e8f0', padding: '8px' }}>الإجمالي</th>
+                            <tr style={{ background: '#1e3a8a', color: 'white' }}>
+                                <th style={{ border: '1px solid #1e3a8a', padding: '10px' }}>م</th>
+                                <th style={{ border: '1px solid #1e3a8a', padding: '10px', textAlign: 'right' }}>بيان الأعمال والمواصفات</th>
+                                <th style={{ border: '1px solid #1e3a8a', padding: '10px' }}>الوحدة</th>
+                                <th style={{ border: '1px solid #1e3a8a', padding: '10px' }}>الكمية</th>
+                                <th style={{ border: '1px solid #1e3a8a', padding: '10px' }}>سعر الوحدة</th>
+                                <th style={{ border: '1px solid #1e3a8a', padding: '10px' }}>الإجمالي</th>
                             </tr>
                         </thead>
                         <tbody>
                             {contract.items?.map((item, i) => (
-                                <tr key={i}>
-                                    <td style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}>{i + 1}</td>
-                                    <td style={{ border: '1px solid #e2e8f0', padding: '8px' }}>{item.description}</td>
-                                    <td style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}>{item.unit}</td>
-                                    <td style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}>{item.quantity}</td>
-                                    <td style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}>{item.unitPrice.toLocaleString()}</td>
-                                    <td style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}>{item.total.toLocaleString()}</td>
+                                <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#f8fafc' }}>
+                                    <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>{i + 1}</td>
+                                    <td style={{ border: '1px solid #cbd5e1', padding: '8px', fontWeight: '600' }}>{item.description}</td>
+                                    <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>{item.unit}</td>
+                                    <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>{item.quantity}</td>
+                                    <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center' }}>{item.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                    <td style={{ border: '1px solid #cbd5e1', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>{item.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                                 </tr>
                             ))}
                         </tbody>
-                        <tfoot style={{ fontWeight: 'bold' }}>
-                            <tr>
-                                <td colSpan="5" style={{ padding: '10px' }}>الإجمالي النهائي شامل الضريبة (15%)</td>
-                                <td style={{ textAlign: 'center' }}>{contract.totalValue.toLocaleString()} ر.س</td>
+                        <tfoot>
+                            <tr style={{ fontWeight: 'bold' }}>
+                                <td colSpan="5" style={{ border: '1.5px solid #1e3a8a', padding: '12px', textAlign: 'left' }}>المجموع الصافي (الخاضع للضريبة)</td>
+                                <td style={{ border: '1.5px solid #1e3a8a', padding: '12px', textAlign: 'center' }}>{contract.netValue.toLocaleString()} ر.س</td>
+                            </tr>
+                            <tr style={{ fontWeight: 'bold', color: '#64748b' }}>
+                                <td colSpan="5" style={{ border: '1.5px solid #1e3a8a', padding: '12px', textAlign: 'left' }}>ضريبة القيمة المضافة (15%)</td>
+                                <td style={{ border: '1.5px solid #1e3a8a', padding: '12px', textAlign: 'center' }}>{contract.taxAmount.toLocaleString()} ر.س</td>
+                            </tr>
+                            <tr style={{ fontWeight: '900', fontSize: '1.2rem', background: '#dcfce7', color: '#166534' }}>
+                                <td colSpan="5" style={{ border: '1.5px solid #1e3a8a', padding: '15px', textAlign: 'left' }}>القيمة الإجمالية النهائية</td>
+                                <td style={{ border: '1.5px solid #1e3a8a', padding: '15px', textAlign: 'center' }}>{contract.totalValue.toLocaleString()} ر.س</td>
                             </tr>
                         </tfoot>
                     </table>
-                </div>
+
+                    {/* Master Signature Section - High Fidelity */}
+                    <div style={{ marginTop: '50px', border: '2px solid #1e3a8a', borderRadius: '8px', padding: '30px' }}>
+                        <h4 style={{ margin: '0 0 30px 0', textAlign: 'center', textDecoration: 'underline' }}>أقر أنا الطرفان المذكوران أعلاه بموافقتنا على كافة ما ورد في هذا العقد وملحقاته</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <p style={{ fontWeight: 'bold', marginBottom: '40px' }}>الطرف الأول (صاحب العمل)</p>
+                                <div style={{ borderBottom: '1px dashed #475569', width: '200px', margin: '15px auto' }}></div>
+                                <span style={{ fontSize: '12px' }}>الاسم والتوقيع</span>
+                                <div style={{ width: '120px', height: '120px', border: '2px dotted #e2e8f0', borderRadius: '50%', margin: '20px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#e2e8f0', fontSize: '10px' }}>محل الختم الرسمي للشركة</div>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                                <p style={{ fontWeight: 'bold', marginBottom: '40px' }}>الطرف الثاني (المقاول)</p>
+                                <div style={{ borderBottom: '1px dashed #475569', width: '200px', margin: '15px auto' }}></div>
+                                <span style={{ fontSize: '12px' }}>الاسم والتوقيع</span>
+                                <div style={{ width: '120px', height: '120px', background: '#f8fafc', border: '2px dashed #1e3a8a', borderRadius: '50%', margin: '20px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', fontSize: '10px' }}>محل الختم الرسمي للشركة</div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+
+                <footer style={{ position: 'absolute', bottom: '15mm', left: '15mm', right: '15mm', textAlign: 'center', fontSize: '10px', color: '#94a3b8' }}>
+                    يعتبر هذا العقد ووثائقه وملحقاته وحدة واحدة لا تتجزأ | تم توليد المستند آلياً بتاريخ {new Date().toLocaleString('ar-SA')}
+                </footer>
             </div>
 
             <style>
                 {`
-                    @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;900&display=swap');
+                    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
                     
                     @media print {
-                        body { background: transparent; padding: 0; margin: 0; }
-                        .print-container { 
+                        body { background: white !important; margin: 0; padding: 0; }
+                        .master-container { background: white !important; padding: 0 !important; }
+                        .a4-sheet { 
                             box-shadow: none !important; 
                             margin: 0 !important; 
-                            border: 1px solid #d4a373 !important; 
+                            width: 210mm !important; 
+                            height: 297mm !important; 
                             page-break-after: always;
                             -webkit-print-color-adjust: exact;
                         }
-                        .second-page {
-                            margin-top: 0 !important;
-                        }
+                        .loader { display: none; }
+                        /* Ensure table headers repeat if possible */
+                        thead { display: table-header-group; }
                     }
+
+                    /* General styling for archivable viewing */
+                    body { -webkit-font-smoothing: antialiased; }
+                    * { box-sizing: border-box; }
                 `}
             </style>
         </div>
