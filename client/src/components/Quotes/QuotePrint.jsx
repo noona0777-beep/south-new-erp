@@ -70,9 +70,9 @@ const QuotePrint = () => {
                 position: 'relative', overflow: 'hidden'
             }} className="print-page">
 
-                {/* Professional Watermark */}
+                {/* Professional Watermark - Fixed at 140mm for absolute stability on A4 */}
                 <div style={{
-                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    position: 'absolute', top: '140mm', left: '50%', transform: 'translate(-50%, -50%)',
                     width: '70%', opacity: 0.07, pointerEvents: 'none', zIndex: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'
                 }}>
                     <img src="/watermark.png" alt="watermark" style={{ width: '100%', height: 'auto' }} />
