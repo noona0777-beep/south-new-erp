@@ -75,7 +75,7 @@ const ContractPrint = () => {
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 0' }}>
 
                 {/* Main A4 Style Wrapper */}
-                <div id="printable-document" style={{ width: '210mm', minHeight: '297mm', background: 'white', padding: '20mm 20mm 20mm 10mm', boxShadow: '0 0 15px rgba(0,0,0,0.1)', color: '#1e293b' }}>
+                <div id="printable-document" style={{ width: '210mm', minHeight: '297mm', background: 'white', padding: '20mm 40mm', boxShadow: '0 0 15px rgba(0,0,0,0.1)', color: '#1e293b' }}>
 
                     {/* Header Section */}
                     <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px double #1e3a8a', paddingBottom: '15px', marginBottom: '10mm' }}>
