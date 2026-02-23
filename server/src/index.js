@@ -1788,6 +1788,33 @@ if (!isVercel) {
         try {
             await prisma.$connect();
             console.log('✅ Database Connected Successfully (PostgreSQL)');
+
+            // --- Auto Initialization ---
+            try {
+                // 1. Initialize Default Warehouse
+                await getOrCreateWarehouse();
+                console.log('📦 Default Warehouse Initialized');
+
+                // 2. Initialize Default Company Settings if not exists
+                const companyInfo = await prisma.settings.findUnique({ where: { key: 'companyInfo' } });
+                if (!companyInfo) {
+                    await prisma.settings.create({
+                        data: {
+                            key: 'companyInfo',
+                            value: JSON.stringify({
+                                name: 'مؤسسة الجنوب الجديد',
+                                vatNumber: '310123456700003',
+                                address: 'المملكة العربية السعودية',
+                                phone: '0500000000'
+                            })
+                        }
+                    });
+                    console.log('🏢 Default Company Settings Created');
+                }
+            } catch (initErr) {
+                console.warn('⚠️ Initialization warning:', initErr.message);
+            }
+
             app.listen(PORT, () => {
                 console.log(`🚀 Server running on port ${PORT}`);
             });
