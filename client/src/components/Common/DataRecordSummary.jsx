@@ -78,13 +78,14 @@ const DataRecordSummary = () => {
                     .no-print { display: none !important; }
                     .print-page { 
                         box-shadow: none !important; 
-                        margin: 0 auto !important; 
-                        width: 210mm !important; 
-                        min-height: 280mm !important; 
-                        padding: 15mm !important;
+                        margin: 0 !important; 
+                        width: 100% !important; 
+                        max-width: none !important;
+                        min-height: auto !important;
+                        padding: 0 !important;
                         position: relative !important;
                     }
-                    @page { margin: 0; size: A4; }
+                    @page { margin: 15mm; size: A4; }
                 }
                 `}
             </style>
@@ -108,8 +109,9 @@ const DataRecordSummary = () => {
 
             {/* A4 Page */}
             <div id="printable-area" className="print-page" style={{
-                background: 'white', width: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box'
+                background: 'white', width: '100%', maxWidth: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box',
+                direction: 'rtl', textAlign: 'right'
             }}>
 
                 {/* Header */}

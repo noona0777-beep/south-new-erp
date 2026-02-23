@@ -64,8 +64,9 @@ const QuotePrint = () => {
 
             {/* A4 Page */}
             <div id="printable-area" style={{
-                background: 'white', width: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box'
+                background: 'white', width: '100%', maxWidth: '210mm', minHeight: '280mm', margin: '0 auto', padding: '20mm',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box',
+                direction: 'rtl', textAlign: 'right'
             }} className="print-page">
 
                 {/* Header */}
@@ -86,7 +87,7 @@ const QuotePrint = () => {
                 {/* Details Section */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1, paddingRight: '20px' }}>
-                        <h4 style={{ margin: '0 0 10px 0', color: '#64748b', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>معلومات العميل</h4>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '0.9rem', fontWeight: 'bold' }}>معلومات العميل</h4>
                         <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '5px' }}>{quote.partner?.name || 'عميل محتمل'}</div>
                         <div style={{ color: '#475569', fontSize: '0.9rem', lineHeight: '1.6' }}>
                             {quote.partner?.address || 'غير محدد'}<br />
@@ -174,16 +175,17 @@ const QuotePrint = () => {
                     body { background: white !important; margin: 0; padding: 0 !important; }
                     .print-page { 
                         box-shadow: none !important; 
-                        margin: 0 auto !important; 
-                        width: 210mm !important; 
-                        min-height: 280mm !important;
-                        padding: 15mm !important; 
+                        margin: 0 !important; 
+                        width: 100% !important; 
+                        max-width: none !important;
+                        min-height: auto !important;
+                        padding: 0 !important; 
                         border: none !important; 
                         position: relative !important;
                     }
                     @page { 
                         size: A4; 
-                        margin: 0; 
+                        margin: 15mm; 
                     }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }
