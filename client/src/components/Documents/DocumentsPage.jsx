@@ -141,17 +141,22 @@ const DocumentsPage = () => {
     };
 
     const handleDownload = (doc) => {
-        if (!doc.fileUrl) return;
+        const urlToUse = doc.fileUrl || resolvedUrl;
+        if (!urlToUse) return;
 
-        if (doc.fileUrl.startsWith('INTERNAL:')) {
-            const [, type, id] = doc.fileUrl.split(':');
-            const path = type === 'INVOICE' ? `/invoices/${id}/print` : `/quotes/${id}/print`;
+        if (urlToUse.startsWith('INTERNAL:')) {
+            const [, type, id] = urlToUse.split(':');
+            let path = '';
+            if (type === 'INVOICE') path = `/invoices/${id}/print`;
+            else if (type === 'QUOTE') path = `/quotes/${id}/print`;
+            else path = `/archive/summary/${type}/${id}`;
+
             window.open(path, '_blank');
             return;
         }
 
         try {
-            const splitUrl = doc.fileUrl.split(',');
+            const splitUrl = urlToUse.split(',');
             if (splitUrl.length < 2) throw new Error('Invalid format');
 
             const byteString = atob(splitUrl[1]);
@@ -459,7 +464,21 @@ const DocumentsPage = () => {
                                 <button onClick={() => handleDownload(previewDoc)} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold' }}>
                                     <Download size={18} /> تحميل
                                 </button>
-                                <button onClick={() => window.print()} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold' }}>
+                                <button
+                                    onClick={() => {
+                                        const currentUrl = previewDoc.fileUrl || resolvedUrl;
+                                        if (currentUrl && currentUrl.startsWith('INTERNAL:')) {
+                                            const iframe = document.getElementById('preview-iframe');
+                                            if (iframe) {
+                                                iframe.contentWindow.focus();
+                                                iframe.contentWindow.print();
+                                            }
+                                        } else {
+                                            window.print();
+                                        }
+                                    }}
+                                    style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold' }}
+                                >
                                     <Printer size={18} /> طباعة
                                 </button>
                                 <button onClick={() => setPreviewDoc(null)} style={{ background: '#ef4444', border: 'none', padding: '8px', borderRadius: '50%', cursor: 'pointer', color: 'white' }}>
@@ -485,6 +504,7 @@ const DocumentsPage = () => {
                                                 📄 هذا سجل بيانات مستخرج من النظام. يمكنك عرضه وطباعته مباشرة.
                                             </div>
                                             <iframe
+                                                id="preview-iframe"
                                                 src={path}
                                                 style={{ width: '100%', flex: 1, border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', background: 'white' }}
                                                 title="System Preview"
