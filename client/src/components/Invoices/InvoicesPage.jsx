@@ -101,11 +101,16 @@ const InvoicesPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(`${API_URL}/invoices`, invoiceData);
+            console.log('Sending Invoice Data:', invoiceData);
+            const response = await axios.post(`${API_URL}/invoices`, invoiceData);
+            console.log('Response:', response.data);
             fetchInvoices();
             handleResetForm();
+            alert('✅ تم حفظ الفاتورة بنجاح');
         } catch (err) {
-            alert('فشل حفظ الفاتورة. تأكد من إدخال جميع البيانات.');
+            console.error('Submit Error:', err.response?.data || err.message);
+            const errorMsg = err.response?.data?.error || err.response?.data?.details || err.message;
+            alert(`❌ فشل حفظ الفاتورة: ${errorMsg}`);
         }
     };
 

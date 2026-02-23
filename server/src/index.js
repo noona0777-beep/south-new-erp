@@ -103,16 +103,27 @@ async function logActivity(userId, action, entity, entityId, details) {
 
 // ZATCA QR Helper (TLV Format)
 function generateZatcaTLV(seller, vatNo, timestamp, total, vatTotal) {
-    const tags = [seller, vatNo, timestamp, total, vatTotal];
-    let tlv = Buffer.alloc(0);
-    tags.forEach((val, i) => {
-        const tag = i + 1;
-        const value = Buffer.from(val.toString(), 'utf8');
-        const tagBuf = Buffer.from([tag]);
-        const lenBuf = Buffer.from([value.length]);
-        tlv = Buffer.concat([tlv, tagBuf, lenBuf, value]);
-    });
-    return tlv.toString('base64');
+    try {
+        const tags = [
+            seller || 'مؤسسة الجنوب',
+            vatNo || '310123456700003',
+            timestamp || new Date().toISOString(),
+            total || '0.00',
+            vatTotal || '0.00'
+        ];
+        let tlv = Buffer.alloc(0);
+        tags.forEach((val, i) => {
+            const tag = i + 1;
+            const value = Buffer.from(val.toString(), 'utf8');
+            const tagBuf = Buffer.from([tag]);
+            const lenBuf = Buffer.from([value.length]);
+            tlv = Buffer.concat([tlv, tagBuf, lenBuf, value]);
+        });
+        return tlv.toString('base64');
+    } catch (e) {
+        console.error('TLV Generation Failed', e);
+        return "";
+    }
 }
 
 // --- System Routes ---
