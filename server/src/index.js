@@ -141,34 +141,42 @@ app.get('/api/dashboard/stats', async (req, res) => {
             recentInvoices,
             recentQuotes,
             lowStockItems,
-            invoiceStats
-        ] = await Promise.all([
-            prisma.invoice.count(),
-            prisma.quote.count(),
-            prisma.partner.count({ where: { type: 'CUSTOMER' } }),
-            prisma.product.count(),
-            prisma.project.count(),
-            prisma.employee.count(),
-            prisma.invoice.findMany({
-                take: 5,
-                orderBy: { createdAt: 'desc' },
-                include: { partner: true }
-            }),
-            prisma.quote.findMany({
-                take: 5,
-                orderBy: { createdAt: 'desc' },
-                include: { partner: true }
-            }),
-            prisma.stock.findMany({
-                where: { quantity: { lt: 10 } },
-                include: { product: true },
-                take: 5
-            }),
-            prisma.invoice.aggregate({
-                _sum: { total: true },
-                where: { status: { not: 'CANCELLED' } }
+            invoiceStats,
+            prisma.constructionContract.aggregate({
+                _sum: { totalValue: true },
+                _count: { id: true }
             })
-        ]);
+        ] = await Promise.all([
+                prisma.invoice.count(),
+                prisma.quote.count(),
+                prisma.partner.count({ where: { type: 'CUSTOMER' } }),
+                prisma.product.count(),
+                prisma.project.count(),
+                prisma.employee.count(),
+                prisma.invoice.findMany({
+                    take: 5,
+                    orderBy: { createdAt: 'desc' },
+                    include: { partner: true }
+                }),
+                prisma.quote.findMany({
+                    take: 5,
+                    orderBy: { createdAt: 'desc' },
+                    include: { partner: true }
+                }),
+                prisma.stock.findMany({
+                    where: { quantity: { lt: 10 } },
+                    include: { product: true },
+                    take: 5
+                }),
+                prisma.invoice.aggregate({
+                    _sum: { total: true },
+                    where: { status: { not: 'CANCELLED' } }
+                }),
+                prisma.constructionContract.aggregate({
+                    _sum: { totalValue: true },
+                    _count: { id: true }
+                })
+            ]);
 
         // Monthly revenue (last 6 months)
         const now = new Date();
@@ -1497,59 +1505,81 @@ app.post('/api/construction-contracts', authenticate, async (req, res) => {
 // Update Construction Contract
 app.put('/api/construction-contracts/:id', authenticate, async (req, res) => {
     const { id } = req.params;
-    const { partnerId, projectId, title, type, startDate, endDate, advancePayment, retentionPercent, items, clauses, status, location, signatureName } = req.body;
+    const body = req.body;
 
     try {
-        let netValue = 0;
-        const contractItems = items.map(item => {
-            const total = Number(item.quantity) * Number(item.unitPrice);
-            netValue += total;
-            return {
-                description: item.description,
-                unit: item.unit,
-                quantity: Number(item.quantity),
-                unitPrice: Number(item.unitPrice),
-                total
-            };
-        });
+        // Check if this is a full update (with items) or a partial update (like status only)
+        if (body.items && Array.isArray(body.items)) {
+            const { partnerId, projectId, title, type, startDate, endDate, advancePayment, retentionPercent, items, clauses, status, location, signatureName } = body;
 
-        const taxAmount = netValue * 0.15;
-        const totalValue = netValue + taxAmount;
-
-        const result = await prisma.$transaction(async (tx) => {
-            // Delete old items
-            await tx.constructionContractItem.deleteMany({ where: { contractId: parseInt(id) } });
-
-            // Update contract
-            const contract = await tx.constructionContract.update({
-                where: { id: parseInt(id) },
-                data: {
-                    title,
-                    type,
-                    status,
-                    partnerId: parseInt(partnerId),
-                    projectId: projectId ? parseInt(projectId) : null,
-                    startDate: new Date(startDate),
-                    endDate: new Date(endDate),
-                    advancePayment: parseFloat(advancePayment || 0),
-                    retentionPercent: parseFloat(retentionPercent || 0),
-                    netValue,
-                    taxAmount,
-                    totalValue,
-                    clauses: clauses || {},
-                    location: location || '',
-                    signatureName: signatureName || '',
-                    items: {
-                        create: contractItems
-                    }
-                }
+            let netValue = 0;
+            const contractItems = items.map(item => {
+                const total = Number(item.quantity) * Number(item.unitPrice);
+                netValue += total;
+                return {
+                    description: item.description,
+                    unit: item.unit,
+                    quantity: Number(item.quantity),
+                    unitPrice: Number(item.unitPrice),
+                    total
+                };
             });
-            return contract;
-        });
 
-        await logActivity(req.user.id, 'UPDATE', 'CONSTRUCTION_CONTRACT', result.id, `تعديل عقد مقاولات #${result.contractNumber}`);
-        res.json(result);
+            const taxAmount = netValue * 0.15;
+            const totalValue = netValue + taxAmount;
+
+            const result = await prisma.$transaction(async (tx) => {
+                // Delete old items
+                await tx.constructionContractItem.deleteMany({ where: { contractId: parseInt(id) } });
+
+                // Update contract
+                const contract = await tx.constructionContract.update({
+                    where: { id: parseInt(id) },
+                    data: {
+                        title,
+                        type,
+                        status,
+                        partnerId: parseInt(partnerId),
+                        projectId: projectId ? parseInt(projectId) : null,
+                        startDate: new Date(startDate),
+                        endDate: new Date(endDate),
+                        advancePayment: parseFloat(advancePayment || 0),
+                        retentionPercent: parseFloat(retentionPercent || 0),
+                        netValue,
+                        taxAmount,
+                        totalValue,
+                        clauses: clauses || {},
+                        location: location || '',
+                        signatureName: signatureName || '',
+                        items: {
+                            create: contractItems
+                        }
+                    }
+                });
+                return contract;
+            });
+
+            await logActivity(req.user.id, 'UPDATE', 'CONSTRUCTION_CONTRACT', result.id, `تعديل عقد مقاولات #${result.contractNumber}`);
+            res.json(result);
+        } else {
+            // Partial update (Status change, etc.)
+            const updateData = { ...body };
+            // Ensure dates are correctly formatted if present
+            if (updateData.startDate) updateData.startDate = new Date(updateData.startDate);
+            if (updateData.endDate) updateData.endDate = new Date(updateData.endDate);
+            if (updateData.partnerId) updateData.partnerId = parseInt(updateData.partnerId);
+            if (updateData.projectId) updateData.projectId = updateData.projectId ? parseInt(updateData.projectId) : null;
+
+            const contract = await prisma.constructionContract.update({
+                where: { id: parseInt(id) },
+                data: updateData
+            });
+
+            await logActivity(req.user.id, 'UPDATE_STATUS', 'CONSTRUCTION_CONTRACT', contract.id, `تحديث حالة عقد مقاولات #${contract.contractNumber} إلى ${body.status}`);
+            res.json(contract);
+        }
     } catch (error) {
+        console.error('Update Contract Error:', error);
         res.status(500).json({ error: error.message });
     }
 });

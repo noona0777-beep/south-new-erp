@@ -37,10 +37,12 @@ const ContractsPage = () => {
 
     const fetchData = async () => {
         try {
+            const token = localStorage.getItem('token');
+            const headers = { Authorization: `Bearer ${token}` };
             const [cRes, pRes, prRes] = await Promise.all([
-                axios.get(`${API_URL}/construction-contracts`),
-                axios.get(`${API_URL}/partners`),
-                axios.get(`${API_URL}/projects`)
+                axios.get(`${API_URL}/construction-contracts`, { headers }),
+                axios.get(`${API_URL}/partners`, { headers }),
+                axios.get(`${API_URL}/projects`, { headers })
             ]);
             setContracts(cRes.data);
             setPartners(pRes.data);
@@ -101,11 +103,13 @@ const ContractsPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const token = localStorage.getItem('token');
+            const headers = { Authorization: `Bearer ${token}` };
             if (isEditing) {
-                await axios.put(`${API_URL}/construction-contracts/${editingId}`, formData);
+                await axios.put(`${API_URL}/construction-contracts/${editingId}`, formData, { headers });
                 alert('✅ تم تحديث العقد بنجاح');
             } else {
-                await axios.post(`${API_URL}/construction-contracts`, formData);
+                await axios.post(`${API_URL}/construction-contracts`, formData, { headers });
                 alert('✅ تم إنشاء العقد بنجاح');
             }
             fetchData();
@@ -139,7 +143,10 @@ const ContractsPage = () => {
     const handleDelete = async (id) => {
         if (window.confirm('هل أنت متأكد من حذف هذا العقد؟')) {
             try {
-                await axios.delete(`${API_URL}/construction-contracts/${id}`);
+                const token = localStorage.getItem('token');
+                await axios.delete(`${API_URL}/construction-contracts/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
                 fetchData();
             } catch (err) {
                 alert('❌ فشل الحذف');
@@ -150,7 +157,11 @@ const ContractsPage = () => {
     const handleArchive = async (id) => {
         if (!window.confirm('هل أنت متأكد من نقل هذا العقد إلى الأرشيف الرسمي؟')) return;
         try {
-            await axios.put(`${API_URL}/construction-contracts/${id}`, { status: 'ARCHIVED' });
+            const token = localStorage.getItem('token');
+            await axios.put(`${API_URL}/construction-contracts/${id}`,
+                { status: 'ARCHIVED' },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
             fetchData();
             alert('✅ تمت أرشفة المستند بنجاح');
         } catch (err) {
