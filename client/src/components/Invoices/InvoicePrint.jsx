@@ -102,8 +102,8 @@ const InvoicePrint = () => {
 
                 {/* Professional Watermark */}
                 <div style={{
-                    position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
-                    width: '70%', opacity: 0.06, pointerEvents: 'none', zIndex: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    width: '70%', opacity: 0.07, pointerEvents: 'none', zIndex: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'
                 }}>
                     <img src="/watermark.png" alt="watermark" style={{ width: '100%', height: 'auto' }} />
                 </div>
@@ -215,11 +215,10 @@ const InvoicePrint = () => {
                     }
                     #printable-area { 
                         box-shadow: none !important; 
-                        margin: 0 auto !important; 
+                        margin: 0 !important; 
                         width: 210mm !important; 
                         height: 297mm !important;
-                        min-height: 297mm !important;
-                        padding: 15mm !important; 
+                        padding: 20mm !important; 
                         border: none !important; 
                         position: relative !important;
                         overflow: hidden !important;
