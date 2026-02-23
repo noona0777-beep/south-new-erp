@@ -61,7 +61,7 @@ const QuotePrint = () => {
 
             {/* A4 Page */}
             <div id="printable-area" style={{
-                background: 'white', width: '210mm', minHeight: '297mm', margin: '0 auto', padding: '20mm',
+                background: 'white', width: '210mm', minHeight: '296mm', margin: '0 auto', padding: '20mm',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box'
             }} className="print-page">
 
@@ -171,11 +171,12 @@ const QuotePrint = () => {
                     body { background: white !important; margin: 0; padding: 0 !important; }
                     .print-page { 
                         box-shadow: none !important; 
-                        margin: 0 !important; 
-                        width: 100% !important; 
+                        margin: 0 auto !important; 
+                        width: 210mm !important; 
+                        min-height: 296mm !important;
                         padding: 15mm !important; 
                         border: none !important; 
-                        min-height: 297mm;
+                        position: relative !important;
                     }
                     @page { 
                         size: A4; 
