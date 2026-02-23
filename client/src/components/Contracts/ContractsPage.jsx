@@ -377,14 +377,45 @@ const ContractsPage = () => {
                                         <DollarSign size={16} color="#10b981" /> {contract.totalValue.toLocaleString()} ر.س
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
-                                    <button onClick={() => window.open(`/contracts/${contract.id}/print`, '_blank')} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 'bold' }}>
+                                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                                    <button
+                                        onClick={() => window.open(`/contracts/${contract.id}/print`, '_blank')}
+                                        title="عرض وطباعة"
+                                        style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', color: '#2563eb', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 'bold' }}
+                                    >
                                         <Printer size={16} /> طباعة
                                     </button>
-                                    <button onClick={() => handleEdit(contract)} style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}>
+
+                                    <button
+                                        onClick={() => window.open(`/contracts/${contract.id}/print`, '_blank')}
+                                        title="تنزيل PDF"
+                                        style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}
+                                    >
+                                        <FileText size={18} />
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            if (navigator.share) {
+                                                navigator.share({
+                                                    title: contract.title,
+                                                    text: `عقد مقاولات: ${contract.title}`,
+                                                    url: `${window.location.origin}/contracts/${contract.id}/print`,
+                                                });
+                                            } else {
+                                                alert('رابط العقد: ' + `${window.location.origin}/contracts/${contract.id}/print`);
+                                            }
+                                        }}
+                                        title="مشاركة العقد"
+                                        style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}
+                                    >
+                                        <ChevronRight size={18} />
+                                    </button>
+
+                                    <button onClick={() => handleEdit(contract)} title="تعديل العقد" style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}>
                                         <Edit size={18} />
                                     </button>
-                                    <button onClick={() => handleDelete(contract.id)} style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#fef2f2', color: '#ef4444', cursor: 'pointer' }}>
+                                    <button onClick={() => handleDelete(contract.id)} title="حذف العقد" style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#fef2f2', color: '#ef4444', cursor: 'pointer' }}>
                                         <Trash2 size={18} />
                                     </button>
                                 </div>
