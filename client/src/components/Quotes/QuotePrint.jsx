@@ -70,9 +70,9 @@ const QuotePrint = () => {
                 position: 'relative', overflow: 'hidden'
             }} className="print-page">
 
-                {/* Professional Watermark - Fixed at 140mm for absolute stability on A4 */}
+                {/* Professional Watermark - Strategically placed at 50% of the fixed 297mm A4 page */}
                 <div style={{
-                    position: 'absolute', top: '140mm', left: '50%', transform: 'translate(-50%, -50%)',
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                     width: '70%', opacity: 0.07, pointerEvents: 'none', zIndex: 0, display: 'flex', justifyContent: 'center', alignItems: 'center'
                 }}>
                     <img src="/watermark.png" alt="watermark" style={{ width: '100%', height: 'auto' }} />
@@ -194,12 +194,17 @@ const QuotePrint = () => {
                     }
                     #printable-area { 
                         box-shadow: none !important; 
-                        margin: 0 !important; 
-                        width: 100% !important; 
-                        padding: 10mm !important; 
+                        margin: 0 auto !important; 
+                        width: 210mm !important; 
+                        height: 297mm !important;
+                        min-height: 297mm !important;
+                        padding: 15mm !important; 
                         border: none !important; 
                         position: relative !important;
-                        height: auto !important;
+                        overflow: hidden !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        justify-content: space-between !important;
                     }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }
