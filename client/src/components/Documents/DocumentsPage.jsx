@@ -15,6 +15,7 @@ const DocumentsPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [uploading, setUploading] = useState(false);
     const [previewDoc, setPreviewDoc] = useState(null);
+    const [resolvedUrl, setResolvedUrl] = useState(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -35,6 +36,17 @@ const DocumentsPage = () => {
         fetchDocuments();
         fetchRelatedData();
     }, []);
+
+    useEffect(() => {
+        if (previewDoc && !previewDoc.fileUrl) {
+            setResolvedUrl(null); // Reset
+            axios.get(`${API_URL}/resolve-document?title=${encodeURIComponent(previewDoc.title)}`)
+                .then(res => setResolvedUrl(res.data.url))
+                .catch(() => setResolvedUrl(false));
+        } else {
+            setResolvedUrl(null);
+        }
+    }, [previewDoc]);
 
     const fetchDocuments = async () => {
         setLoading(true);
@@ -119,6 +131,13 @@ const DocumentsPage = () => {
 
     const handleDownload = (doc) => {
         if (!doc.fileUrl) return;
+
+        if (doc.fileUrl.startsWith('INTERNAL:')) {
+            const [, type, id] = doc.fileUrl.split(':');
+            const path = type === 'INVOICE' ? `/invoices/${id}/print` : `/quotes/${id}/print`;
+            window.open(path, '_blank');
+            return;
+        }
 
         try {
             const splitUrl = doc.fileUrl.split(',');
@@ -439,26 +458,54 @@ const DocumentsPage = () => {
                         </div>
 
                         <div style={{ flex: 1, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto', padding: '20px' }}>
-                            {previewDoc.fileUrl ? (
-                                previewDoc.fileUrl.includes('application/pdf') ? (
-                                    <iframe
-                                        src={previewDoc.fileUrl}
-                                        style={{ width: '100%', height: '100%', borderRadius: '12px', shadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                        title="Preview"
-                                    />
-                                ) : (
-                                    <img
-                                        src={previewDoc.fileUrl}
-                                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                        alt="Preview"
-                                    />
-                                )
-                            ) : (
-                                <div style={{ textAlign: 'center', color: '#94a3b8' }}>
-                                    <FileText size={64} style={{ opacity: 0.2, marginBottom: '20px' }} />
-                                    <p>عذراً، هذا المستند لا يحتوي على ملف للعرض.</p>
-                                </div>
-                            )}
+                            {(() => {
+                                const currentUrl = previewDoc.fileUrl || resolvedUrl;
+
+                                if (currentUrl && currentUrl.startsWith('INTERNAL:')) {
+                                    const [, type, id] = currentUrl.split(':');
+                                    const path = type === 'INVOICE' ? `/invoices/${id}/print` : `/quotes/${id}/print`;
+                                    return (
+                                        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                            <div style={{ background: '#fffbeb', padding: '10px', borderRadius: '8px', border: '1px solid #fef3c7', color: '#b45309', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center' }}>
+                                                📄 هذا مستند مُنشأ تلقائياً من النظام. يمكنك عرضه وطباعته مباشرة.
+                                            </div>
+                                            <iframe
+                                                src={path}
+                                                style={{ width: '100%', flex: 1, border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', background: 'white' }}
+                                                title="System Preview"
+                                            />
+                                        </div>
+                                    );
+                                }
+
+                                if (!previewDoc.fileUrl && resolvedUrl === null) {
+                                    return <div style={{ color: '#64748b' }}>⏳ جاري جلب تفاصيل المستند...</div>;
+                                }
+
+                                if (previewDoc.fileUrl) {
+                                    return previewDoc.fileUrl.includes('application/pdf') ? (
+                                        <iframe
+                                            src={previewDoc.fileUrl}
+                                            style={{ width: '100%', height: '100%', borderRadius: '12px', shadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                            title="File Preview"
+                                        />
+                                    ) : (
+                                        <img
+                                            src={previewDoc.fileUrl}
+                                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                            alt="File Preview"
+                                        />
+                                    );
+                                }
+
+                                return (
+                                    <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+                                        <FileText size={64} style={{ opacity: 0.2, marginBottom: '20px' }} />
+                                        <p>عذراً، هذا المستند لا يحتوي على ملف للعرض.</p>
+                                        <p style={{ fontSize: '0.8rem' }}>قد يكون هذا السجل مرجعياً فقط أو قديماً.</p>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>

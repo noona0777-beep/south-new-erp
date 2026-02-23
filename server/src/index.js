@@ -783,7 +783,7 @@ app.post('/api/invoices', authenticate, async (req, res) => {
                     data: {
                         title: `فاتورة مبيعات رقم ${invoice.invoiceNumber}`,
                         category: 'OTHER',
-                        fileUrl: '', // This acts as a database record for now
+                        fileUrl: `INTERNAL:INVOICE:${invoice.id}`, // Link to system invoice
                         partnerId: invoice.partnerId,
                         projectId: invoice.projectId,
                         createdAt: invoice.createdAt
@@ -1022,7 +1022,7 @@ app.post('/api/quotes', async (req, res) => {
                 data: {
                     title: `عرض سعر رقم ${quote.quoteNumber}`,
                     category: 'OTHER',
-                    fileUrl: '', // This acts as a database record for now
+                    fileUrl: `INTERNAL:QUOTE:${quote.id}`, // Link to system quote
                     partnerId: quote.partnerId,
                     createdAt: quote.createdAt
                 }
@@ -1053,6 +1053,31 @@ app.patch('/api/quotes/:id/status', async (req, res) => {
 });
 
 // --- HR Routes ---
+
+// Resolve System Document
+app.get('/api/resolve-document', async (req, res) => {
+    const { title } = req.query;
+    if (!title) return res.status(400).json({ error: 'Title required' });
+
+    try {
+        // Extract invoice number (INV-...) or quote number (QT-...)
+        const invMatch = title.match(/INV-\d+/);
+        const qtMatch = title.match(/QT-\d+/);
+
+        if (invMatch) {
+            const invoice = await prisma.invoice.findUnique({ where: { invoiceNumber: invMatch[0] } });
+            if (invoice) return res.json({ url: `INTERNAL:INVOICE:${invoice.id}` });
+        }
+        if (qtMatch) {
+            const quote = await prisma.quote.findUnique({ where: { quoteNumber: qtMatch[0] } });
+            if (quote) return res.json({ url: `INTERNAL:QUOTE:${quote.id}` });
+        }
+
+        res.status(404).json({ error: 'System document not found' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // Get All Employees
 app.get('/api/employees', async (req, res) => {
