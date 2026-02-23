@@ -382,15 +382,24 @@ const Layout = ({ user, onLogout }) => {
                 flexDirection: 'column',
                 height: '100vh',
                 overflow: 'hidden',
-                paddingRight: window.innerWidth > 768 ? '280px' : '0',
-                transition: 'padding 0.4s ease'
+                marginRight: window.innerWidth > 768 ? '280px' : '0',
+                transition: 'margin 0.4s ease',
+                width: window.innerWidth > 768 ? 'calc(100% - 280px)' : '100%'
             }}>
-                <header className="fade-in no-print" style={{ background: 'white', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', zIndex: 20 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <header className="fade-in no-print" style={{
+                    background: 'white',
+                    padding: '12px 20px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                    zIndex: 20
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
                         <button className="show-mobile" onClick={toggleSidebar} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', color: '#1e293b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Menu size={20} />
                         </button>
-                        <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+                        <div style={{ position: 'relative', width: '100%', maxWidth: '350px' }}>
                             <Search size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                             <input type="text" placeholder="بحث..." value={searchQuery} onChange={handleSearch} style={{ width: '100%', padding: '10px 40px 10px 15px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', outline: 'none', fontFamily: 'Cairo', fontSize: '0.9rem' }} />
                         </div>
