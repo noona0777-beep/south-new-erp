@@ -104,8 +104,8 @@ const DataRecordSummary = () => {
 
             {/* A4 Page */}
             <div id="printable-area" className="print-page" style={{
-                background: 'white', width: '210mm', minHeight: '297mm', margin: '0 auto', padding: '20mm',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', position: 'relative', color: '#0f172a', boxSizing: 'border-box'
+                background: 'white', width: '210mm', margin: '0 auto', padding: '20mm',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', color: '#0f172a', boxSizing: 'border-box'
             }}>
 
                 {/* Header */}
@@ -170,7 +170,7 @@ const DataRecordSummary = () => {
                 )}
 
                 {/* Footer */}
-                <div style={{ position: 'absolute', bottom: '20mm', left: '20mm', right: '20mm', borderTop: '1px solid #e2e8f0', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8' }}>
+                <div style={{ marginTop: '50px', borderTop: '1px solid #e2e8f0', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8' }}>
                     <div>تم استخراج هذا السجل آلياً من نظام مؤسسة الجنوب الجديد</div>
                     <div>صفحة 1 من 1</div>
                 </div>
