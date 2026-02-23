@@ -136,6 +136,7 @@ const DataRecordSummary = () => {
                                 سجل بيانات نظام
                             </div>
                             <div style={{ fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 'bold' }}>{new Date().toLocaleDateString('ar-SA')}</div>
+                            <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '5px', fontWeight: 'bold' }}>المرجع: <span dir="ltr">N S S-REC-{data.id.toString().padStart(5, '0')}</span></div>
                         </div>
                     </div>
 

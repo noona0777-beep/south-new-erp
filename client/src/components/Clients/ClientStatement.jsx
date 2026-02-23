@@ -68,6 +68,7 @@ const ClientStatement = () => {
                         <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <div style={{ background: '#1e3a8a', color: 'white', padding: '10px 20px', borderRadius: '4px', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '10px' }}>كشف حساب عميل</div>
                             <div style={{ fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 'bold' }}>{new Date().toLocaleDateString('ar-SA')}</div>
+                            <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '5px', fontWeight: 'bold' }}>المرجع: <span dir="ltr">N S S-ST-{id.padStart(5, '0')}</span></div>
                         </div>
                     </div>
 

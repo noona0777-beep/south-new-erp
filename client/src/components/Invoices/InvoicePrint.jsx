@@ -122,6 +122,7 @@ const InvoicePrint = () => {
                                 فاتورة ضريبية
                             </div>
                             <div style={{ fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 'bold' }}>{new Date(invoice.date).toLocaleDateString('en-GB')}</div>
+                            <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '5px', fontWeight: 'bold' }}>المرجع: <span dir="ltr">N S S-INV-{invoice.id.toString().padStart(5, '0')}</span></div>
                         </div>
                     </div>
 
