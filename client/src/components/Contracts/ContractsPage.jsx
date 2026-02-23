@@ -25,7 +25,8 @@ const ContractsPage = () => {
         advancePayment: 0,
         retentionPercent: 5,
         items: [{ description: '', unit: 'متر', quantity: 1, unitPrice: 0, total: 0 }],
-        clauses: SCA_CLAUSES.MAIN
+        clauses: SCA_CLAUSES.MAIN,
+        signatureName: ''
     });
 
     useEffect(() => {
@@ -120,7 +121,8 @@ const ContractsPage = () => {
             advancePayment: contract.advancePayment,
             retentionPercent: contract.retentionPercent,
             items: contract.items,
-            clauses: contract.clauses || SCA_CLAUSES.MAIN
+            clauses: contract.clauses || SCA_CLAUSES.MAIN,
+            signatureName: contract.signatureName || ''
         });
         setEditingId(contract.id);
         setIsEditing(true);
@@ -156,6 +158,14 @@ const ContractsPage = () => {
         return { subtotal, tax, total };
     };
 
+    const handleConvertToInvoice = (contract) => {
+        if (!window.confirm('هل تريد تحويل هذا العقد إلى مسودة فاتورة مبيعات في النظام المحاسبي؟')) return;
+        // Logic to redirect to Invoice creation with state
+        // In a real app, you might call an API, but here we'll redirect
+        alert('✅ تم تجهيز بيانات الفاتورة. سيتم تحويلك لصفحة الفواتير...');
+        window.location.href = `/invoices?fromContract=${contract.id}&partnerId=${contract.partnerId}&total=${contract.totalValue}&title=${encodeURIComponent(contract.title)}`;
+    };
+
     if (showForm) {
         const totals = calculateTotals();
         return (
@@ -189,6 +199,16 @@ const ContractsPage = () => {
                                         placeholder="مثال: توريد وتركيب أعمال الكلادينج لمشروع..."
                                         value={formData.title}
                                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none' }}
+                                    />
+                                </div>
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>اسم الشخص المفوض بالتوقيع</label>
+                                    <input
+                                        type="text"
+                                        placeholder="الاسم الذي سيظهر في خانة التوقيع"
+                                        value={formData.signatureName}
+                                        onChange={(e) => setFormData({ ...formData, signatureName: e.target.value })}
                                         style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none' }}
                                     />
                                 </div>
@@ -367,6 +387,26 @@ const ContractsPage = () => {
                 </div>
             </div>
 
+            {/* Statistics Summary */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+                {[
+                    { label: 'إجمالي قيمة العقود', value: `${contracts.reduce((a, b) => a + (b.totalValue || 0), 0).toLocaleString()} ر.س`, icon: <DollarSign />, color: '#2563eb' },
+                    { label: 'العقود النشطة', value: contracts.filter(c => c.status === 'ACTIVE').length, icon: <ShieldCheck />, color: '#10b981' },
+                    { label: 'العقود المكتملة', value: contracts.filter(c => c.status === 'COMPLETED').length, icon: <CheckCircle2 />, color: '#6366f1' },
+                    { label: 'بانتظار التعميد', value: contracts.filter(c => c.status === 'DRAFT').length, icon: <AlertCircle />, color: '#f59e0b' }
+                ].map((stat, i) => (
+                    <div key={i} style={{ background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{ background: `${stat.color}10`, color: stat.color, padding: '12px', borderRadius: '15px' }}>
+                            {stat.icon}
+                        </div>
+                        <div>
+                            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{stat.label}</div>
+                            <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1e293b' }}>{stat.value}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '100px', color: '#94a3b8' }}>جاري تحميل العقود...</div>
             ) : (
@@ -399,6 +439,18 @@ const ContractsPage = () => {
                                             <DollarSign size={16} color="#10b981" /> {contract.totalValue.toLocaleString()} ر.س
                                         </div>
                                     </div>
+
+                                    {/* Financial Progress Bar */}
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginBottom: '5px' }}>
+                                            <span>نسبة الإنجاز المالي</span>
+                                            <span>{contract.status === 'COMPLETED' ? '100%' : 'جارِ التنفيذ'}</span>
+                                        </div>
+                                        <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+                                            <div style={{ height: '100%', width: contract.status === 'COMPLETED' ? '100%' : '35%', background: 'linear-gradient(90deg, #2563eb, #3b82f6)', borderRadius: '10px' }}></div>
+                                        </div>
+                                    </div>
+
                                     <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
                                         <button
                                             onClick={() => window.open(`/contracts/${contract.id}/print`, '_blank')}
@@ -409,13 +461,22 @@ const ContractsPage = () => {
                                         </button>
 
                                         {contract.status !== 'ARCHIVED' && (
-                                            <button
-                                                onClick={() => handleArchive(contract.id)}
-                                                title="نقل للأرشيف"
-                                                style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}
-                                            >
-                                                <ShieldCheck size={18} />
-                                            </button>
+                                            <>
+                                                <button
+                                                    onClick={() => handleConvertToInvoice(contract)}
+                                                    title="تحويل لفاتورة"
+                                                    style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f0f9ff', color: '#0369a1', cursor: 'pointer' }}
+                                                >
+                                                    <DollarSign size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleArchive(contract.id)}
+                                                    title="نقل للأرشيف"
+                                                    style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}
+                                                >
+                                                    <ShieldCheck size={18} />
+                                                </button>
+                                            </>
                                         )}
 
                                         <button onClick={() => handleEdit(contract)} title="تعديل العقد" style={{ padding: '10px', borderRadius: '10px', border: 'none', background: '#f8fafc', color: '#64748b', cursor: 'pointer' }}>
