@@ -412,9 +412,6 @@ model Document {
   projectId   Int?
   project     Project? @relation(fields: [projectId], references: [id])
 
-  invoiceId   Int?
-  quoteId     Int?
-
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
