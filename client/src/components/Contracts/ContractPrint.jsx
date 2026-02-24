@@ -87,7 +87,7 @@ const ContractPrint = () => {
             <div id="printable-area" style={{ display: 'flex', justifyContent: 'center', padding: '30px 0' }}>
                 <div style={{
                     width: '210mm', minHeight: '297mm', background: 'white', padding: '15mm 20mm',
-                    boxShadow: '0 0 40px rgba(0,0,0,0.05)', position: 'relative', display: 'flex', flexDirection: 'column'
+                    position: 'relative', display: 'flex', flexDirection: 'column'
                 }}>
 
                     {/* Header Section */}
@@ -107,12 +107,12 @@ const ContractPrint = () => {
 
                     {/* Parties Section */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '40px' }}>
-                        <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ padding: '0 20px', borderRight: '1px solid #e2e8f0' }}>
                             <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '8px', fontWeight: 'bold' }}>الطرف الأول (صاحب العمل)</div>
                             <div style={{ fontSize: '18px', fontWeight: '900', color: '#1e3a8a' }}>{contract.partner?.name}</div>
                             <div style={{ fontSize: '12px', color: '#64748b', marginTop: '5px' }}>هاتف: {contract.partner?.phone}</div>
                         </div>
-                        <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ padding: '0 20px', borderRight: '1px solid #e2e8f0' }}>
                             <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '8px', fontWeight: 'bold' }}>الطرف الثاني (المقاول)</div>
                             <div style={{ fontSize: '18px', fontWeight: '900', color: '#1e3a8a' }}>{companyInfo.name}</div>
                             <div style={{ fontSize: '12px', color: '#64748b', marginTop: '5px' }}>هاتف: {companyInfo.phone}</div>
@@ -157,14 +157,14 @@ const ContractPrint = () => {
 
                     {/* BOQ Section */}
                     <div className="print-section" style={{ marginBottom: '20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', background: '#f8fafc', padding: '8px 15px', borderRadius: '8px', borderLeft: '4px solid #1e3a8a' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '8px 0', borderBottom: '1px solid #1e3a8a' }}>
                             <FileText size={18} color="#1e3a8a" />
                             <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#1e3a8a' }}>ثانياً: جدول الكميات والمواصفات المعتمد (BOQ)</h2>
                         </div>
 
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', border: '1px solid #e2e8f0' }}>
                             <thead style={{ display: 'table-header-group' }}>
-                                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #1e3a8a' }}>
+                                <tr style={{ borderBottom: '2px solid #1e3a8a' }}>
                                     <th style={{ padding: '12px', textAlign: 'right' }}>البيان / الوصف</th>
                                     <th style={{ padding: '12px', textAlign: 'center' }}>الوحدة</th>
                                     <th style={{ padding: '12px', textAlign: 'center' }}>الكمية</th>
@@ -196,16 +196,16 @@ const ContractPrint = () => {
                                 <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '5px' }}>تحقق من صحة العقد</div>
                             </div>
 
-                            <div style={{ width: '60%', background: '#1e3a8a', color: 'white', padding: '20px', borderRadius: '12px', marginRight: '40px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', opacity: 0.8 }}>
+                            <div style={{ width: '60%', border: '2px solid #1e3a8a', padding: '20px', borderRadius: '12px', marginRight: '40px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: '#475569' }}>
                                     <span>المجموع الفرعي:</span>
                                     <span>{(contract.netValue || 0).toLocaleString()} ر.س</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '12px', opacity: 0.8 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '12px', color: '#475569' }}>
                                     <span>ضريبة القيمة المضافة (15%):</span>
                                     <span>{(contract.taxAmount || 0).toLocaleString()} ر.س</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.2)', fontSize: '20px', fontWeight: '900' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid #e2e8f0', fontSize: '20px', fontWeight: '900', color: '#1e3a8a' }}>
                                     <span>إجمالي قيمة العقد:</span>
                                     <span>{(contract.totalValue || 0).toLocaleString()} ر.س</span>
                                 </div>
