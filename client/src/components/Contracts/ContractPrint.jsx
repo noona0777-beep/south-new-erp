@@ -6,6 +6,7 @@ import {
     Printer, Download, ArrowRight, ShieldCheck,
     MapPin, Calendar, User, Briefcase, FileText
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 /**
  * @component ContractPrint
