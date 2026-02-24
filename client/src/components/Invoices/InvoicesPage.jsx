@@ -21,6 +21,8 @@ const InvoicesPage = () => {
         items: [{ productId: '', description: '', quantity: 1, unitPrice: 0, total: 0 }]
     });
 
+    const [error, setError] = useState(null);
+
     useEffect(() => {
         fetchInvoices();
         fetchMasterData();
@@ -28,11 +30,14 @@ const InvoicesPage = () => {
 
     const fetchInvoices = async () => {
         try {
+            setError(null);
             const res = await axios.get(`${API_URL}/invoices`);
             setInvoices(res.data);
-            setLoading(false);
         } catch (err) {
             console.error('Error fetching invoices', err);
+            setError('فشل تحميل الفواتير. يرجى التأكد من اتصال قاعدة البيانات.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -306,6 +311,8 @@ const InvoicesPage = () => {
 
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>جاري تحميل الفواتير...</div>
+            ) : error ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444', background: '#fef2f2', borderRadius: '12px' }}>{error}</div>
             ) : (
                 <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9' }}>
                     <div className="table-responsive">
