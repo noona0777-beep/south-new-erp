@@ -40,6 +40,7 @@ const ContractsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -62,21 +63,35 @@ const ContractsPage = () => {
     }, []);
 
     const fetchData = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const token = localStorage.getItem('token');
-            const headers = { Authorization: `Bearer ${token}` };
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-            const [cRes, pRes, prRes] = await Promise.all([
+            // Fetch concurrently but handle individually if needed
+            const results = await Promise.allSettled([
                 axios.get(`${API_URL}/construction-contracts`, { headers }),
-                axios.get(`${API_URL}/partners`),
-                axios.get(`${API_URL}/projects`)
+                axios.get(`${API_URL}/partners`, { headers }),
+                axios.get(`${API_URL}/projects`, { headers })
             ]);
-            setContracts(cRes.data);
-            setPartners(pRes.data);
-            setProjects(prRes.data);
-            setLoading(false);
+
+            if (results[0].status === 'fulfilled') setContracts(results[0].value.data);
+            else console.error('Contracts Fetch Error:', results[0].reason);
+
+            if (results[1].status === 'fulfilled') setPartners(results[1].value.data);
+            else {
+                console.error('Partners Fetch Error:', results[1].reason);
+                setError('فشل تحميل قائمة العملاء');
+            }
+
+            if (results[2].status === 'fulfilled') setProjects(results[2].value.data);
+            else console.error('Projects Fetch Error:', results[2].reason);
+
         } catch (error) {
             console.error('Fetch error:', error);
+            setError('حدث خطأ أثناء جلب البيانات');
+        } finally {
             setLoading(false);
         }
     };
