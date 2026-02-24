@@ -25,12 +25,14 @@ const DocumentsPage = () => {
         fileName: '',
         partnerId: '',
         employeeId: '',
-        projectId: ''
+        projectId: '',
+        constructionContractId: ''
     });
 
     const [partners, setPartners] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [projects, setProjects] = useState([]);
+    const [contracts, setContracts] = useState([]);
 
     useEffect(() => {
         fetchDocuments();
@@ -73,14 +75,16 @@ const DocumentsPage = () => {
 
     const fetchRelatedData = async () => {
         try {
-            const [p, e, pr] = await Promise.all([
+            const [p, e, pr, c] = await Promise.all([
                 axios.get(`${API_URL}/partners`),
                 axios.get(`${API_URL}/employees`),
-                axios.get(`${API_URL}/projects`)
+                axios.get(`${API_URL}/projects`),
+                axios.get(`${API_URL}/construction-contracts`)
             ]);
             setPartners(p.data);
             setEmployees(e.data);
             setProjects(pr.data);
+            setContracts(c.data);
         } catch (err) {
             console.error('Error fetching related data', err);
         }
@@ -120,7 +124,7 @@ const DocumentsPage = () => {
         try {
             await axios.post(`${API_URL}/documents`, formData);
             setShowUpload(false);
-            setFormData({ title: '', category: 'CONTRACT', fileUrl: '', fileName: '', partnerId: '', employeeId: '', projectId: '' });
+            setFormData({ title: '', category: 'CONTRACT', fileUrl: '', fileName: '', partnerId: '', employeeId: '', projectId: '', constructionContractId: '' });
             fetchDocuments();
             alert('✅ تم رفع المستند بنجاح');
         } catch (err) {
@@ -290,6 +294,11 @@ const DocumentsPage = () => {
                                     <Briefcase size={14} /> {doc.project.name}
                                 </div>
                             )}
+                            {doc.constructionContract && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>
+                                    <FileText size={14} /> عقد: {doc.constructionContract.contractNumber}
+                                </div>
+                            )}
                         </div>
 
                         <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #f8fafc', paddingTop: '15px' }}>
@@ -423,6 +432,14 @@ const DocumentsPage = () => {
                                     >
                                         <option value="">-- ربط بمشروع --</option>
                                         {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                    </select>
+                                    <select
+                                        value={formData.constructionContractId}
+                                        onChange={e => setFormData({ ...formData, constructionContractId: e.target.value, partnerId: '', employeeId: '', projectId: '' })}
+                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
+                                    >
+                                        <option value="">-- ربط بعقد مقاولات --</option>
+                                        {contracts.map(c => <option key={c.id} value={c.id}>{c.contractNumber} - {c.title}</option>)}
                                     </select>
                                 </div>
                             </div>

@@ -39,8 +39,20 @@ const ContractsPage = () => {
     const [projects, setProjects] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [showDocsModal, setShowDocsModal] = useState(false);
+    const [selectedContract, setSelectedContract] = useState(null);
+    const [contractDocuments, setContractDocuments] = useState([]);
+    const [uploadingDoc, setUploadingDoc] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // Document Form State
+    const [docFormData, setDocFormData] = useState({
+        title: '',
+        category: 'CONTRACT',
+        fileUrl: '',
+        fileName: ''
+    });
 
     // Form State
     const [formData, setFormData] = useState({
@@ -148,6 +160,95 @@ const ContractsPage = () => {
         }
     };
 
+    const handleArchive = async (id) => {
+        if (!window.confirm('هل تريد أرشفة هذا العقد؟ سيتم تغيير حالته ونقله للأرشيف.')) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_URL}/construction-contracts/${id}/archive`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert('✅ تم أرشفة العقد بنجاح');
+            fetchData();
+        } catch (error) {
+            alert('❌ فشل أرشفة العقد');
+        }
+    };
+
+    const fetchContractDocuments = async (contractId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${API_URL}/documents?constructionContractId=${contractId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setContractDocuments(res.data);
+        } catch (err) {
+            console.error('Error fetching contract docs', err);
+        }
+    };
+
+    const handleOpenDocs = (contract) => {
+        setSelectedContract(contract);
+        fetchContractDocuments(contract.id);
+        setShowDocsModal(true);
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            alert('الملف كبير جداً (ماكس 5MB)');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setDocFormData({
+                ...docFormData,
+                fileUrl: reader.result,
+                fileName: file.name,
+                title: docFormData.title || file.name.split('.')[0]
+            });
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleUploadDoc = async (e) => {
+        e.preventDefault();
+        if (!docFormData.fileUrl) return;
+
+        setUploadingDoc(true);
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_URL}/documents`, {
+                ...docFormData,
+                constructionContractId: selectedContract.id,
+                partnerId: selectedContract.partnerId
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setDocFormData({ title: '', category: 'CONTRACT', fileUrl: '', fileName: '' });
+            fetchContractDocuments(selectedContract.id);
+            alert('✅ تم رفع المستند');
+        } catch (err) {
+            alert('❌ فشل الرفع');
+        } finally {
+            setUploadingDoc(false);
+        }
+    };
+
+    const handleDeleteDoc = async (id) => {
+        if (!window.confirm('حذف المستند؟')) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/documents/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchContractDocuments(selectedContract.id);
+        } catch (err) {
+            alert('فشل الحذف');
+        }
+    };
+
     const filteredContracts = contracts.filter(c =>
         c.contractNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.partner?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -243,9 +344,17 @@ const ContractsPage = () => {
                                         <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#0f172a' }}>{contract.totalValue.toLocaleString()} <span style={{ fontSize: '0.8rem' }}>ر.س</span></div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button onClick={() => handleOpenDocs(contract)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e0f2fe', background: '#f0f9ff', color: '#0284c7', cursor: 'pointer' }} title="المستندات">
+                                            <FileText size={18} />
+                                        </button>
                                         <button onClick={() => navigate(`/contracts/${contract.id}/print`)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer' }} title="طباعة">
                                             <Printer size={18} />
                                         </button>
+                                        {contract.status !== 'ARCHIVED' && (
+                                            <button onClick={() => handleArchive(contract.id)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #f1f5f9', background: 'white', color: '#64748b', cursor: 'pointer' }} title="أرشفة">
+                                                <Archive size={18} />
+                                            </button>
+                                        )}
                                         <button onClick={() => handleDelete(contract.id)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #fee2e2', background: 'white', color: '#ef4444', cursor: 'pointer' }} title="حذف">
                                             <Trash2 size={18} />
                                         </button>
@@ -443,6 +552,85 @@ const ContractsPage = () => {
                                 <button type="submit" style={{ padding: '10px 40px', borderRadius: '10px', border: 'none', background: '#2563eb', color: 'white', fontWeight: 'bold' }}>حفظ العقد وإصدار رقم</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Documents Modal */}
+            {showDocsModal && selectedContract && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2005, padding: '20px' }}>
+                    <div style={{ background: 'white', width: '100%', maxWidth: '600px', borderRadius: '24px', padding: '30px', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ margin: 0 }}>مستندات العقد: {selectedContract.contractNumber}</h3>
+                            <button onClick={() => setShowDocsModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
+                        </div>
+
+                        {/* Upload Section */}
+                        <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px dashed #cbd5e1' }}>
+                            <form onSubmit={handleUploadDoc}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="عنوان المستند (مثال: صورة الموقع، الدفعة الأولى...)"
+                                        required
+                                        value={docFormData.title}
+                                        onChange={e => setDocFormData({ ...docFormData, title: e.target.value })}
+                                        style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                                    />
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <input
+                                            type="file"
+                                            onChange={handleFileChange}
+                                            style={{ flex: 1, fontSize: '0.8rem' }}
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={uploadingDoc || !docFormData.fileUrl}
+                                            style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}
+                                        >
+                                            {uploadingDoc ? 'جاري الرفع...' : 'رفع الملف'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        {/* Docs List */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {contractDocuments.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>لا توجد مستندات مرفوعة لهذا العقد</div>
+                            ) : contractDocuments.map(doc => (
+                                <div key={doc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: '#fff', border: '1px solid #f1f5f9', borderRadius: '12px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <FileText size={20} color="#64748b" />
+                                        <div>
+                                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{doc.title}</div>
+                                            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{new Date(doc.createdAt).toLocaleDateString('ar-SA')}</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button
+                                            onClick={() => {
+                                                if (doc.fileUrl.startsWith('data:')) {
+                                                    const link = document.createElement('a');
+                                                    link.href = doc.fileUrl;
+                                                    link.download = doc.title;
+                                                    link.click();
+                                                } else {
+                                                    window.open(doc.fileUrl, '_blank');
+                                                }
+                                            }}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb' }}
+                                        >
+                                            <Download size={18} />
+                                        </button>
+                                        <button onClick={() => handleDeleteDoc(doc.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}>
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
