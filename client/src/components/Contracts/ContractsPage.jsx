@@ -5,7 +5,7 @@ import API_URL from '../../config';
 import {
     Plus, Search, FileText, Calendar, User,
     Briefcase, MoreVertical, Edit, Trash2, Printer,
-    CheckCircle, XCircle, Clock, Archive
+    CheckCircle, XCircle, Clock, Archive, ShieldCheck
 } from 'lucide-react';
 
 const SCA_STANDARD_CLAUSES = [
