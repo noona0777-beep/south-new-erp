@@ -7,6 +7,8 @@ import {
     MapPin, Calendar, User, Briefcase, FileText
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, HeadingLevel, VerticalAlign } from 'docx';
+import { saveAs } from 'file-saver';
 
 /**
  * @component ContractPrint
@@ -59,6 +61,149 @@ const ContractPrint = () => {
         }
     };
 
+    const handleDownloadWord = async () => {
+        const clauses = Array.isArray(contract.clauses) ? contract.clauses :
+            (typeof contract.clauses === 'object' && contract.clauses !== null ? Object.values(contract.clauses) : []);
+
+        const doc = new Document({
+            sections: [{
+                properties: {
+                    page: {
+                        margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+                    }
+                },
+                children: [
+                    // Header
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                            new TextRun({ text: "عقد مقاولات إنشائية", bold: true, size: 36, color: "1e3a8a" }),
+                        ],
+                    }),
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                            new TextRun({ text: `الرقم المرجعي: ${contract.contractNumber} | التاريخ: ${formattedDate}`, size: 20, color: "64748b" }),
+                        ],
+                    }),
+                    new Paragraph({ text: "", spacing: { after: 400 } }),
+
+                    // Company & Partner Info Table
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({
+                                children: [
+                                    new TableCell({
+                                        children: [
+                                            new Paragraph({ children: [new TextRun({ text: "الطرف الأول (صاحب العمل)", bold: true, size: 20, color: "94a3b8" })] }),
+                                            new Paragraph({ children: [new TextRun({ text: contract.partner?.name, bold: true, size: 28, color: "1e3a8a" })] }),
+                                            new Paragraph({ children: [new TextRun({ text: `هاتف: ${contract.partner?.phone}`, size: 20 })] }),
+                                        ],
+                                        padding: { top: 200, bottom: 200, left: 200, right: 200 },
+                                    }),
+                                    new TableCell({
+                                        children: [
+                                            new Paragraph({ children: [new TextRun({ text: "الطرف الثاني (المقاول)", bold: true, size: 20, color: "94a3b8" })] }),
+                                            new Paragraph({ children: [new TextRun({ text: companyInfo.name, bold: true, size: 28, color: "1e3a8a" })] }),
+                                            new Paragraph({ children: [new TextRun({ text: `هاتف: ${companyInfo.phone}`, size: 20 })] }),
+                                        ],
+                                        padding: { top: 200, bottom: 200, left: 200, right: 200 },
+                                    }),
+                                ],
+                            }),
+                        ],
+                    }),
+                    new Paragraph({ text: "", spacing: { after: 400 } }),
+
+                    // Section Title: SCA Clauses
+                    new Paragraph({
+                        children: [new TextRun({ text: "بنود العقد والشروط الفنية (SCA)", bold: true, size: 28, color: "1e3a8a" })],
+                        border: { bottom: { color: "1e3a8a", size: 12, space: 1, style: BorderStyle.SINGLE } },
+                        spacing: { after: 200 },
+                    }),
+
+                    // Clauses Content
+                    ...clauses.map((c, idx) => [
+                        new Paragraph({
+                            children: [new TextRun({ text: `المادة (${c.id || idx + 1}): ${c.title}`, bold: true, color: "1e3a8a", size: 24 })],
+                            spacing: { before: 200 },
+                        }),
+                        new Paragraph({
+                            children: [new TextRun({ text: c.content, size: 22 })],
+                            spacing: { after: 100 },
+                        }),
+                    ]).flat(),
+
+                    new Paragraph({ text: "", spacing: { after: 400 } }),
+
+                    // BOQ Title
+                    new Paragraph({
+                        children: [new TextRun({ text: "ثانياً: جدول الكميات والمواصفات المعتمد (BOQ)", bold: true, size: 28, color: "1e3a8a" })],
+                        spacing: { before: 400, after: 200 },
+                    }),
+
+                    // BOQ Table
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({
+                                tableHeader: true,
+                                children: ["البيان / الوصف", "الوحدة", "الكمية", "سعر الوحدة", "الإجمالي"].map(h =>
+                                    new TableCell({
+                                        children: [new Paragraph({ children: [new TextRun({ text: h, bold: true })], alignment: AlignmentType.CENTER })],
+                                        shading: { fill: "f8fafc" },
+                                    })
+                                ),
+                            }),
+                            ...(contract.items || []).map(item => new TableRow({
+                                children: [
+                                    new TableCell({ children: [new Paragraph({ text: item.description })] }),
+                                    new TableCell({ children: [new Paragraph({ text: item.unit, alignment: AlignmentType.CENTER })] }),
+                                    new TableCell({ children: [new Paragraph({ text: String(item.quantity), alignment: AlignmentType.CENTER })] }),
+                                    new TableCell({ children: [new Paragraph({ text: (item.unitPrice || 0).toLocaleString(), alignment: AlignmentType.CENTER })] }),
+                                    new TableCell({ children: [new Paragraph({ text: (item.total || 0).toLocaleString(), alignment: AlignmentType.CENTER })] }),
+                                ],
+                            })),
+                        ],
+                    }),
+
+                    new Paragraph({ text: "", spacing: { after: 800 } }),
+
+                    // Totals Table
+                    new Table({
+                        alignment: AlignmentType.RIGHT,
+                        width: { size: 50, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({
+                                children: [
+                                    new TableCell({ children: [new Paragraph({ text: "المجموع الفرعي:" })] }),
+                                    new TableCell({ children: [new Paragraph({ text: `${(contract.netValue || 0).toLocaleString()} ر.س`, alignment: AlignmentType.LEFT })] }),
+                                ],
+                            }),
+                            new TableRow({
+                                children: [
+                                    new TableCell({ children: [new Paragraph({ text: "ضريبة القيمة المضافة (15%):" })] }),
+                                    new TableCell({ children: [new Paragraph({ text: `${(contract.taxAmount || 0).toLocaleString()} ر.س`, alignment: AlignmentType.LEFT })] }),
+                                ],
+                            }),
+                            new TableRow({
+                                children: [
+                                    new TableCell({ children: [new Paragraph({ text: "إجمالي قيمة العقد:", bold: true })] }),
+                                    new TableCell({ children: [new Paragraph({ text: `${(contract.totalValue || 0).toLocaleString()} ر.س`, bold: true, alignment: AlignmentType.LEFT })] }),
+                                ],
+                            }),
+                        ],
+                    }),
+                ],
+            }],
+        });
+
+        Packer.toBlob(doc).then(blob => {
+            saveAs(blob, `Contract_${contract.contractNumber}.docx`);
+        });
+    };
+
     if (loading || !contract) return <div style={{ textAlign: 'center', padding: '100px', fontSize: '18px', fontFamily: 'Cairo' }}>⏳ جاري تجهيز وثيقة التعاقد...</div>;
 
     const formattedDate = new Date(contract.createdAt).toLocaleDateString('ar-SA');
@@ -74,6 +219,9 @@ const ContractPrint = () => {
                     <ArrowRight size={18} /> العودة للعقود
                 </button>
                 <div style={{ display: 'flex', gap: '12px' }}>
+                    <button onClick={handleDownloadWord} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileText size={18} /> تحميل Word
+                    </button>
                     <button onClick={handleDownloadPDF} style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Download size={18} /> تحميل PDF
                     </button>
