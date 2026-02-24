@@ -171,6 +171,11 @@ const ContractsPage = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                 <div>
                     <h2 style={{ margin: 0, color: '#0f172a', fontSize: '1.8rem', fontWeight: '800' }}>إدارة عقود المقاولات</h2>
+                    {error && (
+                        <div style={{ background: '#fef2f2', color: '#ef4444', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <XCircle size={16} /> {error}
+                        </div>
+                    )}
                     <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>إصدار ومتابعة عقود الإنشاءات والصيانة حسب معايير SCA</p>
                 </div>
                 <button
