@@ -241,6 +241,14 @@ body {
     }
 }
 
+/* Table Responsiveness */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
 @media (max-width: 768px) {
     .hide-mobile {
         display: none !important;
@@ -248,14 +256,6 @@ body {
 
     .show-mobile {
         display: block !important;
-    }
-
-    /* Table Responsiveness */
-    .table-responsive {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin-bottom: 1rem;
     }
 
     /* Grid layout for cards in mobile */
