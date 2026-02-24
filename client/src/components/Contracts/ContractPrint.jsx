@@ -119,11 +119,11 @@ const ContractPrint = () => {
                         </div>
                     </div>
 
-                    {/* Main Clauses Section */}
-                    <div style={{ marginBottom: '40px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', background: '#1e3a8a', color: 'white', padding: '10px 20px', borderRadius: '8px' }}>
-                            <ShieldCheck size={20} />
-                            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>أولاً: بنود الاتفاقية والشروط العامة (SCA Standard)</h2>
+                    {/* Contract Scope & Details */}
+                    <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px', borderBottom: '2px solid #1e3a8a', paddingBottom: '8px' }}>
+                            <ShieldCheck size={24} color="#1e3a8a" />
+                            <h3 style={{ margin: 0, fontSize: '18px', color: '#1e3a8a', fontWeight: '900' }}>بنود العقد والشروط الفنية (SCA)</h3>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '25px' }}>
@@ -156,10 +156,10 @@ const ContractPrint = () => {
                     </div>
 
                     {/* BOQ Section */}
-                    <div style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', background: '#f8fafc', padding: '10px 20px', borderRadius: '8px', borderLeft: '4px solid #1e3a8a' }}>
-                            <FileText size={20} color="#1e3a8a" />
-                            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#1e3a8a' }}>ثانياً: جدول الكميات والمواصفات المعتمد (BOQ)</h2>
+                    <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', background: '#f8fafc', padding: '8px 15px', borderRadius: '8px', borderLeft: '4px solid #1e3a8a' }}>
+                            <FileText size={18} color="#1e3a8a" />
+                            <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#1e3a8a' }}>ثانياً: جدول الكميات والمواصفات المعتمد (BOQ)</h2>
                         </div>
 
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', border: '1px solid #e2e8f0' }}>
@@ -187,8 +187,8 @@ const ContractPrint = () => {
                     </div>
 
                     {/* Totals & Signatures Area */}
-                    <div style={{ pageBreakInside: 'avoid', marginTop: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '40px', marginBottom: '40px' }}>
+                    <div style={{ pageBreakInside: 'avoid', marginTop: '10px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '40px', marginBottom: '30px' }}>
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ padding: '10px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'inline-block' }}>
                                     <QRCodeSVG value={`https://south-new-erp.vercel.app/verify/${contract.id}`} size={90} />
