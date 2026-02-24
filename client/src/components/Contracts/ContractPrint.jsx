@@ -188,7 +188,7 @@ const ContractPrint = () => {
 
                     {/* Totals & Signatures Area */}
                     <div style={{ pageBreakInside: 'avoid', marginTop: '10px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '40px', marginBottom: '30px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' }}>
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ padding: '10px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'inline-block' }}>
                                     <QRCodeSVG value={`https://south-new-erp.vercel.app/verify/${contract.id}`} size={90} />
@@ -196,7 +196,7 @@ const ContractPrint = () => {
                                 <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '5px' }}>تحقق من صحة العقد</div>
                             </div>
 
-                            <div style={{ flex: 1, background: '#1e3a8a', color: 'white', padding: '20px', borderRadius: '12px' }}>
+                            <div style={{ width: '60%', background: '#1e3a8a', color: 'white', padding: '20px', borderRadius: '12px', marginRight: '40px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', opacity: 0.8 }}>
                                     <span>المجموع الفرعي:</span>
                                     <span>{contract.netValue.toLocaleString()} ر.س</span>
@@ -212,16 +212,16 @@ const ContractPrint = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px' }}>
-                            <div style={{ textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+                        <div style={{ display: 'flex', width: '100%', marginBottom: '40px' }}>
+                            <div style={{ flex: 1, textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '15px', marginLeft: '30px' }}>
                                 <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '20px' }}>الطرف الأول (صاحب العمل)</div>
                                 <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{contract.partner?.name}</div>
-                                <div style={{ height: '50px' }}></div>
+                                <div style={{ height: '40px' }}></div>
                             </div>
-                            <div style={{ textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+                            <div style={{ flex: 1, textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '15px', marginRight: '30px' }}>
                                 <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '20px' }}>الطرف الثاني (المقاول)</div>
                                 <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{companyInfo.name}</div>
-                                <div style={{ height: '50px' }}></div>
+                                <div style={{ height: '40px' }}></div>
                             </div>
                         </div>
                     </div>
