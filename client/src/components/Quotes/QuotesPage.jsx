@@ -299,9 +299,9 @@ const QuotesPage = () => {
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>جاري التحميل...</div>
             ) : (
-                <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9' }}>
-                    <div className="table-responsive">
-                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+                <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
+                    <div className="table-responsive" style={{ width: '100%' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
                             <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                                 <tr>
                                     <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>رقم العرض</th>
@@ -309,7 +309,7 @@ const QuotesPage = () => {
                                     <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>التاريخ</th>
                                     <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الحالة</th>
                                     <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الإجمالي</th>
-                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الإجراءات</th>
+                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem', fontWeight: '600', minWidth: '150px' }}>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -336,14 +336,14 @@ const QuotesPage = () => {
                                                     </span>
                                                 </td>
                                                 <td style={{ padding: '16px 24px', color: '#0f172a', fontWeight: 'bold' }}>{qt.total.toFixed(2)} ر.س</td>
-                                                <td style={{ padding: '16px 24px', textAlign: 'center' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-                                                        <button onClick={() => updateStatus(qt.id, 'ACCEPTED')} title="قبول" style={{ background: '#ecfdf5', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><CheckCircle size={16} /></button>
-                                                        <button onClick={() => updateStatus(qt.id, 'REJECTED')} title="رفض" style={{ background: '#fef2f2', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><XCircle size={16} /></button>
+                                                <td style={{ padding: '16px 24px', textAlign: 'center', minWidth: '150px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', paddingLeft: '5px' }}>
+                                                        <button onClick={() => updateStatus(qt.id, 'ACCEPTED')} title="قبول" style={{ background: '#ecfdf5', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><CheckCircle size={16} /></button>
+                                                        <button onClick={() => updateStatus(qt.id, 'REJECTED')} title="رفض" style={{ background: '#fef2f2', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><XCircle size={16} /></button>
                                                         <button
                                                             onClick={() => window.open(`/quotes/${qt.id}/print`, '_blank')}
                                                             title="طباعة"
-                                                            style={{ background: '#f8fafc', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                            style={{ background: '#f8fafc', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                                                         >
                                                             <Printer size={16} />
                                                         </button>
