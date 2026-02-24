@@ -156,14 +156,14 @@ const ContractPrint = () => {
                     </div>
 
                     {/* BOQ Section */}
-                    <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+                    <div className="print-section" style={{ marginBottom: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', background: '#f8fafc', padding: '8px 15px', borderRadius: '8px', borderLeft: '4px solid #1e3a8a' }}>
                             <FileText size={18} color="#1e3a8a" />
                             <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#1e3a8a' }}>ثانياً: جدول الكميات والمواصفات المعتمد (BOQ)</h2>
                         </div>
 
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', border: '1px solid #e2e8f0' }}>
-                            <thead>
+                            <thead style={{ display: 'table-header-group' }}>
                                 <tr style={{ background: '#f8fafc', borderBottom: '2px solid #1e3a8a' }}>
                                     <th style={{ padding: '12px', textAlign: 'right' }}>البيان / الوصف</th>
                                     <th style={{ padding: '12px', textAlign: 'center' }}>الوحدة</th>
@@ -174,12 +174,12 @@ const ContractPrint = () => {
                             </thead>
                             <tbody>
                                 {contract.items?.map((item, i) => (
-                                    <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                    <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', pageBreakInside: 'avoid' }}>
                                         <td style={{ padding: '12px', fontWeight: 'bold' }}>{item.description}</td>
                                         <td style={{ padding: '12px', textAlign: 'center' }}>{item.unit}</td>
                                         <td style={{ padding: '12px', textAlign: 'center' }}>{item.quantity}</td>
-                                        <td style={{ padding: '12px', textAlign: 'center' }}>{item.unitPrice.toLocaleString()}</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1e3a8a' }}>{item.total.toLocaleString()} ر.س</td>
+                                        <td style={{ padding: '12px', textAlign: 'center' }}>{(item.unitPrice || 0).toLocaleString()}</td>
+                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1e3a8a' }}>{(item.total || 0).toLocaleString()} ر.س</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -187,11 +187,11 @@ const ContractPrint = () => {
                     </div>
 
                     {/* Totals & Signatures Area */}
-                    <div style={{ pageBreakInside: 'avoid', marginTop: '10px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' }}>
+                    <div className="print-section" style={{ marginTop: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', pageBreakInside: 'avoid' }}>
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ padding: '10px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'inline-block' }}>
-                                    <QRCodeSVG value={`https://south-new-erp.vercel.app/verify/${contract.id}`} size={90} />
+                                    <QRCodeSVG value={`https://south-new-system.com/verify/${contract.id}`} size={90} />
                                 </div>
                                 <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '5px' }}>تحقق من صحة العقد</div>
                             </div>
@@ -199,20 +199,20 @@ const ContractPrint = () => {
                             <div style={{ width: '60%', background: '#1e3a8a', color: 'white', padding: '20px', borderRadius: '12px', marginRight: '40px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', opacity: 0.8 }}>
                                     <span>المجموع الفرعي:</span>
-                                    <span>{contract.netValue.toLocaleString()} ر.س</span>
+                                    <span>{(contract.netValue || 0).toLocaleString()} ر.س</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '12px', opacity: 0.8 }}>
                                     <span>ضريبة القيمة المضافة (15%):</span>
-                                    <span>{contract.taxAmount.toLocaleString()} ر.س</span>
+                                    <span>{(contract.taxAmount || 0).toLocaleString()} ر.س</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.2)', fontSize: '20px', fontWeight: '900' }}>
                                     <span>إجمالي قيمة العقد:</span>
-                                    <span>{contract.totalValue.toLocaleString()} ر.س</span>
+                                    <span>{(contract.totalValue || 0).toLocaleString()} ر.س</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', width: '100%', marginBottom: '40px' }}>
+                        <div style={{ display: 'flex', width: '100%', marginBottom: '20px', pageBreakInside: 'avoid' }}>
                             <div style={{ flex: 1, textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '15px', marginLeft: '30px' }}>
                                 <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '20px' }}>الطرف الأول (صاحب العمل)</div>
                                 <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{contract.partner?.name}</div>
@@ -227,7 +227,7 @@ const ContractPrint = () => {
                     </div>
 
                     {/* System Footer */}
-                    <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '30px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#cbd5e1' }}>
+                    <div style={{ borderTop: '1px solid #f1f5f9', marginTop: 'auto', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#cbd5e1' }}>
                         <span>تم إصدار هذا العقد آلياً من نظام {companyInfo.name}</span>
                         <span>رقم الوثيقة: {contract.id}-{Date.now()}</span>
                     </div>
@@ -237,11 +237,53 @@ const ContractPrint = () => {
             <style>
                 {`
                     @media print {
-                        body { background: white !important; margin: 0; padding: 0; }
+                        @page { 
+                            size: A4 portrait; 
+                            margin: 15mm 10mm 15mm 10mm;
+                        }
+                        body { 
+                            background: white !important; 
+                            margin: 0; 
+                            padding: 0;
+                            -webkit-print-color-adjust: exact;
+                        }
                         .no-print { display: none !important; }
-                        #printable-area { padding: 0 !important; margin: 0 !important; }
-                        @page { size: A4 portrait; margin: 0; }
-                        .card-shadow { box-shadow: none !important; border: 1px solid #f1f5f9 !important; }
+                        #printable-area { 
+                            padding: 0 !important; 
+                            margin: 0 !important;
+                            display: block !important;
+                        }
+                        #printable-area > div {
+                            box-shadow: none !important;
+                            padding: 0 !important;
+                            margin: 0 !important;
+                            width: 100% !important;
+                        }
+                        .print-section {
+                            page-break-inside: avoid !important;
+                            break-inside: avoid !important;
+                            display: block;
+                            width: 100%;
+                        }
+                        table { 
+                            width: 100% !important;
+                            border-collapse: collapse !important;
+                            page-break-inside: auto !important;
+                        }
+                        tr { 
+                            page-break-inside: avoid !important; 
+                            page-break-after: auto !important;
+                        }
+                        thead { 
+                            display: table-header-group !important;
+                        }
+                        h1, h2, h3 { 
+                            page-break-after: avoid !important; 
+                        }
+                        p, div {
+                            orphans: 3;
+                            widows: 3;
+                        }
                     }
                 `}
             </style>
