@@ -2,7 +2,7 @@
 // Production: uses relative path /api (works on same domain deployment like Vercel)
 const API_URL = import.meta.env.VITE_API_URL ||
     (window.location.hostname === 'localhost'
-        ? 'http://localhost:5000/api'
+        ? 'https://south-new-erp-1.onrender.com/api'
         : '/api');
 
 export default API_URL;
