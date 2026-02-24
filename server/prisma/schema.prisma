@@ -232,6 +232,9 @@ model Invoice {
   
   contractId    Int?
   contract      RealEstateContract? @relation(fields: [contractId], references: [id])
+  
+  constructionContractId Int?
+  constructionContract   ConstructionContract? @relation(fields: [constructionContractId], references: [id])
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -414,6 +417,9 @@ model Document {
   projectId   Int?
   project     Project? @relation(fields: [projectId], references: [id])
 
+  constructionContractId Int?
+  constructionContract   ConstructionContract? @relation(fields: [constructionContractId], references: [id])
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -457,6 +463,8 @@ model ConstructionContract {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   items           ConstructionContractItem[]
+  invoices        Invoice[]
+  documents       Document[]
 }
 
 model ConstructionContractItem {

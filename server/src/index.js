@@ -692,7 +692,7 @@ app.get('/api/invoices/:id', async (req, res) => {
 
 // Create New Invoice
 app.post('/api/invoices', authenticate, async (req, res) => {
-    const { partnerId, date, type, items, discount } = req.body;
+    const { partnerId, date, type, items, discount, constructionContractId } = req.body;
 
     // Calculate Totals
     let subtotal = 0;
@@ -739,7 +739,8 @@ app.post('/api/invoices', authenticate, async (req, res) => {
                         total.toFixed(2),
                         taxAmount.toFixed(2)
                     ),
-                    items: { create: invoiceItemsData }
+                    items: { create: invoiceItemsData },
+                    constructionContractId: constructionContractId ? parseInt(constructionContractId) : null
                 }
             });
 
@@ -1584,6 +1585,43 @@ app.delete('/api/construction-contracts/:id', authenticate, async (req, res) => 
     }
 });
 
+// Archive Construction Contract
+app.post('/api/construction-contracts/:id/archive', authenticate, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const contract = await prisma.constructionContract.findUnique({
+            where: { id: parseInt(id) },
+            include: { partner: true, project: true }
+        });
+
+        if (!contract) return res.status(404).json({ error: 'Contract not found' });
+
+        // Change status
+        const updatedContract = await prisma.constructionContract.update({
+            where: { id: parseInt(id) },
+            data: { status: 'ARCHIVED' }
+        });
+
+        // Create Document Record
+        await prisma.document.create({
+            data: {
+                title: `أرشيف عقد: ${contract.title} (#${contract.contractNumber})`,
+                category: 'CONTRACT',
+                fileUrl: `INTERNAL:CONSTRUCTION_CONTRACT:${id}`,
+                partnerId: contract.partnerId,
+                projectId: contract.projectId,
+                constructionContractId: parseInt(id)
+            }
+        });
+
+        await logActivity(req.user.id, 'ARCHIVE', 'CONSTRUCTION_CONTRACT', parseInt(id), `أرشفة عقد مقاولات #${contract.contractNumber}`);
+        res.json(updatedContract);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 // --- Settings Routes ---
 app.get('/api/settings/:key', async (req, res) => {
     try {
@@ -1926,15 +1964,16 @@ app.get('/api/reports/general-ledger', async (req, res) => {
 // Get All Documents
 app.get('/api/documents', async (req, res) => {
     try {
-        const { partnerId, employeeId, projectId } = req.query;
+        const { partnerId, employeeId, projectId, constructionContractId } = req.query;
         const where = {};
         if (partnerId) where.partnerId = parseInt(partnerId);
         if (employeeId) where.employeeId = parseInt(employeeId);
         if (projectId) where.projectId = parseInt(projectId);
+        if (constructionContractId) where.constructionContractId = parseInt(constructionContractId);
 
         const documents = await prisma.document.findMany({
             where,
-            include: { partner: true, employee: true, project: true },
+            include: { partner: true, employee: true, project: true, constructionContract: true },
             orderBy: { createdAt: 'desc' }
         });
         res.json(documents);
@@ -1946,7 +1985,7 @@ app.get('/api/documents', async (req, res) => {
 // Create Document Entry
 app.post('/api/documents', async (req, res) => {
     try {
-        const { title, category, fileUrl, fileType, fileSize, partnerId, employeeId, projectId } = req.body;
+        const { title, category, fileUrl, fileType, fileSize, partnerId, employeeId, projectId, constructionContractId } = req.body;
         const document = await prisma.document.create({
             data: {
                 title,
@@ -1957,6 +1996,7 @@ app.post('/api/documents', async (req, res) => {
                 partnerId: partnerId ? parseInt(partnerId) : null,
                 employeeId: employeeId ? parseInt(employeeId) : null,
                 projectId: projectId ? parseInt(projectId) : null,
+                constructionContractId: constructionContractId ? parseInt(constructionContractId) : null,
             }
         });
         res.json(document);
