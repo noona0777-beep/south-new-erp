@@ -347,7 +347,7 @@ const ContractsPage = () => {
                                         <button onClick={() => handleOpenDocs(contract)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e0f2fe', background: '#f0f9ff', color: '#0284c7', cursor: 'pointer' }} title="المستندات">
                                             <FileText size={18} />
                                         </button>
-                                        <button onClick={() => navigate(`/contracts/${contract.id}/print`)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer' }} title="طباعة">
+                                        <button onClick={() => window.open(`/contracts/${contract.id}/print`, '_blank')} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer' }} title="طباعة">
                                             <Printer size={18} />
                                         </button>
                                         {contract.status !== 'ARCHIVED' && (

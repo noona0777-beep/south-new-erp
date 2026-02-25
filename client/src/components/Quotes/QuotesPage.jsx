@@ -416,7 +416,7 @@ const QuotesPage = () => {
                                                             <Trash2 size={16} />
                                                         </button>
                                                         <button
-                                                            onClick={() => window.open(`${API_URL}/quotes/${qt.id}/print`, '_blank')}
+                                                            onClick={() => window.open(`/quotes/${qt.id}/print`, '_blank')}
                                                             title="طباعة"
                                                             style={{ background: '#f8fafc', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                                                         >
