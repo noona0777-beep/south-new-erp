@@ -390,6 +390,141 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// --- Account Recovery Routes ---
+
+// 1. Forgot Password - Send OTP
+app.post('/api/forgot-password', async (req, res) => {
+    const { contact } = req.body; // Can be email or phone
+    try {
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: contact },
+                    { phone: contact }
+                ]
+            }
+        });
+
+        if (!user) return res.status(404).json({ error: 'البيانات المدخلة غير مسجلة لدينا' });
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { otp, otpExpiry }
+        });
+
+        // Send Email (Real Delivery)
+        const mailOptions = {
+            from: '"South New System" <noona0777@gmail.com>',
+            to: user.email,
+            subject: 'رمز استعادة كلمة المرور - نظام الجنوب الجديد',
+            html: `
+                <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #0A1A2F; border-radius: 10px;">
+                    <h2 style="color: #0A1A2F;">مرحباً ${user.name}،</h2>
+                    <p>لقد طلبت إعادة تعيين كلمة المرور الخاصة بك في نظام الجنوب الجديد.</p>
+                    <div style="background: #f1f5f9; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0;">
+                        <span style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #0A1A2F;">${otp}</span>
+                    </div>
+                    <p style="font-size: 14px; color: #64748b;">هذا الرمز صالح لمدة 10 دقائق فقط. إذا لم تطلب هذا الرمز، يرجى تجاهل هذه الرسالة.</p>
+                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                    <p style="font-size: 12px; color: #94a3b8;">نظام إدارة الموارد - مؤسسة الجنوب الجديد للمقاولات العامة</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.json({ message: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' });
+    } catch (error) {
+        console.error('Forgot Password Error:', error);
+        res.status(500).json({ error: 'فشل إرسال الرمز، يرجى المحاولة لاحقاً' });
+    }
+});
+
+// 2. Verify OTP
+app.post('/api/verify-otp', async (req, res) => {
+    const { contact, otp } = req.body;
+    try {
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [{ email: contact }, { phone: contact }],
+                otp,
+                otpExpiry: { gte: new Date() }
+            }
+        });
+
+        if (!user) return res.status(400).json({ error: 'الرمز غير صحيح أو انتهت صلاحيته' });
+
+        res.json({ success: true, message: 'تم التحقق من الرمز بنجاح' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 3. Reset Password
+app.post('/api/reset-password', async (req, res) => {
+    const { contact, otp, newPassword } = req.body;
+    try {
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [{ email: contact }, { phone: contact }],
+                otp,
+                otpExpiry: { gte: new Date() }
+            }
+        });
+
+        if (!user) return res.status(400).json({ error: 'غير مسموح بتغيير كلمة المرور حالياً' });
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                password: hashedPassword,
+                otp: null,
+                otpExpiry: null
+            }
+        });
+
+        res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 4. Forgot Username
+app.post('/api/forgot-username', async (req, res) => {
+    const { phone } = req.body;
+    try {
+        const user = await prisma.user.findUnique({ where: { phone } });
+        if (!user) return res.status(404).json({ error: 'رقم الجوال غير مسجل' });
+
+        // For security, we send it via email since we have it
+        const mailOptions = {
+            from: '"South New System" <noona0777@gmail.com>',
+            to: user.email,
+            subject: 'تذكير ببيانات الحساب - نظام الجنوب الجديد',
+            html: `
+                <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #C8CCD4; border-radius: 10px;">
+                    <h2 style="color: #0A1A2F;">تذكير باسم المستخدم</h2>
+                    <p>عزيزي ${user.name}،</p>
+                    <p>بناءً على طلبك، إليك بريدك الإلكتروني المستخدم للدخول للنظام:</p>
+                    <div style="background: #f8fafc; padding: 10px; border-right: 4px solid #0A1A2F; margin: 15px 0; font-weight: bold;">
+                        ${user.email}
+                    </div>
+                    <p style="font-size: 14px;">يمكنك الآن العودة لصفحة تسجيل الدخول واستخدام البيانات المذكورة أعلاه.</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.json({ message: 'تم إرسال بيانات الحساب إلى بريدك الإلكتروني المسجل' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- User Management Routes ---
 
 // Get All Users
