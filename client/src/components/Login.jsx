@@ -238,25 +238,10 @@ const Login = ({ onSuccess }) => {
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Tajawal, Cairo, sans-serif', direction: 'rtl', background: '#FFFFFF' }}>
-            <div style={{ flex: 1, position: 'relative' }} className="login-visual-panel">
-                <style>{`
-                    @media (max-width: 1024px) {
-                        .login-visual-panel { display: none !important; }
-                        .login-form-panel { width: 100% !important; flex: 1 !important; }
-                    }
-                `}</style>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url("/login-bg.jpg")', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(10, 26, 47, 0.4)', backdropFilter: 'grayscale(20%)' }} />
-                <div style={{ position: 'absolute', bottom: '10%', right: '10%', color: 'white', zIndex: 2, maxWidth: '400px' }}>
-                    <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '15px', color: '#FFFFFF' }}>South New ERP</h2>
-                    <p style={{ fontSize: '1.1rem', opacity: 0.9, lineHeight: 1.6, color: '#C8CCD4' }}>نظام إدارة هندسي متكامل يجمع بين القوة والمرونة، مصمم خصيصاً لقطاع المقاولات والتطوير العقاري.</p>
-                </div>
-            </div>
-
             <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '40px 60px', background: '#FFFFFF', boxShadow: '-10px 0 50px rgba(0,0,0,0.02)', zIndex: 3 }} className="login-form-panel">
                 <div style={{ maxWidth: '400px', margin: '0 auto', width: '100%' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                        <img src="/logo.png" alt="South New Logo" style={{ width: '140px', height: 'auto', marginBottom: '20px' }} onError={(e) => { e.target.src = 'https://via.placeholder.com/140x60?text=NEW+SOUTH'; }} />
+                    <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+                        <img src="/logo.png" alt="South New Logo" style={{ width: '220px', height: 'auto', marginBottom: '10px' }} onError={(e) => { e.target.src = 'https://via.placeholder.com/220x100?text=SOUTH+NEW+SYSTEM'; }} />
                     </div>
 
                     {error && (
@@ -281,6 +266,21 @@ const Login = ({ onSuccess }) => {
                     <div style={{ marginTop: '50px', textAlign: 'center', color: '#94a3b8', fontSize: '0.75rem' }}>
                         نظام إدارة الموارد © 2026<br /> مؤسسة الجنوب الوثيق للمقاولات العامة
                     </div>
+                </div>
+            </div>
+
+            <div style={{ flex: 1, position: 'relative' }} className="login-visual-panel">
+                <style>{`
+                    @media (max-width: 1024px) {
+                        .login-visual-panel { display: none !important; }
+                        .login-form-panel { width: 100% !important; flex: 1 !important; }
+                    }
+                `}</style>
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url("/login-bg.jpg")', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(10, 26, 47, 0.4)', backdropFilter: 'grayscale(20%)' }} />
+                <div style={{ position: 'absolute', bottom: '10%', right: '10%', color: 'white', zIndex: 2, maxWidth: '400px' }}>
+                    <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '15px', color: '#FFFFFF' }}>South New ERP</h2>
+                    <p style={{ fontSize: '1.1rem', opacity: 0.9, lineHeight: 1.6, color: '#C8CCD4' }}>نظام إدارة هندسي متكامل يجمع بين القوة والمرونة، مصمم خصيصاً لقطاع المقاولات والتطوير العقاري.</p>
                 </div>
             </div>
 
