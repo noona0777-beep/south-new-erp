@@ -31,7 +31,8 @@ export const PermissionProvider = ({ children }) => {
 
     const hasPermission = (moduleName) => {
         if (!user) return false;
-        const perms = rolePermissions[user.role] || rolePermissions.user;
+        const roleKey = (user.role || 'user').toLowerCase();
+        const perms = rolePermissions[roleKey] || rolePermissions.user;
         return perms.all || perms[moduleName] || false;
     };
 
