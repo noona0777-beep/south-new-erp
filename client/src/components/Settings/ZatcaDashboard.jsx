@@ -10,7 +10,7 @@ import { fadeInUp } from '../Common/MotionComponents';
 import API_URL from '../../config';
 
 const ZatcaDashboard = () => {
-    const { data: status, isLoading } = useQuery({
+    const { data: status, isLoading: statusLoading } = useQuery({
         queryKey: ['zatcaStatus'],
         queryFn: async () => (await axios.get(`${API_URL}/zatca/status`)).data,
         initialData: {
@@ -19,6 +19,36 @@ const ZatcaDashboard = () => {
             stats: { reported: 142, pending: 3, error: 0 }
         }
     });
+
+    const { data: invoices = [], isLoading: invoicesLoading } = useQuery({
+        queryKey: ['zatcaInvoices'],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/invoices`);
+            // Show invoices that have ZATCA status or just the latest ones for monitoring
+            return res.data.slice(0, 10);
+        }
+    });
+
+    const handleDownloadXml = (invoice) => {
+        if (!invoice.xmlContent) {
+            // Test/Demo fallback if no XML content exists yet
+            const dummyXml = `<?xml version="1.0" encoding="UTF-8"?>\n<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">\n  <cbc:ID>${invoice.invoiceNumber}</cbc:ID>\n  <cbc:UUID>${invoice.uuid || 'N/A'}</cbc:UUID>\n  <cbc:IssueDate>${new Date(invoice.date).toISOString().split('T')[0]}</cbc:IssueDate>\n</Invoice>`;
+            const blob = new Blob([dummyXml], { type: 'text/xml' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${invoice.invoiceNumber}_zatca.xml`;
+            a.click();
+            return;
+        }
+
+        const blob = new Blob([invoice.xmlContent], { type: 'text/xml' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${invoice.invoiceNumber}_zatca.xml`;
+        a.click();
+    };
 
     const glassStyle = {
         background: 'rgba(255, 255, 255, 0.7)',
@@ -93,16 +123,26 @@ const ZatcaDashboard = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {[1082, 1081, 1080].map(id => (
-                                <tr key={id} style={{ borderBottom: '1px solid #f1f5f9', fontSize: '0.9rem' }}>
-                                    <td style={{ padding: '15px' }}>INV-{id}</td>
-                                    <td style={{ padding: '15px' }}>منذ 10 دقائق</td>
-                                    <td style={{ padding: '15px' }}>فاتورة ضريبية</td>
+                            {invoices.map(inv => (
+                                <tr key={inv.id} style={{ borderBottom: '1px solid #f1f5f9', fontSize: '0.9rem' }}>
+                                    <td style={{ padding: '15px' }}>{inv.invoiceNumber}</td>
+                                    <td style={{ padding: '15px' }}>{new Date(inv.date).toLocaleDateString()}</td>
+                                    <td style={{ padding: '15px' }}>{inv.type === 'STANDARD' ? 'فاتورة ضريبية' : 'فاتورة مبسطة'}</td>
                                     <td style={{ padding: '15px' }}>
-                                        <span style={{ padding: '4px 10px', background: '#ecfdf5', color: '#059669', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold' }}>معتمدة (Cleared)</span>
+                                        <span style={{
+                                            padding: '4px 10px',
+                                            background: inv.zatcaStatus === 'REPORTED' ? '#ecfdf5' : '#fff7ed',
+                                            color: inv.zatcaStatus === 'REPORTED' ? '#059669' : '#d97706',
+                                            borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold'
+                                        }}>
+                                            {inv.zatcaStatus || 'قيد الانتظار'}
+                                        </span>
                                     </td>
                                     <td style={{ padding: '15px' }}>
-                                        <button style={{ color: '#2563eb', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <button
+                                            onClick={() => handleDownloadXml(inv)}
+                                            style={{ color: '#2563eb', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        >
                                             <Download size={14} /> تحميل XML
                                         </button>
                                     </td>
