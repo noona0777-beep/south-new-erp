@@ -14,6 +14,7 @@ import RealEstatePage from './components/RealEstate/RealEstatePage';
 import ClientStatement from './components/Clients/ClientStatement';
 import ReportsPage from './components/Reports/ReportsPage';
 import SettingsPage from './components/Settings/SettingsPage';
+import ZatcaDashboard from './components/Settings/ZatcaDashboard';
 import AccountingPage from './components/Accounting/AccountingPage';
 import DocumentsPage from './components/Documents/DocumentsPage';
 import ContractsPage from './components/Contracts/ContractsPage';
@@ -24,6 +25,12 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import { AnimatePresence, motion } from 'framer-motion';
 import { buttonClick, fadeInUp } from './components/Common/MotionComponents';
 import { ToastProvider, useToast } from './context/ToastContext';
+import { PermissionProvider, usePermission } from './context/PermissionContext';
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid,
+    Tooltip, ResponsiveContainer, BarChart, Bar, Cell
+} from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -46,12 +53,13 @@ axios.interceptors.request.use((config) => {
 import {
     LayoutDashboard, ShoppingCart, Users, Briefcase, Building2,
     DollarSign, FileBarChart2, Settings, Bell, Search, Menu, X,
-    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut
+    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages
 } from 'lucide-react';
 
 /* --- UI Components --- */
 
-const NavLink = ({ to, icon, label, active, onClick }) => {
+const NavLink = ({ to, icon, label, active, onClick, i18n }) => {
+    const isRtl = i18n.language === 'ar';
     return (
         <motion.div {...buttonClick}>
             <Link to={to} onClick={onClick} className="card-hover" style={{
@@ -64,11 +72,21 @@ const NavLink = ({ to, icon, label, active, onClick }) => {
                 marginBottom: '6px',
                 transition: 'all 0.3s ease',
                 fontSize: '1rem',
-                fontWeight: active ? '600' : '400'
+                fontWeight: active ? '600' : '400',
+                flexDirection: isRtl ? 'row' : 'row-reverse',
+                textAlign: isRtl ? 'right' : 'left'
             }}>
                 {React.cloneElement(icon, { size: 20 })}
-                <span>{label}</span>
-                {active && <motion.div initial={{ x: 10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} style={{ marginRight: 'auto' }}><ChevronLeft size={16} /></motion.div>}
+                <span style={{ flex: 1 }}>{label}</span>
+                {active && (
+                    <motion.div
+                        initial={{ x: isRtl ? 10 : -10, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        style={{ marginLeft: isRtl ? 'auto' : '0', marginRight: isRtl ? '0' : 'auto' }}
+                    >
+                        {isRtl ? <ChevronLeft size={16} /> : <div style={{ transform: 'rotate(180deg)' }}><ChevronLeft size={16} /></div>}
+                    </motion.div>
+                )}
             </Link>
         </motion.div>
     );
@@ -97,6 +115,7 @@ const HeaderStat = ({ title, value, subtext, icon, color }) => (
 );
 
 const Dashboard = () => {
+    const { t } = useTranslation();
     const [user] = useState(JSON.parse(localStorage.getItem('user')) || { name: 'المستخدم' });
 
     const { data: stats, isLoading: statsLoading } = useQuery({
@@ -112,9 +131,9 @@ const Dashboard = () => {
 
     const getGreeting = () => {
         const hour = new Date().getHours();
-        if (hour < 12) return { text: 'صباح الخير', icon: '☀️' };
-        if (hour < 18) return { text: 'طاب يومك', icon: '🌤️' };
-        return { text: 'مساء الخير', icon: '🌙' };
+        if (hour < 12) return { text: t('welcome') + ' ' + (t('welcome_morning') || 'صباح الخير'), icon: '☀️' };
+        if (hour < 18) return { text: t('welcome') + ' ' + (t('welcome_day') || 'طاب يومك'), icon: '🌤️' };
+        return { text: t('welcome') + ' ' + (t('welcome_evening') || 'مساء الخير'), icon: '🌙' };
     };
     const greeting = getGreeting();
 
@@ -157,7 +176,7 @@ const Dashboard = () => {
                         <h2 style={{ margin: 0, fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-0.5px' }}>{greeting.text}، {user.name}</h2>
                     </div>
                     <p style={{ margin: 0, opacity: 0.9, fontSize: '1.1rem', fontWeight: '500', maxWidth: '600px', lineHeight: '1.5' }}>
-                        أهلاً بك في نظام إدارة موارد {companyInfo.name || 'مؤسسة الجنوب الجديد'}. إليك نظرة سريعة على أداء المؤسسة.
+                        {t('welcome_desc', 'أهلاً بك في نظام إدارة موارد')} {companyInfo.name || 'مؤسسة الجنوب الجديد'}. {t('welcome_sub', 'إليك نظرة سريعة على أداء المؤسسة.')}
                     </p>
                 </div>
             </motion.div>
@@ -170,32 +189,63 @@ const Dashboard = () => {
             </div>
 
             <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '24px' }}>
-                <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', alignItems: 'center' }}>
+                <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', alignItems: 'center' }}>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>الإيرادات الشهرية</h3>
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>آخر 6 أشهر</span>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b', fontWeight: 'bold' }}>تحليل الإيرادات والنمو</h3>
+                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>مقارنة أداء المبيعات الشهور الأخيرة</span>
                         </div>
-                        <div style={{ background: '#eff6ff', padding: '6px 14px', borderRadius: '20px', color: '#2563eb', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                        <div style={{ background: '#eff6ff', padding: '8px 16px', borderRadius: '20px', color: '#2563eb', fontSize: '0.85rem', fontWeight: 'bold', border: '1px solid rgba(37,99,235,0.1)' }}>
                             {formatMoney(stats?.totals?.revenue)} ر.س إجمالي
                         </div>
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '12px', paddingBottom: '16px', minHeight: '200px' }}>
-                        {chartData.map((d, i) => (
-                            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-                                <div className="hide-mobile" style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#2563eb', marginBottom: '4px' }}>
-                                    {d.value > 0 ? formatMoney(d.value) : ''}
-                                </div>
-                                <div style={{
-                                    width: '100%',
-                                    height: `${maxVal > 0 ? Math.max((d.value / maxVal) * 100, d.value > 0 ? 8 : 3) : 3}%`,
-                                    background: i === chartData.length - 1 ? 'linear-gradient(to top, #2563eb, #60a5fa)' : '#dbeafe',
-                                    borderRadius: '6px 6px 3px 3px',
-                                    transition: 'height 0.8s ease'
-                                }} />
-                                <div style={{ marginTop: '8px', color: '#94a3b8', fontSize: '0.72rem', fontWeight: '600' }}>{d.label}</div>
-                            </div>
-                        ))}
+
+                    <div style={{ flex: 1, width: '100%', minHeight: '280px' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis
+                                    dataKey="label"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }}
+                                    dy={10}
+                                />
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                                    tickFormatter={(val) => formatMoney(val)}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        borderRadius: '12px',
+                                        border: 'none',
+                                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                                        fontFamily: 'Cairo',
+                                        direction: 'rtl',
+                                        padding: '12px'
+                                    }}
+                                    formatter={(value) => [`${value?.toLocaleString()} ر.س`, 'الإيرادات']}
+                                    labelStyle={{ fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="value"
+                                    stroke="#2563eb"
+                                    strokeWidth={3}
+                                    fillOpacity={1}
+                                    fill="url(#colorValue)"
+                                    animationDuration={1500}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
 
@@ -277,6 +327,9 @@ const Dashboard = () => {
 /* --- Layout --- */
 
 const Layout = ({ user, onLogout }) => {
+    const { t, i18n } = useTranslation();
+    const { hasPermission } = usePermission();
+    const isRtl = i18n.language === 'ar';
     const location = useLocation();
     const isActive = (path) => location.pathname === path;
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -340,15 +393,19 @@ const Layout = ({ user, onLogout }) => {
     };
 
     return (
-        <div style={{ display: 'flex', height: '100vh', direction: 'rtl', fontFamily: 'Cairo, sans-serif', background: '#f8fafc', position: 'relative' }}>
+        <div style={{ display: 'flex', height: '100vh', direction: isRtl ? 'rtl' : 'ltr', fontFamily: 'Cairo, sans-serif', background: '#f8fafc', position: 'relative' }}>
             {isSidebarOpen && <div className="sidebar-overlay show-mobile" onClick={closeSidebar} />}
 
             <div className={`sidebar-scroll no-print ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} style={{
                 width: '280px', background: '#0f172a', color: 'white', padding: '24px',
                 display: 'flex', flexDirection: 'column', overflowY: 'auto',
-                boxShadow: '4px 0 20px rgb(0 0 0 / 0.05)', zIndex: 50,
+                boxShadow: isRtl ? '4px 0 20px rgb(0 0 0 / 0.05)' : '-4px 0 20px rgb(0 0 0 / 0.05)',
+                zIndex: 50,
                 position: window.innerWidth > 768 ? 'sticky' : 'fixed',
-                top: 0, right: 0, bottom: 0, height: '100vh',
+                top: 0,
+                right: isRtl ? 0 : 'auto',
+                left: isRtl ? 'auto' : 0,
+                bottom: 0, height: '100vh',
                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
             }}>
                 <div style={{ marginBottom: '40px', textAlign: 'center', paddingBottom: '24px', borderBottom: '1px solid #1e293b', position: 'relative' }}>
@@ -362,19 +419,20 @@ const Layout = ({ user, onLogout }) => {
                 </div>
 
                 <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <NavLink to="/" icon={<LayoutDashboard />} label="لوحة القيادة" active={isActive('/')} onClick={closeSidebar} />
-                    <NavLink to="/invoices" icon={<ShoppingCart />} label="المبيعات والفواتير" active={isActive('/invoices')} onClick={closeSidebar} />
-                    <NavLink to="/quotes" icon={<FileText />} label="عروض الأسعار" active={isActive('/quotes')} onClick={closeSidebar} />
-                    <NavLink to="/inventory" icon={<Package />} label="المخزون" active={isActive('/inventory')} onClick={closeSidebar} />
-                    <NavLink to="/clients" icon={<Users />} label="العملاء" active={isActive('/clients')} onClick={closeSidebar} />
-                    <NavLink to="/projects" icon={<Briefcase />} label="المشاريع والمقاولات" active={isActive('/projects')} onClick={closeSidebar} />
-                    <NavLink to="/contracts" icon={<FileText />} label="عقود المقاولات" active={isActive('/contracts')} onClick={closeSidebar} />
-                    <NavLink to="/accounting" icon={<DollarSign />} label="المحاسبة والمالية" active={isActive('/accounting')} onClick={closeSidebar} />
-                    <NavLink to="/hr" icon={<Users />} label="الموارد البشرية" active={isActive('/hr')} onClick={closeSidebar} />
-                    <NavLink to="/real-estate" icon={<Building2 />} label="إدارة الأملاك" active={isActive('/real-estate')} />
-                    <NavLink to="/archive" icon={<Folder />} label="الأرشيف والوثائق" active={isActive('/archive')} />
-                    <NavLink to="/reports" icon={<FileBarChart2 />} label="التقارير" active={isActive('/reports')} />
-                    <NavLink to="/users" icon={<Settings />} label="الإعدادات" active={isActive('/users')} />
+                    {hasPermission('dashboard') && <NavLink to="/" icon={<LayoutDashboard />} label={t('dashboard')} active={isActive('/')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('invoices') && <NavLink to="/invoices" icon={<ShoppingCart />} label={t('sales_invoices')} active={isActive('/invoices')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('quotes') && <NavLink to="/quotes" icon={<FileText />} label={t('quotes')} active={isActive('/quotes')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('inventory') && <NavLink to="/inventory" icon={<Package />} label={t('inventory')} active={isActive('/inventory')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('clients') && <NavLink to="/clients" icon={<Users />} label={t('clients')} active={isActive('/clients')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('projects') && <NavLink to="/projects" icon={<Briefcase />} label={t('projects')} active={isActive('/projects')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('contracts') && <NavLink to="/contracts" icon={<FileText />} label={t('contracts')} active={isActive('/contracts')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('accounting') && <NavLink to="/accounting" icon={<DollarSign />} label={t('accounting')} active={isActive('/accounting')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('hr') && <NavLink to="/hr" icon={<Users />} label={t('hr')} active={isActive('/hr')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('real_estate') && <NavLink to="/real-estate" icon={<Building2 />} label={t('real_estate')} active={isActive('/real-estate')} i18n={i18n} onClick={closeSidebar} />}
+                    {hasPermission('archive') && <NavLink to="/archive" icon={<Folder />} label={t('archive')} active={isActive('/archive')} i18n={i18n} onClick={closeSidebar} />}
+                    {hasPermission('reports') && <NavLink to="/reports" icon={<FileBarChart2 />} label={t('reports')} active={isActive('/reports')} i18n={i18n} onClick={closeSidebar} />}
+                    {hasPermission('all') && <NavLink to="/zatca" icon={<ShieldCheck />} label={t('zatca_dashboard', 'مراقبة زاتكا')} active={isActive('/zatca')} i18n={i18n} onClick={closeSidebar} />}
+                    <NavLink to="/users" icon={<Settings />} label={t('settings')} active={isActive('/users')} i18n={i18n} onClick={closeSidebar} />
                 </nav>
 
                 <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #1e293b' }}>
@@ -409,13 +467,13 @@ const Layout = ({ user, onLogout }) => {
                             <Menu size={20} />
                         </button>
                         <div style={{ position: 'relative', width: '100%', maxWidth: '450px' }}>
-                            <Search size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <Search size={18} style={{ position: isRtl ? 'absolute' : 'none', right: isRtl ? '14px' : 'auto', left: isRtl ? 'auto' : '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                             <input
                                 type="text"
-                                placeholder="بحث شامل في أرشيف المشروع والنظام..."
+                                placeholder={t('search_placeholder')}
                                 value={searchQuery}
                                 onChange={handleSearch}
-                                style={{ width: '100%', padding: '12px 45px 12px 15px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'rgba(248, 250, 252, 0.8)', outline: 'none', fontFamily: 'Cairo' }}
+                                style={{ width: '100%', padding: isRtl ? '12px 45px 12px 15px' : '12px 15px 12px 45px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'rgba(248, 250, 252, 0.8)', outline: 'none', fontFamily: 'Cairo' }}
                             />
                             <AnimatePresence>
                                 {showSearchResults && (
@@ -427,7 +485,7 @@ const Layout = ({ user, onLogout }) => {
                                                 </div>
                                                 <div style={{ flex: 1 }}>
                                                     <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{res.title}</div>
-                                                    <div style={{ fontSize: '0.7rem' }}>{res.subtitle}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{res.subtitle}</div>
                                                 </div>
                                             </Link>
                                         ))}
@@ -437,6 +495,27 @@ const Layout = ({ user, onLogout }) => {
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                        {/* Language Switcher */}
+                        <motion.button
+                            {...buttonClick}
+                            onClick={() => i18n.changeLanguage(isRtl ? 'en' : 'ar')}
+                            style={{
+                                padding: '8px 12px',
+                                background: 'rgba(248, 250, 252, 0.8)',
+                                borderRadius: '10px',
+                                border: '1px solid #e2e8f0',
+                                color: '#64748b',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            <Languages size={18} />
+                            <span>{isRtl ? 'English' : 'عربي'}</span>
+                        </motion.button>
+
                         <div style={{ position: 'relative' }}>
                             <motion.div {...buttonClick} onClick={() => setShowNotifications(!showNotifications)} style={{ cursor: 'pointer', padding: '8px', background: 'rgba(248, 250, 252, 0.8)', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                                 <Bell size={20} color={notifications.some(n => !n.isRead) ? '#2563eb' : '#64748b'} />
@@ -446,10 +525,10 @@ const Layout = ({ user, onLogout }) => {
                             </motion.div>
                             <AnimatePresence>
                                 {showNotifications && (
-                                    <motion.div {...fadeInUp} style={{ ...glassStyle, position: 'absolute', top: '50px', left: '0', width: '320px', borderRadius: '16px', zIndex: 100, padding: '16px', direction: 'rtl' }}>
+                                    <motion.div {...fadeInUp} style={{ ...glassStyle, position: 'absolute', top: '50px', left: isRtl ? '0' : 'auto', right: isRtl ? 'auto' : '0', width: '320px', borderRadius: '16px', zIndex: 100, padding: '16px', direction: isRtl ? 'rtl' : 'ltr' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
-                                            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '700' }}>التنبيهات المركزية</h4>
-                                            <button onClick={markAllAsRead} style={{ color: '#2563eb', border: 'none', background: 'none', fontSize: '0.8rem', cursor: 'pointer' }}>تحديد المقروء</button>
+                                            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '700' }}>{t('notifications')}</h4>
+                                            <button onClick={markAllAsRead} style={{ color: '#2563eb', border: 'none', background: 'none', fontSize: '0.8rem', cursor: 'pointer' }}>{t('mark_read')}</button>
                                         </div>
                                         <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
                                             {notifications.map(n => (
@@ -481,6 +560,7 @@ const Layout = ({ user, onLogout }) => {
                                 <Route path="/real-estate" element={<RealEstatePage />} />
                                 <Route path="/archive" element={<DocumentsPage />} />
                                 <Route path="/reports" element={<ReportsPage />} />
+                                <Route path="/zatca" element={<ZatcaDashboard />} />
                                 <Route path="/users" element={<SettingsPage />} />
                             </Routes>
                         </motion.div>
@@ -491,7 +571,7 @@ const Layout = ({ user, onLogout }) => {
     );
 };
 
-function App() {
+const AppContent = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -506,22 +586,30 @@ function App() {
     if (loading) return null;
 
     return (
+        !user ? (
+            <Login onSuccess={setUser} />
+        ) : (
+            <Routes>
+                <Route path="/invoices/:id/print" element={<InvoicePrint />} />
+                <Route path="/quotes/:id/print" element={<QuotePrint />} />
+                <Route path="/contracts/:id/print" element={<ContractPrint />} />
+                <Route path="/clients/:id/statement" element={<ClientStatement />} />
+                <Route path="/archive/summary/:type/:id" element={<DataRecordSummary />} />
+                <Route path="/*" element={<Layout user={user} onLogout={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); }} />} />
+            </Routes>
+        )
+    );
+};
+
+const App = () => {
+    return (
         <QueryClientProvider client={queryClient}>
             <ToastProvider>
-                <BrowserRouter>
-                    {!user ? (
-                        <Login onSuccess={setUser} />
-                    ) : (
-                        <Routes>
-                            <Route path="/invoices/:id/print" element={<InvoicePrint />} />
-                            <Route path="/quotes/:id/print" element={<QuotePrint />} />
-                            <Route path="/contracts/:id/print" element={<ContractPrint />} />
-                            <Route path="/clients/:id/statement" element={<ClientStatement />} />
-                            <Route path="/archive/summary/:type/:id" element={<DataRecordSummary />} />
-                            <Route path="/*" element={<Layout user={user} onLogout={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); }} />} />
-                        </Routes>
-                    )}
-                </BrowserRouter>
+                <PermissionProvider>
+                    <BrowserRouter>
+                        <AppContent />
+                    </BrowserRouter>
+                </PermissionProvider>
             </ToastProvider>
         </QueryClientProvider>
     );
