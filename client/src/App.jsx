@@ -53,7 +53,7 @@ axios.interceptors.request.use((config) => {
 import {
     LayoutDashboard, ShoppingCart, Users, Briefcase, Building2,
     DollarSign, FileBarChart2, Settings, Bell, Search, Menu, X,
-    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages
+    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages, ShieldCheck, Activity
 } from 'lucide-react';
 
 /* --- UI Components --- */
