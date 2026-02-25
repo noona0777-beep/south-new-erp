@@ -1141,6 +1141,22 @@ app.patch('/api/quotes/:id/status', async (req, res) => {
     }
 });
 
+// Delete Quote
+app.delete('/api/quotes/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        await prisma.$transaction(async (tx) => {
+            // Delete items first
+            await tx.quoteItem.deleteMany({ where: { quoteId: id } });
+            // Delete quote
+            await tx.quote.delete({ where: { id: id } });
+        });
+        res.json({ message: 'Quote deleted' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- HR Routes ---
 
 // Resolve System Document

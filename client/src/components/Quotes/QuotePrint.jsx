@@ -9,16 +9,24 @@ const QuotePrint = () => {
     const { id } = useParams();
     const [quote, setQuote] = useState(null);
 
-    const [qrContent, setQrContent] = useState('');
+    const [qrValue, setQrValue] = useState('');
+    const [companyInfo, setCompanyInfo] = useState({ name: 'مؤسسة الجنوب الوثيق', vatNumber: '310123456700003' });
     const hideToolbar = new URLSearchParams(window.location.search).get('hideToolbar') === 'true';
 
     useEffect(() => {
-        axios.get(`${API_URL}/quotes/${id}`)
-            .then(res => setQuote(res.data))
-            .catch(err => alert('خطأ في تحميل عرض السعر'));
+        // Fetch Company Info
+        axios.get(`${API_URL}/settings/companyInfo`)
+            .then(res => setCompanyInfo(res.data))
+            .catch(() => { });
 
-        // Set QR content to current URL for online version
-        setQrContent(window.location.href);
+        axios.get(`${API_URL}/quotes/${id}`)
+            .then(res => {
+                const qt = res.data;
+                setQuote(qt);
+                // For quotes, we use a simple URL or a structured content for the QR
+                setQrValue(window.location.href);
+            })
+            .catch(err => alert('خطأ في تحميل عرض السعر'));
     }, [id]);
 
     const handleDownloadPDF = () => {
@@ -74,9 +82,9 @@ const QuotePrint = () => {
                     {/* Header Section */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                         <div>
-                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#1e3a8a', fontWeight: '900' }}>مؤسسة الجنوب الجديد</h1>
+                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#1e3a8a', fontWeight: '900' }}>{companyInfo.name || 'مؤسسة الجنوب الجديد'}</h1>
                             <p style={{ margin: '5px 0', color: '#64748b', fontSize: '1rem', fontWeight: 'bold' }}>للتطوير و الاستثمار و التسويق العقاري</p>
-                            <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>الرقم الضريبي: <span dir="ltr">310123456700003</span></p>
+                            <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>الرقم الضريبي: <span dir="ltr">{companyInfo.vatNumber || '310123456700003'}</span></p>
                             <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>العنوان: أحد المسارحة ، جازان</p>
                         </div>
                         <div style={{ textAlign: 'center' }}>
@@ -105,7 +113,7 @@ const QuotePrint = () => {
                         </div>
                         <div style={{ textAlign: 'left' }}>
                             <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '5px' }}>إجمالي العرض</div>
-                            <div style={{ fontSize: '2rem', fontWeight: '900', color: '#10b981' }}>
+                            <div style={{ fontSize: '2rem', fontWeight: '900', color: '#1e40af' }}>
                                 {quote.total.toFixed(2)} <span style={{ fontSize: '1.2rem' }}>ر.س</span>
                             </div>
                         </div>
@@ -137,7 +145,7 @@ const QuotePrint = () => {
                     {/* Totals Section */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '20px' }}>
                         <div style={{ padding: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                            <QRCode value={qrContent} size={100} />
+                            <QRCode value={qrValue} size={100} />
                         </div>
                         <div style={{ width: '350px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid #f1f5f9' }}>
