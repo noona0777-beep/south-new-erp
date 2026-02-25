@@ -6,6 +6,15 @@ dotenv.config();
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'noona0777@gmail.com',
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_for_south_new_system_2024';
 
