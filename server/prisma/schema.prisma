@@ -14,6 +14,8 @@ model User {
   email     String   @unique
   phone     String?  @unique
   password  String
+  otp       String?
+  otpExpiry DateTime?
   name      String
   role      String   @default("USER")
   createdAt DateTime @default(now())
