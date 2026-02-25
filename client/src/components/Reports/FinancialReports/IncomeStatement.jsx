@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, TrendingDown, DollarSign, Clock, AlertOctagon } from 'lucide-react';
 

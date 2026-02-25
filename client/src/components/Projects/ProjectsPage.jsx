@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Briefcase, Calendar, MapPin, User, CheckSquare, Clock, AlertCircle, Folder, AlertOctagon } from 'lucide-react';
 import API_URL from '../../config';
