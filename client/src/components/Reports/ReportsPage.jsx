@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useQuery } from '@tanstack/react-query';
 import API_URL from '../../config';
 import { FileBarChart2, TrendingUp, Users, Package, Briefcase, DollarSign, AlertTriangle, CheckCircle, Clock, ArrowUp, ArrowDown } from 'lucide-react';
 

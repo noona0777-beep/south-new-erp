@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Folder, File, FileText, Plus, Trash2,
@@ -169,7 +170,7 @@ const DocumentsPage = () => {
         return matchesFilter && matchesSearch;
     });
 
-    if (loading && documents.length === 0) return <div style={{ textAlign: 'center', padding: '50px' }}>جاري تحميل الأرشيف...</div>;
+    if (docsLoading && documents.length === 0) return <div style={{ textAlign: 'center', padding: '50px' }}>جاري تحميل الأرشيف...</div>;
 
     return (
         <div className="fade-in" style={{ direction: 'rtl', fontFamily: 'Cairo, sans-serif' }}>
@@ -236,10 +237,10 @@ const DocumentsPage = () => {
                 </div>
             ) : (
                 <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-                    {filteredDocuments.length === 0 ? (
+                    {filteredDocs.length === 0 ? (
                         <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px', color: '#94a3b8' }}>لا توجد وثائق مطابقة حالياً</div>
                     ) : (
-                        filteredDocuments.map(doc => (
+                        filteredDocs.map(doc => (
                             <div key={doc.id} className="card-hover" style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', position: 'relative' }}>
                                 <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
                                     <div style={{

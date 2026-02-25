@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
+import API_URL from '../../../config';
 import { Shield, CreditCard, PieChart, Clock, AlertOctagon } from 'lucide-react';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
