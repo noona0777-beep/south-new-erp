@@ -1,37 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import API_URL from '../../../config';
-import { Shield, CreditCard, PieChart } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Shield, CreditCard, PieChart, Clock, AlertOctagon } from 'lucide-react';
 
-const token = () => localStorage.getItem('token');
+const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 const BalanceSheet = () => {
-    const [report, setReport] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
 
-    const fetchReport = async () => {
-        setLoading(true);
-        try {
+    const { data: report, isLoading, error } = useQuery({
+        queryKey: ['report', 'balance-sheet', asOfDate],
+        queryFn: async () => {
             const res = await axios.get(`${API_URL}/reports/balance-sheet?date=${asOfDate}`, {
-                headers: { Authorization: `Bearer ${token()}` }
+                headers: H()
             });
-            setReport(res.data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
+            return res.data;
         }
-    };
-
-    useEffect(() => {
-        fetchReport();
-    }, [asOfDate]);
+    });
 
     const format = (v) => Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2 });
 
-    if (loading) return <div>جاري التحميل...</div>;
-    if (!report) return <div>لا توجد بيانات</div>;
+    if (isLoading) return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+            <Clock className="animate-spin" size={24} style={{ marginBottom: 10, display: 'block', margin: '0 auto' }} />
+            جاري التحميل...
+        </div>
+    );
+
+    if (error) return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444', background: '#fef2f2', borderRadius: 12 }}>
+            <AlertOctagon size={24} style={{ marginBottom: 10, display: 'block', margin: '0 auto' }} />
+            خطأ في تحميل الميزانية العمومية
+        </div>
+    );
+
+    if (!report) return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+            لا توجد بيانات للفترة المحددة
+        </div>
+    );
 
     return (
         <div style={{ direction: 'rtl' }}>

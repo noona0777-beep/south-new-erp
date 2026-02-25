@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import axios from 'axios';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     ChevronDown, ChevronRight, Folder, FileText,
     Plus, RefreshCw, DollarSign, X, Check,
-    ArrowUpRight, ArrowDownLeft, Landmark, Trash2, BookOpen
+    ArrowUpRight, ArrowDownLeft, Landmark, Trash2, BookOpen, Clock, AlertOctagon
 } from 'lucide-react';
 import API_URL from '../../config';
+import { useToast } from '../../context/ToastContext';
+
+const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 // =============================================
 // Sub-Component: Account Tree Item
@@ -131,6 +135,8 @@ const JournalRow = ({ entry }) => {
 // Modal: Create Journal Entry
 // =============================================
 const JournalModal = ({ accounts, onClose, onSave }) => {
+    const queryClient = useQueryClient();
+    const { showToast } = useToast();
     const [form, setForm] = useState({
         date: new Date().toISOString().split('T')[0],
         description: '',
@@ -140,10 +146,8 @@ const JournalModal = ({ accounts, onClose, onSave }) => {
         { accountId: '', debit: '', credit: '', description: '' },
         { accountId: '', debit: '', credit: '', description: '' },
     ]);
-    const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
-    // Flatten accounts for dropdown
     const flatAccounts = [];
     const flatten = (list) => list.forEach(a => { flatAccounts.push(a); if (a.children) flatten(a.children); });
     flatten(accounts);
@@ -157,31 +161,39 @@ const JournalModal = ({ accounts, onClose, onSave }) => {
     const totalCredit = lines.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0);
     const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01 && totalDebit > 0;
 
-    const handleSave = async () => {
+    const journalMutation = useMutation({
+        mutationFn: async (data) => await axios.post(`${API_URL}/journal`, data, { headers: H() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['journal'] });
+            queryClient.invalidateQueries({ queryKey: ['accounts'] });
+            showToast('تم تسجيل قيد اليومية بنجاح', 'success');
+            onSave();
+            onClose();
+        },
+        onError: (err) => {
+            const msg = err.response?.data?.error || 'فشل في الحفظ';
+            setError(msg);
+            showToast(msg, 'error');
+        }
+    });
+
+    const handleSave = () => {
         if (!form.description) return setError('أدخل وصف القيد');
         if (!isBalanced) return setError('المدين والدائن يجب أن يكونا متساويين');
         const validLines = lines.filter(l => l.accountId && (parseFloat(l.debit) || parseFloat(l.credit)));
         if (validLines.length < 2) return setError('القيد يحتاج على الأقل سطرين');
 
-        setSaving(true);
-        try {
-            await axios.post(`${API_URL}/journal`, {
-                date: form.date,
-                description: form.description,
-                reference: form.reference,
-                entries: validLines.map(l => ({
-                    accountId: parseInt(l.accountId),
-                    debit: parseFloat(l.debit) || 0,
-                    credit: parseFloat(l.credit) || 0,
-                    description: l.description,
-                }))
-            });
-            onSave();
-            onClose();
-        } catch (e) {
-            setError(e.response?.data?.error || 'فشل في الحفظ');
-        }
-        setSaving(false);
+        journalMutation.mutate({
+            date: form.date,
+            description: form.description,
+            reference: form.reference,
+            entries: validLines.map(l => ({
+                accountId: parseInt(l.accountId),
+                debit: parseFloat(l.debit) || 0,
+                credit: parseFloat(l.credit) || 0,
+                description: l.description,
+            }))
+        });
     };
 
     return (
@@ -312,8 +324,8 @@ const JournalModal = ({ accounts, onClose, onSave }) => {
                     </div>
                     <div style={{ display: 'flex', gap: '10px', width: '100%', justifyContent: 'flex-end' }}>
                         <button onClick={onClose} style={{ flex: 1, maxWidth: '120px', padding: '10px 24px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontFamily: 'Cairo' }}>إلغاء</button>
-                        <button onClick={handleSave} disabled={saving || !isBalanced} style={{ flex: 1, maxWidth: '160px', padding: '10px 28px', borderRadius: '10px', border: 'none', background: isBalanced ? '#2563eb' : '#94a3b8', color: 'white', cursor: isBalanced ? 'pointer' : 'not-allowed', fontFamily: 'Cairo', fontWeight: 'bold' }}>
-                            {saving ? '...جاري الحفظ' : '💾 حفظ القيد'}
+                        <button onClick={handleSave} disabled={journalMutation.isPending || !isBalanced} style={{ flex: 1, maxWidth: '160px', padding: '10px 28px', borderRadius: '10px', border: 'none', background: isBalanced ? '#2563eb' : '#94a3b8', color: 'white', cursor: isBalanced ? 'pointer' : 'not-allowed', fontFamily: 'Cairo', fontWeight: 'bold' }}>
+                            {journalMutation.isPending ? '...جاري الحفظ' : '💾 حفظ القيد'}
                         </button>
                     </div>
                 </div>
@@ -326,30 +338,38 @@ const JournalModal = ({ accounts, onClose, onSave }) => {
 // Modal: Add New Account
 // =============================================
 const AccountModal = ({ accounts, onClose, onSave }) => {
+    const queryClient = useQueryClient();
+    const { showToast } = useToast();
     const [form, setForm] = useState({ name: '', code: '', type: 'ASSET', parentId: '' });
-    const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
     const flatAccounts = [];
     const flatten = (list) => list.forEach(a => { flatAccounts.push(a); if (a.children) flatten(a.children); });
     flatten(accounts);
 
-    const handleSave = async () => {
-        if (!form.name || !form.code) return setError('الاسم والرمز مطلوبان');
-        setSaving(true);
-        try {
-            await axios.post(`${API_URL}/accounts`, {
-                name: form.name,
-                code: form.code,
-                type: form.type,
-                parentId: form.parentId ? parseInt(form.parentId) : null,
-            });
+    const accountMutation = useMutation({
+        mutationFn: async (data) => await axios.post(`${API_URL}/accounts`, data, { headers: H() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['accounts'] });
+            showToast('تم إنشاء الحساب المالي بنجاح', 'success');
             onSave();
             onClose();
-        } catch (e) {
-            setError(e.response?.data?.error || 'فشل في إنشاء الحساب');
+        },
+        onError: (err) => {
+            const msg = err.response?.data?.error || 'فشل في إنشاء الحساب';
+            setError(msg);
+            showToast(msg, 'error');
         }
-        setSaving(false);
+    });
+
+    const handleSave = () => {
+        if (!form.name || !form.code) return setError('الاسم والرمز مطلوبان');
+        accountMutation.mutate({
+            name: form.name,
+            code: form.code,
+            type: form.type,
+            parentId: form.parentId ? parseInt(form.parentId) : null,
+        });
     };
 
     return (
@@ -414,8 +434,8 @@ const AccountModal = ({ accounts, onClose, onSave }) => {
 
                 <div style={{ padding: '16px 28px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                     <button onClick={onClose} style={{ padding: '10px 24px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontFamily: 'Cairo' }}>إلغاء</button>
-                    <button onClick={handleSave} disabled={saving} style={{ padding: '10px 28px', borderRadius: '10px', border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold' }}>
-                        {saving ? '...جاري الحفظ' : '✅ إنشاء الحساب'}
+                    <button onClick={handleSave} disabled={accountMutation.isPending} style={{ padding: '10px 28px', borderRadius: '10px', border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold' }}>
+                        {accountMutation.isPending ? '...جاري الحفظ' : '✅ إنشاء الحساب'}
                     </button>
                 </div>
             </div>
@@ -427,53 +447,30 @@ const AccountModal = ({ accounts, onClose, onSave }) => {
 // Main: AccountingPage
 // =============================================
 export default function AccountingPage() {
-    const [accounts, setAccounts] = useState([]);
-    const [journal, setJournal] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
     const [activeTab, setActiveTab] = useState('tree');
-    const [stats, setStats] = useState({ totalAssets: 0, totalRevenue: 0, totalExpenses: 0 });
     const [showJournalModal, setShowJournalModal] = useState(false);
     const [showAccountModal, setShowAccountModal] = useState(false);
 
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const [accRes, journalRes] = await Promise.all([
-                axios.get(`${API_URL}/accounts`),
-                axios.get(`${API_URL}/journal`)
-            ]);
+    // Queries
+    const { data: accounts = [], isLoading: accountsLoading, error: accountsError } = useQuery({
+        queryKey: ['accounts'],
+        queryFn: async () => (await axios.get(`${API_URL}/accounts`, { headers: H() })).data
+    });
 
-            const allAccounts = accRes.data || [];
-            setAccounts(allAccounts);
-            setJournal(journalRes.data || []);
+    const { data: journal = [], isLoading: journalLoading, error: journalError } = useQuery({
+        queryKey: ['journal'],
+        queryFn: async () => (await axios.get(`${API_URL}/journal`, { headers: H() })).data
+    });
 
-            // Calculate real stats from all accounts (flat list from API)
-            const totalAssets = allAccounts
-                .filter(a => a.type === 'ASSET')
-                .reduce((sum, a) => sum + (a.balance || 0), 0);
-            const totalRevenue = allAccounts
-                .filter(a => a.type === 'REVENUE')
-                .reduce((sum, a) => sum + Math.abs(a.balance || 0), 0);
-            const totalExpenses = allAccounts
-                .filter(a => a.type === 'EXPENSE')
-                .reduce((sum, a) => sum + Math.abs(a.balance || 0), 0);
+    const isLoading = accountsLoading || journalLoading;
 
-            setStats({ totalAssets, totalRevenue, totalExpenses });
-            setLoading(false);
-        } catch (error) {
-            console.error('Failed to fetch accounting data', error);
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => { fetchData(); }, []);
-
-    // Build tree from flat list
-    const buildTree = (flatList) => {
+    // Memoized Calculations
+    const accountTree = useMemo(() => {
         const map = {};
-        flatList.forEach(a => { map[a.id] = { ...a, children: [] }; });
+        accounts.forEach(a => { map[a.id] = { ...a, children: [] }; });
         const roots = [];
-        flatList.forEach(a => {
+        accounts.forEach(a => {
             if (a.parentId && map[a.parentId]) {
                 map[a.parentId].children.push(map[a.id]);
             } else {
@@ -481,17 +478,37 @@ export default function AccountingPage() {
             }
         });
         return roots;
-    };
-    const accountTree = buildTree(accounts);
+    }, [accounts]);
 
-    const netProfit = stats.totalRevenue - stats.totalExpenses;
+    const stats = useMemo(() => {
+        const totalAssets = accounts
+            .filter(a => a.type === 'ASSET')
+            .reduce((sum, a) => sum + (a.balance || 0), 0);
+        const totalRevenue = accounts
+            .filter(a => a.type === 'REVENUE')
+            .reduce((sum, a) => sum + Math.abs(a.balance || 0), 0);
+        const totalExpenses = accounts
+            .filter(a => a.type === 'EXPENSE')
+            .reduce((sum, a) => sum + Math.abs(a.balance || 0), 0);
+        const netProfit = totalRevenue - totalExpenses;
+        return { totalAssets, totalRevenue, totalExpenses, netProfit };
+    }, [accounts]);
 
     const statCards = [
         { label: 'إجمالي الأصول', value: stats.totalAssets, color: '#2563eb', bg: '#eff6ff', icon: <Landmark size={22} /> },
         { label: 'الإيرادات', value: stats.totalRevenue, color: '#10b981', bg: '#ecfdf5', icon: <ArrowUpRight size={22} /> },
         { label: 'المصروفات', value: stats.totalExpenses, color: '#ef4444', bg: '#fef2f2', icon: <ArrowDownLeft size={22} /> },
-        { label: 'صافي الربح', value: netProfit, color: netProfit >= 0 ? '#10b981' : '#ef4444', bg: netProfit >= 0 ? '#ecfdf5' : '#fef2f2', icon: <DollarSign size={22} /> },
+        { label: 'صافي الربح', value: stats.netProfit, color: stats.netProfit >= 0 ? '#10b981' : '#ef4444', bg: stats.netProfit >= 0 ? '#ecfdf5' : '#fef2f2', icon: <DollarSign size={22} /> },
     ];
+
+    if (accountsError || journalError) {
+        return (
+            <div style={{ textAlign: 'center', padding: '60px', color: '#ef4444', background: 'white', borderRadius: '16px' }}>
+                <AlertOctagon size={32} style={{ margin: '0 auto 16px', display: 'block' }} />
+                خطأ في تحميل البيانات المالية. يرجى المحاولة مرة أخرى.
+            </div>
+        );
+    }
 
     return (
         <div style={{ fontFamily: 'Cairo, sans-serif', direction: 'rtl' }}>
@@ -505,8 +522,8 @@ export default function AccountingPage() {
                     <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>إدارة الحسابات والقيود • متصل بالسحابة</p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    <button onClick={fetchData} title="تحديث" style={{ background: 'white', border: '1px solid #e2e8f0', padding: '10px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                        <RefreshCw size={18} color="#64748b" />
+                    <button onClick={() => { queryClient.invalidateQueries(['accounts']); queryClient.invalidateQueries(['journal']); }} title="تحديث" style={{ background: 'white', border: '1px solid #e2e8f0', padding: '10px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        <RefreshCw size={18} color="#64748b" className={isLoading ? 'animate-spin' : ''} />
                     </button>
                     <button onClick={() => setShowAccountModal(true)} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', color: '#334155', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Plus size={17} /> حساب جديد
@@ -565,9 +582,9 @@ export default function AccountingPage() {
                 </div>
 
                 <div style={{ padding: '24px' }}>
-                    {loading ? (
+                    {isLoading ? (
                         <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8', fontSize: '1rem' }}>
-                            <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px', color: '#2563eb' }} />
+                            <Clock size={32} className="animate-spin" style={{ marginBottom: '12px', color: '#2563eb', display: 'inline-block' }} />
                             <div>جاري التحميل من السحابة...</div>
                         </div>
                     ) : (
@@ -625,14 +642,14 @@ export default function AccountingPage() {
                 <JournalModal
                     accounts={accountTree}
                     onClose={() => setShowJournalModal(false)}
-                    onSave={fetchData}
+                    onSave={() => { }}
                 />
             )}
             {showAccountModal && (
                 <AccountModal
                     accounts={accountTree}
                     onClose={() => setShowAccountModal(false)}
-                    onSave={fetchData}
+                    onSave={() => { }}
                 />
             )}
         </div>

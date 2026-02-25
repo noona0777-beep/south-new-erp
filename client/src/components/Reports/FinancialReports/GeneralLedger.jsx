@@ -1,47 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import API_URL from '../../../config';
-import { Search, Printer, Download, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Search, Printer, Download, ArrowRight, ArrowLeft, Clock, AlertOctagon } from 'lucide-react';
 
-const token = () => localStorage.getItem('token');
+const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 const GeneralLedger = () => {
-    const [accounts, setAccounts] = useState([]);
     const [selectedAccount, setSelectedAccount] = useState('');
     const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
-    const [report, setReport] = useState(null);
-    const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        const fetchAccounts = async () => {
-            try {
-                const res = await axios.get(`${API_URL}/reports/trial-balance`, {
-                    headers: { Authorization: `Bearer ${token()}` }
-                });
-                setAccounts(res.data);
-            } catch (e) {
-                console.error(e);
-            }
-        };
-        fetchAccounts();
-    }, []);
-
-    const fetchLedger = async () => {
-        if (!selectedAccount) return;
-        setLoading(true);
-        try {
-            const res = await axios.get(`${API_URL}/reports/general-ledger?accountId=${selectedAccount}&startDate=${startDate}&endDate=${endDate}`, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
-            setReport(res.data);
-        } catch (e) {
-            console.error(e);
-            alert('خطأ في تحميل كشف الحساب');
-        } finally {
-            setLoading(false);
+    // Fetch account list for dropdown
+    const { data: accounts = [] } = useQuery({
+        queryKey: ['report', 'account-list'],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/reports/trial-balance`, { headers: H() });
+            return res.data;
         }
-    };
+    });
+
+    // Fetch ledger movements (only if account is selected)
+    const { data: report, isLoading, error, refetch } = useQuery({
+        queryKey: ['report', 'general-ledger', selectedAccount, startDate, endDate],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/reports/general-ledger?accountId=${selectedAccount}&startDate=${startDate}&endDate=${endDate}`, {
+                headers: H()
+            });
+            return res.data;
+        },
+        enabled: !!selectedAccount
+    });
 
     const format = (v) => v === 0 ? '-' : Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2 });
 
@@ -72,10 +58,10 @@ const GeneralLedger = () => {
                 </div>
                 <div style={{ display: 'flex', gap: '8px', width: '100%', maxWidth: 'fit-content' }}>
                     <button
-                        onClick={fetchLedger}
+                        onClick={() => refetch()}
                         style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}
                     >
-                        <Search size={18} /> عرض الكشف
+                        <Search size={18} /> تحديث الكشف
                     </button>
                     <button onClick={() => window.print()} style={{ padding: '10px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }}>
                         <Printer size={18} />
@@ -83,9 +69,21 @@ const GeneralLedger = () => {
                 </div>
             </div>
 
-            {loading && <div style={{ textAlign: 'center', padding: '40px' }}>جاري التحميل...</div>}
+            {isLoading && (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                    <Clock className="animate-spin" size={24} style={{ marginBottom: 10, display: 'block', margin: '0 auto' }} />
+                    جاري التحميل...
+                </div>
+            )}
 
-            {report && !loading && (
+            {error && (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444', background: '#fef2f2', borderRadius: 12 }}>
+                    <AlertOctagon size={24} style={{ marginBottom: 10, display: 'block', margin: '0 auto' }} />
+                    خطأ في تحميل كشف الحساب
+                </div>
+            )}
+
+            {report && !isLoading && (
                 <div className="fade-in">
                     <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                         <h2 style={{ margin: 0, color: '#1e293b', fontSize: '1.4rem' }}>كشف حساب تفصيلي</h2>

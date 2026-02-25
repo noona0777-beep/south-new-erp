@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import API_URL from '../../config';
-import { Settings, User, Building2, Save, Plus, Trash2, Eye, EyeOff, Shield, Bell, Database, RefreshCw } from 'lucide-react';
+import { Settings, User, Building2, Save, Plus, Trash2, Eye, EyeOff, Shield, Bell, Database, RefreshCw, Clock, AlertOctagon } from 'lucide-react';
 import AuditLogs from '../Admin/AuditLogs';
+import { useMemo, useState } from 'react';
 
-const token = () => localStorage.getItem('token');
+const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 const currentUser = () => {
     try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
 };
@@ -15,7 +16,7 @@ const TabBtn = ({ active, onClick, children, icon }) => (
         color: active ? 'white' : '#64748b', fontFamily: 'Cairo', fontWeight: '600', fontSize: '0.9rem',
         borderRadius: '10px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '8px'
     }}>
-        {React.cloneElement(icon, { size: 16 })}
+        {icon}
         {children}
     </button>
 );
@@ -43,41 +44,33 @@ const InputField = ({ label, value, onChange, type = 'text', placeholder, readOn
 
 // ======= TAB: Company Info =======
 const CompanyTab = () => {
+    const queryClient = useQueryClient();
     const [form, setForm] = useState({});
-    const [loading, setLoading] = useState(true);
     const [saved, setSaved] = useState(false);
 
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const res = await axios.get(`${API_URL}/settings/companyInfo`, {
-                    headers: { Authorization: `Bearer ${token()}` }
-                });
-                setForm(res.data);
-            } catch (error) {
-                console.error('Fetch error:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchSettings();
-    }, []);
+    const { isLoading, error } = useQuery({
+        queryKey: ['companyInfo'],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/settings/companyInfo`, { headers: H() });
+            setForm(res.data || {});
+            return res.data;
+        }
+    });
+
+    const saveMutation = useMutation({
+        mutationFn: async (data) => await axios.post(`${API_URL}/settings/companyInfo`, { value: data }, { headers: H() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['companyInfo'] });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        },
+        onError: () => alert('فشل في حفظ البيانات')
+    });
 
     const update = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }));
 
-    const handleSave = async () => {
-        try {
-            await axios.post(`${API_URL}/settings/companyInfo`, { value: form }, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-        } catch (error) {
-            alert('فشل في حفظ البيانات');
-        }
-    };
-
-    if (loading) return <div style={{ color: '#64748b', fontFamily: 'Cairo' }}>جاري تحميل البيانات...</div>;
+    if (isLoading) return <div style={{ color: '#64748b', fontFamily: 'Cairo' }}>جاري تحميل البيانات...</div>;
+    if (error) return <div style={{ color: '#ef4444', fontFamily: 'Cairo' }}>خطأ في تحميل البيانات</div>;
 
     return (
         <div>
@@ -95,14 +88,15 @@ const CompanyTab = () => {
                 <InputField label="الموقع الإلكتروني" value={form.website || ''} onChange={update('website')} placeholder="www.company.com" />
                 <InputField label="رقم السجل التجاري" value={form.crNumber || ''} onChange={update('crNumber')} placeholder="4XXXXXXXXX" />
             </div>
-            <button onClick={handleSave} style={{
+            <button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending} style={{
                 marginTop: '24px', padding: '12px 32px', background: saved ? '#10b981' : '#2563eb',
                 color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer',
                 fontFamily: 'Cairo', fontWeight: '700', fontSize: '0.95rem',
-                display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.3s'
+                display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.3s',
+                opacity: saveMutation.isPending ? 0.7 : 1
             }}>
                 <Save size={16} />
-                {saved ? '✅ تم الحفظ في قاعدة البيانات!' : 'حفظ البيانات'}
+                {saveMutation.isPending ? '...جاري الحفظ' : (saved ? '✅ تم الحفظ في قاعدة البيانات!' : 'حفظ البيانات')}
             </button>
         </div>
     );
@@ -110,47 +104,52 @@ const CompanyTab = () => {
 
 // ======= TAB: Users Management =======
 const UsersTab = () => {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
     const [showForm, setShowForm] = useState(false);
     const [showPass, setShowPass] = useState(false);
     const [form, setForm] = useState({ name: '', email: '', password: '', role: 'USER' });
     const [msg, setMsg] = useState('');
     const me = currentUser();
 
-    const fetchUsers = async () => {
-        try {
-            const res = await axios.get(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token()}` } });
-            setUsers(res.data);
-        } catch { setUsers([]); } finally { setLoading(false); }
-    };
+    const { data: users = [], isLoading } = useQuery({
+        queryKey: ['users'],
+        queryFn: async () => (await axios.get(`${API_URL}/users`, { headers: H() })).data
+    });
 
-    useEffect(() => { fetchUsers(); }, []);
+    const addMutation = useMutation({
+        mutationFn: async (data) => await axios.post(`${API_URL}/users`, data, { headers: H() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            setMsg('✅ تم إضافة المستخدم بنجاح');
+            setForm({ name: '', email: '', password: '', role: 'USER' });
+            setShowForm(false);
+        },
+        onError: (err) => setMsg('❌ ' + (err.response?.data?.error || 'فشل في الإضافة'))
+    });
 
-    const handleAdd = async () => {
+    const deleteMutation = useMutation({
+        mutationFn: async (id) => await axios.delete(`${API_URL}/users/${id}`, { headers: H() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            setMsg('✅ تم حذف المستخدم');
+        },
+        onError: () => setMsg('❌ فشل في الحذف')
+    });
+
+    const handleAdd = () => {
         if (!form.name || !form.email || !form.password) {
             setMsg('يرجى تعبئة جميع الحقول');
             return;
         }
-        try {
-            await axios.post(`${API_URL}/users`, form, { headers: { Authorization: `Bearer ${token()}` } });
-            setMsg('✅ تم إضافة المستخدم بنجاح');
-            setForm({ name: '', email: '', password: '', role: 'USER' });
-            setShowForm(false);
-            fetchUsers();
-        } catch (e) {
-            setMsg('❌ ' + (e.response?.data?.error || 'فشل في الإضافة'));
-        }
+        addMutation.mutate(form);
         setTimeout(() => setMsg(''), 3000);
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = (id) => {
         if (id === me.id) { setMsg('❌ لا يمكن حذف المستخدم الحالي'); setTimeout(() => setMsg(''), 2000); return; }
         if (!window.confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
-        try {
-            await axios.delete(`${API_URL}/users/${id}`, { headers: { Authorization: `Bearer ${token()}` } });
-            fetchUsers();
-        } catch { setMsg('❌ فشل في الحذف'); setTimeout(() => setMsg(''), 2000); }
+        deleteMutation.mutate(id);
+        setTimeout(() => setMsg(''), 2000);
     };
 
     const roleColors = { ADMIN: { bg: '#fef3c7', color: '#d97706' }, USER: { bg: '#eff6ff', color: '#2563eb' } };
@@ -206,8 +205,8 @@ const UsersTab = () => {
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                        <button onClick={handleAdd} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '700' }}>
-                            حفظ المستخدم
+                        <button onClick={handleAdd} disabled={addMutation.isPending} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '700' }}>
+                            {addMutation.isPending ? 'جاري الحفظ...' : 'حفظ المستخدم'}
                         </button>
                         <button onClick={() => setShowForm(false)} style={{ padding: '10px 24px', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo' }}>
                             إلغاء
@@ -216,8 +215,11 @@ const UsersTab = () => {
                 </div>
             )}
 
-            {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>جاري التحميل...</div>
+            {isLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                    <Clock size={32} className="animate-spin" style={{ margin: '0 auto 12px', display: 'block' }} />
+                    جاري التحميل...
+                </div>
             ) : (
                 <div className="table-responsive" style={{ background: 'white', borderRadius: '14px', border: '1px solid #f1f5f9', overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo', minWidth: '700px' }}>
@@ -252,11 +254,11 @@ const UsersTab = () => {
                                         {new Date(u.createdAt).toLocaleDateString('ar-SA')}
                                     </td>
                                     <td style={{ padding: '14px 16px' }}>
-                                        <button onClick={() => handleDelete(u.id)} style={{
+                                        <button onClick={() => handleDelete(u.id)} disabled={deleteMutation.isPending} style={{
                                             padding: '6px 12px', background: '#fef2f2', color: '#ef4444', border: 'none',
                                             borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'Cairo', fontSize: '0.8rem'
                                         }}>
-                                            <Trash2 size={14} /> حذف
+                                            <Trash2 size={14} /> {deleteMutation.isPending ? 'حذف...' : 'حذف'}
                                         </button>
                                     </td>
                                 </tr>
@@ -271,42 +273,33 @@ const UsersTab = () => {
 
 // ======= TAB: System Preferences =======
 const SystemTab = () => {
+    const queryClient = useQueryClient();
     const [prefs, setPrefs] = useState({});
-    const [loading, setLoading] = useState(true);
     const [saved, setSaved] = useState(false);
 
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const res = await axios.get(`${API_URL}/settings/systemPrefs`, {
-                    headers: { Authorization: `Bearer ${token()}` }
-                });
-                setPrefs(res.data);
-            } catch (error) {
-                console.error('Fetch error:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchSettings();
-    }, []);
+    const { isLoading } = useQuery({
+        queryKey: ['systemPrefs'],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/settings/systemPrefs`, { headers: H() });
+            setPrefs(res.data || {});
+            return res.data;
+        }
+    });
+
+    const saveMutation = useMutation({
+        mutationFn: async (data) => await axios.post(`${API_URL}/settings/systemPrefs`, { value: data }, { headers: H() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['systemPrefs'] });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        },
+        onError: () => alert('فشل في حفظ التفضيلات')
+    });
 
     const toggle = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }));
     const update = (key) => (e) => setPrefs(p => ({ ...p, [key]: e.target.value }));
 
-    const handleSave = async () => {
-        try {
-            await axios.post(`${API_URL}/settings/systemPrefs`, { value: prefs }, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-        } catch (error) {
-            alert('فشل في حفظ التفضيلات');
-        }
-    };
-
-    if (loading) return <div style={{ color: '#64748b', fontFamily: 'Cairo' }}>جاري التحميل...</div>;
+    if (isLoading) return <div style={{ color: '#64748b', fontFamily: 'Cairo' }}>جاري التحميل...</div>;
 
     return (
         <div>
@@ -381,14 +374,14 @@ const SystemTab = () => {
                     </div>
                 </div>
 
-                <button onClick={handleSave} style={{
+                <button onClick={() => saveMutation.mutate(prefs)} disabled={saveMutation.isPending} style={{
                     padding: '12px 32px', background: saved ? '#10b981' : '#2563eb',
                     color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer',
                     fontFamily: 'Cairo', fontWeight: '700', fontSize: '0.95rem',
                     display: 'flex', alignItems: 'center', gap: '8px', width: 'fit-content', transition: 'background 0.3s'
                 }}>
                     <Save size={16} />
-                    {saved ? '✅ تم الحفظ في السحابة!' : 'حفظ الإعدادات'}
+                    {saveMutation.isPending ? '...جاري الحفظ' : (saved ? '✅ تم الحفظ في السحابة!' : 'حفظ الإعدادات')}
                 </button>
             </div>
         </div>

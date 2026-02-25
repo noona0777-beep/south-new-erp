@@ -1,32 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import API_URL from '../../../config';
-import { Printer, Download } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Printer, Download, Clock, AlertOctagon } from 'lucide-react';
 
-const token = () => localStorage.getItem('token');
+const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 const TrialBalance = () => {
-    const [accounts, setAccounts] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
 
-    const fetchReport = async () => {
-        setLoading(true);
-        try {
+    const { data: accounts = [], isLoading, error } = useQuery({
+        queryKey: ['report', 'trial-balance', asOfDate],
+        queryFn: async () => {
             const res = await axios.get(`${API_URL}/reports/trial-balance?date=${asOfDate}`, {
-                headers: { Authorization: `Bearer ${token()}` }
+                headers: H()
             });
-            setAccounts(res.data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
+            return res.data;
         }
-    };
-
-    useEffect(() => {
-        fetchReport();
-    }, [asOfDate]);
+    });
 
     const totalDebit = accounts.reduce((s, a) => s + (a.balance > 0 ? a.balance : 0), 0);
     const totalCredit = accounts.reduce((s, a) => s + (a.balance < 0 ? Math.abs(a.balance) : 0), 0);
@@ -51,9 +39,19 @@ const TrialBalance = () => {
         link.click();
     };
 
-    const format = (v) => v === 0 ? '-' : v.toLocaleString(undefined, { minimumFractionDigits: 2 });
+    if (isLoading) return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+            <Clock className="animate-spin" size={24} style={{ marginBottom: 10, display: 'block', margin: '0 auto' }} />
+            جاري التحميل...
+        </div>
+    );
 
-    if (loading) return <div>جاري التحميل...</div>;
+    if (error) return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444', background: '#fef2f2', borderRadius: 12 }}>
+            <AlertOctagon size={24} style={{ marginBottom: 10, display: 'block', margin: '0 auto' }} />
+            خطأ في تحميل ميزان المراجعة
+        </div>
+    );
 
     return (
         <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>

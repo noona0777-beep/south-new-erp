@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Plus, Users, UserCircle, Briefcase, DollarSign, Phone, Mail, Calendar, TrendingUp, Edit, Trash2, Eye, X, Folder } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, Users, UserCircle, Briefcase, DollarSign, Phone, Mail, Calendar, TrendingUp, Edit, Trash2, Eye, X, Folder, Clock, AlertOctagon } from 'lucide-react';
 import API_URL from '../../config';
 
+const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
+
 const HRPage = () => {
-    const [employees, setEmployees] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
     const [showForm, setShowForm] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [showDetails, setShowDetails] = useState(false);
@@ -13,69 +13,60 @@ const HRPage = () => {
 
     // Form State
     const [employeeData, setEmployeeData] = useState({
-        name: '',
-        jobTitle: '',
-        department: '',
-        phone: '',
-        email: '',
-        salary: 0,
-        status: 'ACTIVE',
+        name: '', jobTitle: '', department: '', phone: '',
+        email: '', salary: 0, status: 'ACTIVE',
         joinDate: new Date().toISOString().split('T')[0]
     });
 
-    useEffect(() => {
-        fetchEmployees();
-    }, []);
+    // Queries
+    const { data: employees = [], isLoading, error } = useQuery({
+        queryKey: ['employees'],
+        queryFn: async () => (await axios.get(`${API_URL}/employees`)).data
+    });
 
-    const fetchEmployees = async () => {
-        try {
-            const res = await axios.get(`${API_URL}/employees`);
-            setEmployees(res.data);
-            setLoading(false);
-        } catch (err) {
-            console.error('Error fetching employees', err);
+    // Mutations
+    const saveMutation = useMutation({
+        mutationFn: async (data) => {
+            if (isEdit) {
+                return await axios.put(`${API_URL}/employees/${selectedEmployee.id}`, data);
+            } else {
+                return await axios.post(`${API_URL}/employees`, data);
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['employees'] });
+            alert(isEdit ? 'تم تحديث بيانات الموظف بنجاح' : 'تم إضافة الموظف بنجاح');
+            closeForm();
         }
-    };
+    });
 
-    const handleArchiveEmployee = async (employee) => {
-        try {
+    const deleteMutation = useMutation({
+        mutationFn: async (id) => await axios.delete(`${API_URL}/employees/${id}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['employees'] });
+        }
+    });
+
+    const archiveMutation = useMutation({
+        mutationFn: async (employee) => {
             await axios.post(`${API_URL}/documents`, {
                 title: `سجل بيانات الموظف: ${employee.name}`,
                 category: 'OTHER',
                 fileUrl: `INTERNAL:EMPLOYEE:${employee.id}`,
                 employeeId: employee.id
             });
-            alert('✅ تم أرشفة بيانات الموظف في الوثائق');
-        } catch (err) {
-            alert('❌ فشل الأرشفة');
-        }
-    };
+        },
+        onSuccess: () => alert('✅ تم أرشفة بيانات الموظف في الوثائق')
+    });
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        try {
-            if (isEdit) {
-                await axios.put(`${API_URL}/employees/${selectedEmployee.id}`, employeeData);
-                alert('تم تحديث بيانات الموظف بنجاح');
-            } else {
-                await axios.post(`${API_URL}/employees`, employeeData);
-                alert('تم إضافة الموظف بنجاح');
-            }
-            fetchEmployees();
-            closeForm();
-        } catch (err) {
-            alert('فشل في تنفيذ العملية');
-        }
+        saveMutation.mutate(employeeData);
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = (id) => {
         if (window.confirm('هل أنت متأكد من حذف هذا الموظف؟')) {
-            try {
-                await axios.delete(`${API_URL}/employees/${id}`);
-                fetchEmployees();
-            } catch (err) {
-                alert('فشل الحذف');
-            }
+            deleteMutation.mutate(id);
         }
     };
 
@@ -83,12 +74,9 @@ const HRPage = () => {
         if (emp) {
             setSelectedEmployee(emp);
             setEmployeeData({
-                name: emp.name,
-                jobTitle: emp.jobTitle,
-                department: emp.department || '',
-                phone: emp.phone || '',
-                email: emp.email || '',
-                salary: emp.salary,
+                name: emp.name, jobTitle: emp.jobTitle,
+                department: emp.department || '', phone: emp.phone || '',
+                email: emp.email || '', salary: emp.salary,
                 status: emp.status,
                 joinDate: emp.joinDate ? new Date(emp.joinDate).toISOString().split('T')[0] : ''
             });
@@ -153,8 +141,16 @@ const HRPage = () => {
                 </div>
             </div>
 
-            {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>جاري التحميل...</div>
+            {isLoading ? (
+                <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
+                    <Clock className="animate-spin" size={32} style={{ margin: '0 auto 16px', display: 'block' }} />
+                    جاري تحميل بيانات الموظفين...
+                </div>
+            ) : error ? (
+                <div style={{ textAlign: 'center', padding: '60px', color: '#ef4444', background: 'white', borderRadius: '16px' }}>
+                    <AlertOctagon size={32} style={{ margin: '0 auto 16px', display: 'block' }} />
+                    خطأ في تحميل البيانات. يرجى المحاولة مرة أخرى.
+                </div>
             ) : (
                 <div className="table-responsive" style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
@@ -169,12 +165,12 @@ const HRPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {employees && employees.length === 0 ? (
+                            {employees.length === 0 ? (
                                 <tr>
                                     <td colSpan="6" style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>لا يوجد موظفين مضافين حالياً</td>
                                 </tr>
                             ) : (
-                                employees && employees.map(emp => (
+                                employees.map(emp => (
                                     <tr key={emp.id} className="card-hover" style={{ borderBottom: '1px solid #f8fafc' }}>
                                         <td style={{ padding: '16px 24px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -200,9 +196,23 @@ const HRPage = () => {
                                         <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                                             <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
                                                 <button onClick={() => openDetails(emp)} style={{ color: '#64748b', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '6px', borderRadius: '6px', cursor: 'pointer' }} title="عرض التفاصيل"><Eye size={18} /></button>
-                                                <button onClick={() => handleArchiveEmployee(emp)} style={{ color: '#f59e0b', background: '#fffbeb', border: '1px solid #fef3c7', padding: '6px', borderRadius: '6px', cursor: 'pointer' }} title="أرشفة البيانات"><Folder size={18} /></button>
+                                                <button
+                                                    onClick={() => archiveMutation.mutate(emp)}
+                                                    disabled={archiveMutation.isPending}
+                                                    style={{ color: '#f59e0b', background: '#fffbeb', border: '1px solid #fef3c7', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}
+                                                    title="أرشفة البيانات"
+                                                >
+                                                    <Folder size={18} />
+                                                </button>
                                                 <button onClick={() => openForm(emp)} style={{ color: '#3b82f6', background: '#eff6ff', border: '1px solid #dbeafe', padding: '6px', borderRadius: '6px', cursor: 'pointer' }} title="تعديل"><Edit size={18} /></button>
-                                                <button onClick={() => handleDelete(emp.id)} style={{ color: '#ef4444', background: '#fef2f2', border: '1px solid #fee2e2', padding: '6px', borderRadius: '6px', cursor: 'pointer' }} title="حذف"><Trash2 size={18} /></button>
+                                                <button
+                                                    onClick={() => handleDelete(emp.id)}
+                                                    disabled={deleteMutation.isPending}
+                                                    style={{ color: '#ef4444', background: '#fef2f2', border: '1px solid #fee2e2', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}
+                                                    title="حذف"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -258,7 +268,9 @@ const HRPage = () => {
                             </div>
                             <div style={{ gridColumn: 'span 2', display: 'flex', gap: '15px', justifyContent: 'flex-end', marginTop: '20px' }}>
                                 <button type="button" onClick={closeForm} style={{ padding: '12px 30px', borderRadius: '10px', border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer' }}>إلغاء</button>
-                                <button type="submit" style={{ padding: '12px 40px', borderRadius: '10px', background: '#2563eb', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>حفظ البيانات</button>
+                                <button type="submit" disabled={saveMutation.isPending} style={{ padding: '12px 40px', borderRadius: '10px', background: '#2563eb', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                                    {saveMutation.isPending ? 'جاري الحفظ...' : 'حفظ البيانات'}
+                                </button>
                             </div>
                         </form>
                     </div>

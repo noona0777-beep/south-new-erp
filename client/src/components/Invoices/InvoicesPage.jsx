@@ -1,16 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Printer, Trash2, Edit, FileText } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, Printer, Trash2, Edit, FileText, AlertOctagon } from 'lucide-react';
 import API_URL from '../../config';
+import { useToast } from '../../context/ToastContext';
 
 const InvoicesPage = () => {
-    const [invoices, setInvoices] = useState([]);
-    const [partners, setPartners] = useState([]);
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState(null);
+
+    // Fetch Invoices
+    const { data: invoices = [], isLoading: invoicesLoading, error: invoicesError } = useQuery({
+        queryKey: ['invoices'],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/invoices`);
+            return res.data;
+        }
+    });
+
+    // Fetch Partners (Master Data)
+    const { data: partners = [] } = useQuery({
+        queryKey: ['partners'],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/partners`);
+            return res.data;
+        }
+    });
+
+    // Fetch Products (Master Data)
+    const { data: products = [] } = useQuery({
+        queryKey: ['products'],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/products`);
+            return res.data;
+        }
+    });
+
+    const { showToast } = useToast();
+
+    // Mutation for Save/Update
+    const saveMutation = useMutation({
+        mutationFn: async (data) => {
+            const token = localStorage.getItem('token');
+            const config = { headers: { 'Authorization': `Bearer ${token}` } };
+            if (isEditing) {
+                return axios.put(`${API_URL}/invoices/${editingId}`, data, config);
+            } else {
+                return axios.post(`${API_URL}/invoices`, data, config);
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['invoices'] });
+            showToast('تم حفظ الفاتورة بنجاح', 'success');
+            handleResetForm();
+        },
+        onError: (err) => {
+            const errorMsg = err.response?.data?.error || err.response?.data?.details || err.message;
+            showToast(`فشل العملية: ${errorMsg}`, 'error');
+        }
+    });
 
     // Form State
     const [invoiceData, setInvoiceData] = useState({
@@ -20,39 +70,6 @@ const InvoicesPage = () => {
         discount: 0,
         items: [{ productId: '', description: '', quantity: 1, unitPrice: 0, total: 0 }]
     });
-
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        fetchInvoices();
-        fetchMasterData();
-    }, []);
-
-    const fetchInvoices = async () => {
-        try {
-            setError(null);
-            const res = await axios.get(`${API_URL}/invoices`);
-            setInvoices(res.data);
-        } catch (err) {
-            console.error('Error fetching invoices', err);
-            setError('فشل تحميل الفواتير. يرجى التأكد من اتصال قاعدة البيانات.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchMasterData = async () => {
-        try {
-            const [pRes, prodRes] = await Promise.all([
-                axios.get(`${API_URL}/partners`),
-                axios.get(`${API_URL}/products`)
-            ]);
-            setPartners(pRes.data);
-            setProducts(prodRes.data);
-        } catch (err) {
-            console.error('Error fetching master data', err);
-        }
-    };
 
     // --- Form Handlers ---
     const handleResetForm = () => {
@@ -126,29 +143,9 @@ const InvoicesPage = () => {
         return { subtotal, taxable, tax, total };
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        try {
-            const token = localStorage.getItem('token');
-            const config = { headers: { 'Authorization': `Bearer ${token}` } };
-
-            console.log('Sending Invoice Data:', invoiceData);
-
-            if (isEditing) {
-                await axios.put(`${API_URL}/invoices/${editingId}`, invoiceData, config);
-                alert('✅ تم تحديث الفاتورة بنجاح');
-            } else {
-                await axios.post(`${API_URL}/invoices`, invoiceData, config);
-                alert('✅ تم حفظ الفاتورة بنجاح');
-            }
-
-            fetchInvoices();
-            handleResetForm();
-        } catch (err) {
-            console.error('Submit Error:', err.response?.data || err.message);
-            const errorMsg = err.response?.data?.error || err.response?.data?.details || err.message;
-            alert(`❌ فشل العملية: ${errorMsg}`);
-        }
+        saveMutation.mutate(invoiceData);
     };
 
     const openPrint = (id) => {
@@ -309,10 +306,17 @@ const InvoicesPage = () => {
                 </button>
             </div>
 
-            {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>جاري تحميل الفواتير...</div>
-            ) : error ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444', background: '#fef2f2', borderRadius: '12px' }}>{error}</div>
+            {invoicesLoading ? (
+                <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9' }}>
+                    {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="animate-pulse" style={{ height: '50px', background: '#f8fafc', borderRadius: '8px', marginBottom: '12px' }} />
+                    ))}
+                </div>
+            ) : invoicesError ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444', background: '#fef2f2', borderRadius: '12px' }}>
+                    <AlertOctagon style={{ margin: '0 auto 10px', display: 'block' }} size={32} />
+                    <p>فشل تحميل الفواتير. يرجى التحقق من اتصال الخادم.</p>
+                </div>
             ) : (
                 <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9' }}>
                     <div className="table-responsive">

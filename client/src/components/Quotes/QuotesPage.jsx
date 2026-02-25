@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Plus, Printer, Trash2, Edit, FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, Printer, Trash2, Edit, FileText, CheckCircle, XCircle, Clock, AlertOctagon } from 'lucide-react';
 import API_URL from '../../config';
 
 const QuotesPage = () => {
-    const [quotes, setQuotes] = useState([]);
-    const [partners, setPartners] = useState([]);
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
     const [showForm, setShowForm] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingId, setEditingId] = useState(null);
 
     // Form State
     const [quoteData, setQuoteData] = useState({
@@ -20,33 +18,60 @@ const QuotesPage = () => {
         items: [{ productId: '', description: '', quantity: 1, unitPrice: 0, total: 0 }]
     });
 
-    useEffect(() => {
-        fetchQuotes();
-        fetchMasterData();
-    }, []);
-
-    const fetchQuotes = async () => {
-        try {
+    // Fetch Quotes
+    const { data: quotes = [], isLoading: quotesLoading, error: quotesError } = useQuery({
+        queryKey: ['quotes'],
+        queryFn: async () => {
             const res = await axios.get(`${API_URL}/quotes`);
-            setQuotes(res.data);
-            setLoading(false);
-        } catch (err) {
-            console.error('Error fetching quotes', err);
+            return res.data;
         }
-    };
+    });
 
-    const fetchMasterData = async () => {
-        try {
-            const [pRes, prodRes] = await Promise.all([
-                axios.get(`${API_URL}/partners`),
-                axios.get(`${API_URL}/products`)
-            ]);
-            setPartners(pRes.data);
-            setProducts(prodRes.data);
-        } catch (err) {
-            console.error('Error fetching master data', err);
+    // Fetch Partners
+    const { data: partners = [] } = useQuery({
+        queryKey: ['partners'],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/partners`);
+            return res.data;
         }
-    };
+    });
+
+    // Fetch Products
+    const { data: products = [] } = useQuery({
+        queryKey: ['products'],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/products`);
+            return res.data;
+        }
+    });
+
+    const saveMutation = useMutation({
+        mutationFn: async (data) => {
+            if (isEditing) {
+                return axios.put(`${API_URL}/quotes/${editingId}`, data);
+            }
+            return axios.post(`${API_URL}/quotes`, data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['quotes'] });
+            handleResetForm();
+            alert('✅ تم حفظ عرض السعر بنجاح');
+        },
+        onError: (err) => {
+            alert('❌ فشل الحفظ: ' + (err.response?.data?.error || err.message));
+        }
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: (id) => axios.delete(`${API_URL}/quotes/${id}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['quotes'] });
+            alert('✅ تم حذف عرض السعر');
+        },
+        onError: (err) => {
+            alert('❌ فشل الحذف: ' + (err.response?.data?.error || err.message));
+        }
+    });
 
     const handleResetForm = () => {
         setQuoteData({
@@ -57,7 +82,29 @@ const QuotesPage = () => {
             notes: '',
             items: [{ productId: '', description: '', quantity: 1, unitPrice: 0, total: 0 }]
         });
+        setIsEditing(false);
+        setEditingId(null);
         setShowForm(false);
+    };
+
+    const handleEdit = (quote) => {
+        setQuoteData({
+            partnerId: quote.partnerId || '',
+            date: new Date(quote.date).toISOString().split('T')[0],
+            validUntil: quote.validUntil ? new Date(quote.validUntil).toISOString().split('T')[0] : '',
+            discount: quote.discount || 0,
+            notes: quote.notes || '',
+            items: quote.items.map(item => ({
+                productId: item.productId || '',
+                description: item.description || '',
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                total: item.total
+            }))
+        });
+        setEditingId(quote.id);
+        setIsEditing(true);
+        setShowForm(true);
     };
 
     const handleAddItem = () => {
@@ -100,23 +147,24 @@ const QuotesPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            await axios.post(`${API_URL}/quotes`, quoteData);
-            fetchQuotes();
-            handleResetForm();
-        } catch (err) {
-            alert('فشل حفظ عرض السعر. تأكد من إدخال جميع البيانات.');
+        saveMutation.mutate(quoteData);
+    };
+
+    const handleDelete = (id) => {
+        if (window.confirm('هل أنت متأكد من حذف عرض السعر هذا؟')) {
+            deleteMutation.mutate(id);
         }
     };
 
-    const updateStatus = async (id, status) => {
-        try {
-            await axios.patch(`${API_URL}/quotes/${id}/status`, { status });
-            fetchQuotes();
-        } catch (err) {
-            console.error('Error updating status', err);
+    const statusMutation = useMutation({
+        mutationFn: ({ id, status }) => axios.patch(`${API_URL}/quotes/${id}/status`, { status }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['quotes'] });
+        },
+        onError: (err) => {
+            alert('❌ فشل تحديث الحالة');
         }
-    };
+    });
 
     const getStatusStyle = (status) => {
         switch (status) {
@@ -133,10 +181,12 @@ const QuotesPage = () => {
         return (
             <div className="fade-in" style={{ paddingBottom: '50px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ margin: 0, color: '#1e293b' }}>إنشاء عرض سعر جديد</h2>
+                    <h2 style={{ margin: 0, color: '#1e293b' }}>{isEditing ? 'تعديل عرض سعر' : 'إنشاء عرض سعر جديد'}</h2>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button onClick={handleResetForm} style={{ background: 'white', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', color: '#64748b' }}>إلغاء</button>
-                        <button onClick={handleSubmit} style={{ background: '#2563eb', border: 'none', padding: '10px 30px', borderRadius: '8px', cursor: 'pointer', color: 'white', fontWeight: 'bold' }}>حفظ العرض</button>
+                        <button onClick={handleSubmit} disabled={saveMutation.isPending} style={{ background: '#2563eb', border: 'none', padding: '10px 30px', borderRadius: '8px', cursor: 'pointer', color: 'white', fontWeight: 'bold', opacity: saveMutation.isPending ? 0.6 : 1 }}>
+                            {saveMutation.isPending ? 'جاري الحفظ...' : 'حفظ العرض'}
+                        </button>
                     </div>
                 </div>
 
@@ -296,8 +346,16 @@ const QuotesPage = () => {
                 </button>
             </div>
 
-            {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>جاري التحميل...</div>
+            {quotesLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                    <Clock className="animate-spin" size={24} style={{ marginBottom: 10, display: 'block', margin: '0 auto' }} />
+                    جاري التحميل...
+                </div>
+            ) : quotesError ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444', background: '#fef2f2', borderRadius: 12 }}>
+                    <AlertOctagon size={24} style={{ marginBottom: 10, display: 'block', margin: '0 auto' }} />
+                    خطأ في تحميل البيانات
+                </div>
             ) : (
                 <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
                     <div className="table-responsive" style={{ width: '100%' }}>
@@ -325,8 +383,9 @@ const QuotesPage = () => {
                                 ) : (
                                     quotes.map(qt => {
                                         const style = getStatusStyle(qt.status);
+                                        const isActionPending = statusMutation.isPending && statusMutation.variables?.id === qt.id;
                                         return (
-                                            <tr key={qt.id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.background = 'white'}>
+                                            <tr key={qt.id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.2s', opacity: isActionPending ? 0.6 : 1 }} onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.background = 'white'}>
                                                 <td style={{ padding: '16px 24px', fontWeight: 'bold', color: '#0f172a' }}>{qt.quoteNumber}</td>
                                                 <td style={{ padding: '16px 24px', color: '#334155' }}>{qt.partner?.name || '-'}</td>
                                                 <td style={{ padding: '16px 24px', color: '#64748b', fontSize: '0.9rem' }}>{new Date(qt.date).toLocaleDateString('ar-SA')}</td>
@@ -338,10 +397,24 @@ const QuotesPage = () => {
                                                 <td style={{ padding: '16px 24px', color: '#0f172a', fontWeight: 'bold' }}>{qt.total.toFixed(2)} ر.س</td>
                                                 <td style={{ padding: '16px 24px', textAlign: 'center', minWidth: '150px' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', paddingLeft: '5px' }}>
-                                                        <button onClick={() => updateStatus(qt.id, 'ACCEPTED')} title="قبول" style={{ background: '#ecfdf5', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><CheckCircle size={16} /></button>
-                                                        <button onClick={() => updateStatus(qt.id, 'REJECTED')} title="رفض" style={{ background: '#fef2f2', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><XCircle size={16} /></button>
+                                                        <button disabled={isActionPending} onClick={() => statusMutation.mutate({ id: qt.id, status: 'ACCEPTED' })} title="قبول" style={{ background: '#ecfdf5', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><CheckCircle size={16} /></button>
+                                                        <button disabled={isActionPending} onClick={() => statusMutation.mutate({ id: qt.id, status: 'REJECTED' })} title="رفض" style={{ background: '#fef2f2', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><XCircle size={16} /></button>
                                                         <button
-                                                            onClick={() => window.open(`/quotes/${qt.id}/print`, '_blank')}
+                                                            onClick={() => handleEdit(qt)}
+                                                            title="تعديل"
+                                                            style={{ background: '#eff6ff', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                        >
+                                                            <Edit size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(qt.id)}
+                                                            title="حذف"
+                                                            style={{ background: '#fff1f2', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => window.open(`${API_URL}/quotes/${qt.id}/print`, '_blank')}
                                                             title="طباعة"
                                                             style={{ background: '#f8fafc', border: 'none', width: '30px', height: '30px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                                                         >

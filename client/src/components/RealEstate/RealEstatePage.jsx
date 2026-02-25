@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Building2, Home, User, Calendar, Plus, ChevronLeft, LayoutGrid, List } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Building2, Home, User, Calendar, Plus, ChevronLeft, LayoutGrid, List, Clock, AlertOctagon } from 'lucide-react';
 import API_URL from '../../config';
 
+const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
+
 const RealEstatePage = () => {
-    const [properties, setProperties] = useState([]);
+    const queryClient = useQueryClient();
     const [selectedProperty, setSelectedProperty] = useState(null);
-    const [units, setUnits] = useState([]);
-    const [partners, setPartners] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [view, setView] = useState('PROPERTIES'); // PROPERTIES, UNITS, CONTRACT_FORM
 
     // Form States
@@ -20,71 +18,83 @@ const RealEstatePage = () => {
         unitId: '', tenantId: '', startDate: '', endDate: '', rentAmount: '', paymentFrequency: 'MONTHLY'
     });
 
-    useEffect(() => {
-        fetchProperties();
-        fetchPartners();
-    }, []);
+    // Queries
+    const { data: properties = [], isLoading: propsLoading, error: propsError } = useQuery({
+        queryKey: ['properties'],
+        queryFn: async () => (await axios.get(`${API_URL}/properties`)).data
+    });
 
-    const fetchProperties = async () => {
-        try {
-            const res = await axios.get(`${API_URL}/properties`);
-            setProperties(res.data);
-            setLoading(false);
-        } catch (err) {
-            console.error('Error fetching properties', err);
-        }
-    };
+    const { data: partners = [] } = useQuery({
+        queryKey: ['partners'],
+        queryFn: async () => (await axios.get(`${API_URL}/partners`)).data
+    });
 
-    const fetchPartners = async () => {
-        try {
-            const res = await axios.get(`${API_URL}/partners`);
-            setPartners(res.data);
-        } catch (err) {
-            console.error('Error fetching partners', err);
-        }
-    };
+    const { data: units = [], isLoading: unitsLoading } = useQuery({
+        queryKey: ['units', selectedProperty?.id],
+        queryFn: async () => (await axios.get(`${API_URL}/properties/${selectedProperty.id}/units`)).data,
+        enabled: !!selectedProperty && view === 'UNITS'
+    });
 
-    const fetchUnits = async (propId) => {
-        try {
-            const res = await axios.get(`${API_URL}/properties/${propId}/units`);
-            setUnits(res.data);
-            setView('UNITS');
-        } catch (err) {
-            console.error('Error fetching units', err);
-        }
-    };
-
-    const handleCreateProperty = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.post(`${API_URL}/properties`, propData);
+    // Mutations
+    const createPropertyMutation = useMutation({
+        mutationFn: async (data) => await axios.post(`${API_URL}/properties`, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['properties'] });
             setShowPropForm(false);
             setPropData({ name: '', type: 'RESIDENTIAL', address: '' });
-            fetchProperties();
-        } catch (err) { alert('فشل حفظ العقار'); }
-    };
+        }
+    });
 
-    const handleCreateUnit = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.post(`${API_URL}/units`, { ...unitData, propertyId: selectedProperty.id });
+    const createUnitMutation = useMutation({
+        mutationFn: async (data) => await axios.post(`${API_URL}/units`, { ...data, propertyId: selectedProperty.id }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['units', selectedProperty.id] });
             setShowUnitForm(false);
             setUnitData({ unitNumber: '', floor: '', type: 'APARTMENT' });
-            fetchUnits(selectedProperty.id);
-        } catch (err) { alert('فشل حفظ الوحدة'); }
-    };
+        }
+    });
 
-    const handleCreateContract = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.post(`${API_URL}/contracts`, contractData);
+    const createContractMutation = useMutation({
+        mutationFn: async (data) => await axios.post(`${API_URL}/contracts`, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['units', selectedProperty.id] });
             setView('UNITS');
-            fetchUnits(selectedProperty.id);
             alert('تم إنشاء العقد بنجاح');
-        } catch (err) { alert('فشل إنشاء العقد'); }
+        }
+    });
+
+    const handleCreateProperty = (e) => {
+        e.preventDefault();
+        createPropertyMutation.mutate(propData);
     };
 
-    if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>جاري التحميل...</div>;
+    const handleCreateUnit = (e) => {
+        e.preventDefault();
+        createUnitMutation.mutate(unitData);
+    };
+
+    const handleCreateContract = (e) => {
+        e.preventDefault();
+        createContractMutation.mutate(contractData);
+    };
+
+    if (propsLoading) {
+        return (
+            <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
+                <Clock className="animate-spin" size={32} style={{ margin: '0 auto 16px', display: 'block' }} />
+                جاري تحميل بيانات العقارات...
+            </div>
+        );
+    }
+
+    if (propsError) {
+        return (
+            <div style={{ textAlign: 'center', padding: '60px', color: '#ef4444', background: 'white', borderRadius: '16px' }}>
+                <AlertOctagon size={32} style={{ margin: '0 auto 16px', display: 'block' }} />
+                خطأ في تحميل العقارات. يرجى المحاولة مرة أخرى.
+            </div>
+        );
+    }
 
     return (
         <div className="fade-in" style={{ direction: 'rtl', fontFamily: 'Cairo, sans-serif' }}>
@@ -92,7 +102,7 @@ const RealEstatePage = () => {
                 <div>
                     <h2 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>إدارة الأملاك والعقارات</h2>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.9rem' }}>
-                        <span style={{ cursor: 'pointer' }} onClick={() => setView('PROPERTIES')}>العقارات</span>
+                        <span style={{ cursor: 'pointer' }} onClick={() => { setView('PROPERTIES'); setSelectedProperty(null); }}>العقارات</span>
                         {selectedProperty && (
                             <>
                                 <ChevronLeft size={16} />
@@ -119,7 +129,7 @@ const RealEstatePage = () => {
             {view === 'PROPERTIES' && (
                 <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
                     {properties.map(prop => (
-                        <div key={prop.id} onClick={() => { setSelectedProperty(prop); fetchUnits(prop.id); }} style={{ background: 'white', padding: '20px', borderRadius: '15px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', cursor: 'pointer', border: '1px solid #f1f5f9' }} className="card-hover">
+                        <div key={prop.id} onClick={() => { setSelectedProperty(prop); setView('UNITS'); }} style={{ background: 'white', padding: '20px', borderRadius: '15px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', cursor: 'pointer', border: '1px solid #f1f5f9' }} className="card-hover">
                             <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                 <div style={{ background: '#eff6ff', color: '#2563eb', padding: '12px', borderRadius: '12px' }}>
                                     <Building2 size={24} />

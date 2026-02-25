@@ -9,7 +9,7 @@ import IncomeStatement from './FinancialReports/IncomeStatement';
 import BalanceSheet from './FinancialReports/BalanceSheet';
 import GeneralLedger from './FinancialReports/GeneralLedger';
 
-const token = () => localStorage.getItem('token');
+const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 const StatCard = ({ title, value, sub, icon, color, trend }) => (
     <div style={{
@@ -66,40 +66,25 @@ const SectionTitle = ({ title, icon }) => (
 );
 
 export default function ReportsPage() {
-    const [data, setData] = useState({
-        invoices: [], partners: [], products: [], projects: [], employees: []
-    });
-    const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState('month');
     const [activeTab, setActiveTab] = useState('overview');
 
-    useEffect(() => {
-        const fetchAll = async () => {
-            setLoading(true);
-            try {
-                const headers = { Authorization: `Bearer ${token()}` };
-                const [inv, par, prod, proj, emp] = await Promise.all([
-                    axios.get(`${API_URL}/invoices`, { headers }),
-                    axios.get(`${API_URL}/partners`, { headers }),
-                    axios.get(`${API_URL}/products`, { headers }),
-                    axios.get(`${API_URL}/projects`, { headers }),
-                    axios.get(`${API_URL}/employees`, { headers })
-                ]);
-                setData({
-                    invoices: inv.data || [],
-                    partners: par.data || [],
-                    products: prod.data || [],
-                    projects: proj.data || [],
-                    employees: emp.data || []
-                });
-            } catch (e) {
-                console.error('Error loading reports:', e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAll();
-    }, []);
+    // Parallel Queries
+    const invoicesQ = useQuery({ queryKey: ['invoices'], queryFn: async () => (await axios.get(`${API_URL}/invoices`, { headers: H() })).data });
+    const partnersQ = useQuery({ queryKey: ['partners'], queryFn: async () => (await axios.get(`${API_URL}/partners`, { headers: H() })).data });
+    const productsQ = useQuery({ queryKey: ['products'], queryFn: async () => (await axios.get(`${API_URL}/products`, { headers: H() })).data });
+    const projectsQ = useQuery({ queryKey: ['projects'], queryFn: async () => (await axios.get(`${API_URL}/projects`, { headers: H() })).data });
+    const employeesQ = useQuery({ queryKey: ['employees'], queryFn: async () => (await axios.get(`${API_URL}/employees`, { headers: H() })).data });
+
+    const data = {
+        invoices: invoicesQ.data || [],
+        partners: partnersQ.data || [],
+        products: productsQ.data || [],
+        projects: projectsQ.data || [],
+        employees: employeesQ.data || []
+    };
+
+    const loading = invoicesQ.isLoading || partnersQ.isLoading || productsQ.isLoading || projectsQ.isLoading || employeesQ.isLoading;
 
     const filterByPeriod = (items, dateField = 'date') => {
         const now = new Date();

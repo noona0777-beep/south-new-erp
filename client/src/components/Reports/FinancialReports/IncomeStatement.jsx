@@ -1,38 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import API_URL from '../../../config';
-import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { TrendingUp, TrendingDown, DollarSign, Clock, AlertOctagon } from 'lucide-react';
 
-const token = () => localStorage.getItem('token');
+const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 const IncomeStatement = () => {
-    const [report, setReport] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
 
-    const fetchReport = async () => {
-        setLoading(true);
-        try {
+    const { data: report, isLoading, error } = useQuery({
+        queryKey: ['report', 'income-statement', startDate, endDate],
+        queryFn: async () => {
             const res = await axios.get(`${API_URL}/reports/income-statement?startDate=${startDate}&endDate=${endDate}`, {
-                headers: { Authorization: `Bearer ${token()}` }
+                headers: H()
             });
-            setReport(res.data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
+            return res.data;
         }
-    };
-
-    useEffect(() => {
-        fetchReport();
-    }, [startDate, endDate]);
+    });
 
     const format = (v) => Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2 });
 
-    if (loading) return <div>جاري التحميل...</div>;
-    if (!report) return <div>لا توجد بيانات</div>;
+    if (isLoading) return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+            <Clock className="animate-spin" size={24} style={{ marginBottom: 10, display: 'block', margin: '0 auto' }} />
+            جاري التحميل...
+        </div>
+    );
+
+    if (error) return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444', background: '#fef2f2', borderRadius: 12 }}>
+            <AlertOctagon size={24} style={{ marginBottom: 10, display: 'block', margin: '0 auto' }} />
+            خطأ في تحميل قائمة الدخل
+        </div>
+    );
+
+    if (!report) return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+            لا توجد بيانات للفترة المحددة
+        </div>
+    );
 
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto', background: 'white', padding: '20px 24px', borderRadius: '20px', border: '1px solid #f1f5f9', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)' }}>
