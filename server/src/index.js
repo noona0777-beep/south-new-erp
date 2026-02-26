@@ -2122,7 +2122,7 @@ app.get('/api/reports/general-ledger', async (req, res) => {
 });
 
 // --- Field Operations & AI Routes ---
-const fieldOpsRouter = require('./routes/fieldOps');
+const fieldOpsRouter = require('./routes/fieldOps')(prisma);
 app.use('/api/field-ops', authenticate, fieldOpsRouter);
 
 // --- Document & Archive Routes ---
