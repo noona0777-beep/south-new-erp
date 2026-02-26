@@ -275,6 +275,8 @@ model Project {
   invoices    Invoice[]
   tasks       Task[]
   documents   Document[]
+  siteVisits  SiteVisit[]
+  
   constructionContract ConstructionContract?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -282,20 +284,126 @@ model Project {
 
 model Task {
   id          Int       @id @default(autoincrement())
+  taskNumber  String?   @unique
   title       String
   description String?
-  status      String    @default("TODO") // TODO, IN_PROGRESS, DONE, BLOCKED
+  type        String    @default("OFFICE") // FIELD, OFFICE
+  status      String    @default("NEW") // NEW, IN_PROGRESS, PENDING_CLOSURE, CLOSED
   priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  phase       String?   // FOUNDATION, STRUCTURE, ISOLATION, FINISHING, ELECTRICAL, MECHANICAL, ARCHITECTURAL
+  sbcClause   String?
+  riskLevel   String    @default("LOW") // CRITICAL, MEDIUM, LOW
+  
   dueDate     DateTime?
   
   projectId   Int?
   project     Project?  @relation(fields: [projectId], references: [id])
   
   assignedTo  String?
+  engineerId  Int?
+  engineer    Employee? @relation(fields: [engineerId], references: [id])
   
+  measurements Json?
+  engineerNotes String? @db.Text
+  gpsLocation   String?
+  supervisorSignature String? @db.Text
+  contractorSignature String? @db.Text
+
+  attachments   TaskAttachment[]
+  tickets       Ticket[]
+  risks         Risk[]
+  aiReports     AIReport[]
+  planComparisons PlanComparison[]
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
+
+// -- Field Operations & AI Related Models --
+
+model TaskAttachment {
+  id        Int      @id @default(autoincrement())
+  taskId    Int
+  task      Task     @relation(fields: [taskId], references: [id])
+  fileUrl   String
+  fileType  String   // IMAGE, VIDEO, PDF, AUDIO, PANORAMA_360
+  name      String?
+  createdAt DateTime @default(now())
+}
+
+model Ticket {
+  id          Int      @id @default(autoincrement())
+  taskId      Int
+  task        Task     @relation(fields: [taskId], references: [id])
+  title       String
+  description String?  @db.Text
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteVisit {
+  id          Int      @id @default(autoincrement())
+  projectId   Int
+  project     Project  @relation(fields: [projectId], references: [id])
+  engineerId  Int
+  engineer    Employee @relation(fields: [engineerId], references: [id])
+  date        DateTime @default(now())
+  notes       String?  @db.Text
+  gpsLocation String?
+  createdAt   DateTime @default(now())
+}
+
+model Risk {
+  id             Int      @id @default(autoincrement())
+  taskId         Int?
+  task           Task?    @relation(fields: [taskId], references: [id])
+  description    String   @db.Text
+  severity       String   @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
+  mitigationPlan String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model EngineerScore {
+  id                  Int      @id @default(autoincrement())
+  engineerId          Int
+  engineer            Employee @relation(fields: [engineerId], references: [id])
+  month               Int
+  year                Int
+  tasksCompletedScore Float    @default(0)
+  closureSpeedScore   Float    @default(0)
+  reportQualityScore  Float    @default(0)
+  aiAccuracyScore     Float    @default(0)
+  attendanceScore     Float    @default(0)
+  finalScore          Float    @default(0)
+  createdAt           DateTime @default(now())
+  
+  @@unique([engineerId, month, year])
+}
+
+model AIReport {
+  id                Int      @id @default(autoincrement())
+  taskId            Int
+  task              Task     @relation(fields: [taskId], references: [id])
+  imageUrl          String
+  analysisResult    Json?    // violations, cracks, etc
+  progressExtracted Float?
+  sbcViolations     String?  @db.Text
+  createdAt         DateTime @default(now())
+}
+
+model PlanComparison {
+  id                 Int      @id @default(autoincrement())
+  taskId             Int
+  task               Task     @relation(fields: [taskId], references: [id])
+  planUrl            String
+  siteImageUrl       String
+  differenceMapUrl   String?
+  progressPercentage Float?
+  createdAt          DateTime @default(now())
+}
+
 
 
 // 7. Real Estate
@@ -382,6 +490,11 @@ model Employee {
   
   salaries    SalaryRecord[]
   documents   Document[]
+  
+  // Field Operations Relations
+  tasks       Task[]
+  siteVisits  SiteVisit[]
+  scores      EngineerScore[]
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

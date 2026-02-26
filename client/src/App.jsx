@@ -19,6 +19,7 @@ import AccountingPage from './components/Accounting/AccountingPage';
 import DocumentsPage from './components/Documents/DocumentsPage';
 import ContractsPage from './components/Contracts/ContractsPage';
 import ContractPrint from './components/Contracts/ContractPrint';
+import FieldOpsPage from './components/FieldOps/FieldOpsPage';
 import DataRecordSummary from './components/Common/DataRecordSummary';
 import API_URL from './config';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
@@ -53,7 +54,7 @@ axios.interceptors.request.use((config) => {
 import {
     LayoutDashboard, ShoppingCart, Users, Briefcase, Building2,
     DollarSign, FileBarChart2, Settings, Bell, Search, Menu, X,
-    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages, ShieldCheck, Activity
+    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages, ShieldCheck, Activity, HardHat
 } from 'lucide-react';
 
 /* --- UI Components --- */
@@ -431,6 +432,7 @@ const Layout = ({ user, onLogout }) => {
                     {hasPermission('real_estate') && <NavLink to="/real-estate" icon={<Building2 />} label={t('real_estate')} active={isActive('/real-estate')} i18n={i18n} onClick={closeSidebar} />}
                     {hasPermission('archive') && <NavLink to="/archive" icon={<Folder />} label={t('archive')} active={isActive('/archive')} i18n={i18n} onClick={closeSidebar} />}
                     {hasPermission('reports') && <NavLink to="/reports" icon={<FileBarChart2 />} label={t('reports')} active={isActive('/reports')} i18n={i18n} onClick={closeSidebar} />}
+                    {hasPermission('all') && <NavLink to="/field-ops" icon={<HardHat />} label={t('field_ops', 'الإشراف الميداني')} active={isActive('/field-ops')} i18n={i18n} onClick={closeSidebar} />}
                     {hasPermission('all') && <NavLink to="/zatca" icon={<ShieldCheck />} label={t('zatca_dashboard', 'مراقبة زاتكا')} active={isActive('/zatca')} i18n={i18n} onClick={closeSidebar} />}
                     <NavLink to="/users" icon={<Settings />} label={t('settings')} active={isActive('/users')} i18n={i18n} onClick={closeSidebar} />
                 </nav>
@@ -560,6 +562,7 @@ const Layout = ({ user, onLogout }) => {
                                 <Route path="/real-estate" element={<RealEstatePage />} />
                                 <Route path="/archive" element={<DocumentsPage />} />
                                 <Route path="/reports" element={<ReportsPage />} />
+                                <Route path="/field-ops" element={<FieldOpsPage />} />
                                 <Route path="/zatca" element={<ZatcaDashboard />} />
                                 <Route path="/users" element={<SettingsPage />} />
                             </Routes>
