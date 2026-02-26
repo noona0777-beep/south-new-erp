@@ -73,23 +73,10 @@ const authorize = (roles = []) => {
     };
 };
 
-// Detailed Logging Middleware
+// Logging Middleware
 app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl || req.url} - ${res.statusCode} (${duration}ms)`);
-    });
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
-});
-
-// Diagnostic Route
-app.get('/api/whoami', (req, res) => {
-    res.json({
-        message: "You are talking to the local Antigravity server on port 5000",
-        timestamp: new Date().toISOString(),
-        env: process.env.NODE_ENV || 'development'
-    });
 });
 
 // --- Health Checks ---
@@ -376,19 +363,12 @@ app.get('/api/status', async (req, res) => {
 // --- Auth Routes ---
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
-    console.log(`[LOGIN ATTEMPT] Email: ${email}`);
     try {
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
-            console.log(`[LOGIN FAILED] User not found: ${email}`);
-            return res.status(400).json({ error: 'البريد الإلكتروني غير مسجل' });
-        }
+        if (!user) return res.status(400).json({ error: 'البريد الإلكتروني غير مسجل' });
 
         const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-            console.log(`[LOGIN FAILED] Invalid password for: ${email}`);
-            return res.status(400).json({ error: 'كلمة المرور غير صحيحة' });
-        }
+        if (!validPassword) return res.status(400).json({ error: 'كلمة المرور غير صحيحة' });
 
         const token = jwt.sign({ id: user.id, role: user.role, name: user.name }, JWT_SECRET, { expiresIn: '24h' });
 
