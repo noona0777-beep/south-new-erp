@@ -262,8 +262,8 @@ const Login = ({ onSuccess }) => {
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Tajawal, sans-serif', direction: 'rtl', background: '#F8FAFC' }}>
-            <div style={{ width: '100%', maxWidth: '580px', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px', background: '#FFFFFF', position: 'relative', zIndex: 10 }}>
-                <div style={{ maxWidth: '420px', margin: '0 auto', width: '100%' }}>
+            <div style={{ width: '100%', maxWidth: '450px', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '40px', background: '#FFFFFF', position: 'relative', zIndex: 10, boxShadow: '-10px 0 30px rgba(0,0,0,0.05)' }}>
+                <div style={{ maxWidth: '350px', margin: '0 auto', width: '100%' }}>
 
                     {/* Brand Header */}
                     <motion.div
