@@ -165,7 +165,7 @@ const Login = ({ onSuccess }) => {
                 <button type="button" onClick={() => setMode('forgot-username')} style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '0.85rem', cursor: 'pointer' }}>نسيت اسم المستخدم؟</button>
             </div>
 
-            <motion.button type="submit" {...buttonProps} disabled={loading}>
+            <motion.button type="submit" onClick={handleLogin} {...buttonProps} disabled={loading}>
                 {loading ? <Loader2 size={24} className="spin" /> : <><LogIn size={22} /> دخول للنظام</>}
             </motion.button>
         </motion.div>
