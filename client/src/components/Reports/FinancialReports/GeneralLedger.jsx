@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import API_URL from '../../../config';
 import { Search, Printer, Download, ArrowRight, ArrowLeft, Clock, AlertOctagon } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -33,6 +34,21 @@ const GeneralLedger = () => {
     });
 
     const format = (v) => v === 0 ? '-' : Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+    const handleDownloadPDF = () => {
+        const element = document.getElementById('ledger-content');
+        if (!element) return;
+
+        const opt = {
+            margin: 10,
+            filename: `كشف_حساب_${report?.account?.name || 'عام'}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save();
+    };
 
     return (
         <div style={{ background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
@@ -66,8 +82,11 @@ const GeneralLedger = () => {
                     >
                         <Search size={18} /> تحديث الكشف
                     </button>
-                    <button onClick={() => window.print()} style={{ padding: '10px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }}>
+                    <button onClick={() => window.print()} style={{ padding: '10px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', color: '#64748b' }} title="طباعة">
                         <Printer size={18} />
+                    </button>
+                    <button onClick={handleDownloadPDF} style={{ padding: '10px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', color: '#ef4444' }} title="تحميل بصيغة PDF">
+                        <Download size={18} />
                     </button>
                 </div>
             </div>
@@ -87,7 +106,7 @@ const GeneralLedger = () => {
             )}
 
             {report && !isLoading && (
-                <div className="fade-in">
+                <div className="fade-in" id="ledger-content" style={{ padding: '20px', background: 'white' }}>
                     <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                         <h2 style={{ margin: 0, color: '#1e293b', fontSize: '1.4rem' }}>كشف حساب تفصيلي</h2>
                         <p style={{ margin: '8px 0', color: '#64748b', fontSize: '0.95rem' }}>الحساب: <strong>{report.account.name} ({report.account.code})</strong></p>
