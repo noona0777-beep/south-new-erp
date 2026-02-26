@@ -135,7 +135,7 @@ const GeneralLedger = () => {
                 </div>
             )}
 
-            {!report && !loading && (
+            {!report && !isLoading && (
                 <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
                     يرجى اختيار الحساب والفترة التاريخية لعرض كشف الحساب
                 </div>
