@@ -11,7 +11,7 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER || 'noona0777@gmail.com',
+        user: 'noona0777@gmail.com',
         pass: process.env.EMAIL_PASS
     }
 });
@@ -418,7 +418,7 @@ app.post('/api/forgot-password', async (req, res) => {
 
         // Send Email (Real Delivery)
         const mailOptions = {
-            from: `"South New System" <${process.env.EMAIL_USER || 'noona0777@gmail.com'}>`,
+            from: '"South New System" <noona0777@gmail.com>',
             to: user.email,
             subject: 'رمز استعادة كلمة المرور - نظام الجنوب الجديد',
             html: `
@@ -438,15 +438,8 @@ app.post('/api/forgot-password', async (req, res) => {
         await transporter.sendMail(mailOptions);
         res.json({ message: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' });
     } catch (error) {
-        console.error('Forgot Password Details:', {
-            error: error.message,
-            stack: error.stack,
-            smtpError: error.response
-        });
-        res.status(500).json({
-            error: 'فشل إرسال الرمز، يرجى المحاولة لاحقاً',
-            details: error.message
-        });
+        console.error('Forgot Password Error:', error);
+        res.status(500).json({ error: 'فشل إرسال الرمز، يرجى المحاولة لاحقاً' });
     }
 });
 
@@ -509,7 +502,7 @@ app.post('/api/forgot-username', async (req, res) => {
 
         // For security, we send it via email since we have it
         const mailOptions = {
-            from: `"South New System" <${process.env.EMAIL_USER || 'noona0777@gmail.com'}>`,
+            from: '"South New System" <noona0777@gmail.com>',
             to: user.email,
             subject: 'تذكير ببيانات الحساب - نظام الجنوب الجديد',
             html: `
@@ -2284,8 +2277,6 @@ app.put('/api/notifications/read-all', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
-const path = require('path');
 
 // --- Audit Logs ---
 app.get('/api/logs', async (req, res) => {
