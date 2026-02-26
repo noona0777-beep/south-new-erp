@@ -144,28 +144,36 @@ module.exports = function (prisma) {
     // 4. AI INTEGRATION (الذכاء الاصطناعي)
     // ==========================================
 
-    // Mocking AI analysis for now. Returns detected violations.
+    const { analyzeConstructionImage } = require('../services/openaiService');
+
+    // Real AI analysis using OpenAI GPT-4o Vision
     router.post('/ai/analyze-image', async (req, res) => {
         try {
-            const { taskId, imageUrl } = req.body;
-            // Mock AI Results
-            const analysisResult = {
-                detectedObjects: ["Rebar", "Concrete", "Formwork"],
-                cracksDetected: Math.random() > 0.5,
-                coverDepthEstimated: "5cm",
-                anomalies: ["Exposed rebar rust", "Insufficient vibration near edges"]
-            };
+            const { taskId, imageBase64 } = req.body;
+
+            if (!imageBase64) {
+                return res.status(400).json({ error: 'لم يتم إرسال الصورة للتحليل' });
+            }
+
+            // Call real openai service
+            const analysisResult = await analyzeConstructionImage(imageBase64);
+
+            const sbcViolationsStr = analysisResult.sbcViolations && analysisResult.sbcViolations !== "لا يوجد"
+                ? analysisResult.sbcViolations
+                : "غير مبين أو لا توجد مخالفات واضحة";
+
             const aiReport = await prisma.aIReport.create({
                 data: {
                     taskId: parseInt(taskId),
-                    imageUrl,
-                    analysisResult,
-                    progressExtracted: Math.floor(Math.random() * 30) + 10, // random 10-40% progress addition
-                    sbcViolations: "SBC-304: Insufficient curing time observed."
+                    imageUrl: "https://via.placeholder.com/600", // Save placeholder URL for now if no S3
+                    analysisResult: analysisResult,
+                    progressExtracted: parseInt(analysisResult.progressExtracted) || 0,
+                    sbcViolations: sbcViolationsStr
                 }
             });
             res.json(aiReport);
         } catch (error) {
+            console.error(error);
             res.status(500).json({ error: error.message });
         }
     });
