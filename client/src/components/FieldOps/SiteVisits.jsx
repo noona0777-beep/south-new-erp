@@ -4,12 +4,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { MapPin, Plus, Clock, User } from 'lucide-react';
 import API_URL from '../../config';
+import CreateVisitModal from './CreateVisitModal';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 const SiteVisits = ({ projectId }) => {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const { data: visits = [], isLoading } = useQuery({
         queryKey: ['fieldOps', 'visits', projectId],
@@ -56,6 +58,12 @@ const SiteVisits = ({ projectId }) => {
                     </div>
                 )}
             </div>
+
+            <CreateVisitModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                projectId={projectId}
+            />
         </div>
     );
 };
