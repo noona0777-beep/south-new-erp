@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { MapPin, Plus, Clock, User } from 'lucide-react';
-import API_URL from '../../../config';
+import API_URL from '../../config';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 

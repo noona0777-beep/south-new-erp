@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Plus, Clock, CheckCircle2, AlertCircle, LayoutGrid, List } from 'lucide-react';
 import { motion } from 'framer-motion';
-import API_URL from '../../../config';
+import API_URL from '../../config';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 

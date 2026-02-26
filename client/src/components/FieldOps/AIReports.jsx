@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BrainCircuit, UploadCloud, AlertTriangle, Layers, Zap, Image as ImageIcon, Camera } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import API_URL from '../../../config';
+import API_URL from '../../config';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
