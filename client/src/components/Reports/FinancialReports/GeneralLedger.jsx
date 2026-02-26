@@ -35,19 +35,44 @@ const GeneralLedger = () => {
 
     const format = (v) => v === 0 ? '-' : Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2 });
 
-    const handleDownloadPDF = () => {
+    const handleDownloadPDF = async () => {
         const element = document.getElementById('ledger-content');
         if (!element) return;
 
+        // Save original style to restore later
+        const originalStyle = element.getAttribute('style') || '';
+
+        // Temporarily adjust styles for perfect PDF capture
+        element.style.width = '100%';
+        element.style.height = 'auto';
+        element.style.position = 'relative';
+        element.style.overflow = 'visible';
+
+        // Scroll to top to avoid html2canvas capturing blank space
+        const currentScrollY = window.scrollY;
+        window.scrollTo(0, 0);
+
         const opt = {
-            margin: 10,
+            margin: [10, 10, 10, 10], // Top, Left, Bottom, Right
             filename: `GeneralLedger_${report?.account?.code || 'Statement'}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                scrollY: 0,
+                windowWidth: element.scrollWidth
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } // Landscape to fit tables better
         };
 
-        html2pdf().set(opt).from(element).save();
+        try {
+            await html2pdf().set(opt).from(element).save();
+        } finally {
+            // Restore everything
+            element.setAttribute('style', originalStyle);
+            window.scrollTo(0, currentScrollY);
+        }
     };
 
     return (
