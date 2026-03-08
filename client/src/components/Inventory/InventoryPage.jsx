@@ -8,7 +8,7 @@ import {
     DollarSign, AlertTriangle, TrendingDown, Layers,
     ChevronDown, Filter, AlertOctagon
 } from 'lucide-react';
-import API_URL from '../../config';
+import API_URL from '@/config';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -310,7 +310,23 @@ export default function InventoryPage() {
             </div>
 
             <div style={{ marginBottom: 14 }}>
-                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none', alignItems: 'center' }}>
+                <style>{`
+                    .tabs-container::-webkit-scrollbar {
+                        height: 5px;
+                    }
+                    .tabs-container::-webkit-scrollbar-track {
+                        background: rgba(255,255,255,0.02);
+                        border-radius: 10px;
+                    }
+                    .tabs-container::-webkit-scrollbar-thumb {
+                        background: rgba(59,130,246,0.3);
+                        border-radius: 10px;
+                    }
+                    .tabs-container::-webkit-scrollbar-thumb:hover {
+                        background: rgba(59,130,246,0.5);
+                    }
+                `}</style>
+                <div className="tabs-container" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10, alignItems: 'center', WebkitOverflowScrolling: 'touch' }}>
                     <button onClick={() => setActiveCat('all')}
                         style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', borderRadius: 50, border: activeCat === 'all' ? '1.5px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.07)', background: activeCat === 'all' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)', color: activeCat === 'all' ? '#60a5fa' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.82rem' }}>
                         🏠 جميع المنتجات <span style={{ background: activeCat === 'all' ? '#3b82f6' : 'rgba(255,255,255,0.08)', color: 'white', borderRadius: 50, padding: '1px 8px', fontSize: '0.72rem' }}>{products.length}</span>
@@ -327,7 +343,7 @@ export default function InventoryPage() {
                             </button>
                         );
                     })}
-                    <div style={{ marginRight: 'auto' }} />
+                    <div style={{ marginRight: 'auto', flexShrink: 0, width: 20 }} />
                     <button onClick={() => setModal('add-cat')} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 50, border: '1.5px dashed rgba(59,130,246,0.3)', background: 'rgba(59,130,246,0.05)', color: '#3b82f6', fontSize: '0.78rem', cursor: 'pointer' }}>
                         <Plus size={12} /> إضافة قسم
                     </button>

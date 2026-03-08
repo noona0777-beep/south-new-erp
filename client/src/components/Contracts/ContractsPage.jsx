@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import API_URL from '../../config';
+import API_URL from '@/config';
 import {
     Plus, Search, FileText, Calendar, User,
     Briefcase, MoreVertical, Edit, Trash2, Printer,

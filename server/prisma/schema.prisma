@@ -10,17 +10,22 @@ datasource db {
 
 // 1. Authentication
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  phone     String?  @unique
-  password  String
-  otp       String?
-  otpExpiry DateTime?
-  name      String
-  role      String   @default("USER")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  logs      ActivityLog[]
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
+  phone       String?       @unique
+  password    String
+  otp         String?
+  otpExpiry   DateTime?
+  name        String
+  role        String        @default("USER")
+  status      String        @default("ACTIVE") // ACTIVE, BLOCKED
+  jobTitle    String?
+  department  String?
+  permissions Json?         // Detailed module-based permissions
+  lastLogin   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  logs        ActivityLog[]
 }
 
 model ActivityLog {
@@ -43,6 +48,7 @@ model Partner {
   address      String?
   phone        String?
   email        String?
+  password     String?
   balance      Float     @default(0.0)
   creditLimit  Float?
   
@@ -53,6 +59,8 @@ model Partner {
   contracts    RealEstateContract[]
   constructionContracts ConstructionContract[] @relation(name: "ClientContracts")
   documents    Document[]
+  lead         Lead?   // Related to CRM Lead
+  feedbacks    Feedback[] 
   
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -174,6 +182,7 @@ model Product {
   movements   StockMovement[]
   invoiceItems InvoiceItem[]
   quoteItems  QuoteItem[]
+  materialRequests MaterialRequest[]
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -314,6 +323,8 @@ model Task {
   risks         Risk[]
   aiReports     AIReport[]
   planComparisons PlanComparison[]
+  feedback      Feedback?
+  materialRequests MaterialRequest[]
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -351,6 +362,8 @@ model SiteVisit {
   date        DateTime @default(now())
   notes       String?  @db.Text
   gpsLocation String?
+  rating      Int?     // التقييم من العميل (1-5)
+  materialRequests MaterialRequest[]
   createdAt   DateTime @default(now())
 }
 
@@ -366,18 +379,22 @@ model Risk {
 }
 
 model EngineerScore {
-  id                  Int      @id @default(autoincrement())
-  engineerId          Int
-  engineer            Employee @relation(fields: [engineerId], references: [id])
-  month               Int
-  year                Int
-  tasksCompletedScore Float    @default(0)
-  closureSpeedScore   Float    @default(0)
-  reportQualityScore  Float    @default(0)
-  aiAccuracyScore     Float    @default(0)
-  attendanceScore     Float    @default(0)
-  finalScore          Float    @default(0)
-  createdAt           DateTime @default(now())
+  id                    Int      @id @default(autoincrement())
+  engineerId            Int
+  engineer              Employee @relation(fields: [engineerId], references: [id])
+  month                 Int
+  year                  Int
+  tasksCompletedScore   Float    @default(0)
+  closureSpeedScore     Float    @default(0)
+  reportQualityScore    Float    @default(0)
+  aiAccuracyScore       Float    @default(0)
+  attendanceScore       Float    @default(0)
+  safetyComplianceScore Float    @default(0)
+  gpsAccuracyScore      Float    @default(0)
+  technicalDepthScore   Float    @default(0)
+  feedbackScore         Float    @default(0)
+  finalScore            Float    @default(0)
+  createdAt             DateTime @default(now())
   
   @@unique([engineerId, month, year])
 }
@@ -495,6 +512,12 @@ model Employee {
   tasks       Task[]
   siteVisits  SiteVisit[]
   scores      EngineerScore[]
+  materialRequests MaterialRequest[]
+  
+  // CRM Relations
+  leads       Lead[]
+  crmActivities CRMActivity[]
+  feedbacks   Feedback[]
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -592,4 +615,97 @@ model ConstructionContractItem {
   quantity    Float
   unitPrice   Float
   total       Float
+}
+
+// 14. CRM & Sales
+model Lead {
+  id          Int      @id @default(autoincrement())
+  name        String
+  company     String?
+  email       String?
+  phone       String?
+  source      String?  // WEBSITE, REFERRAL, SOCIAL_MEDIA, OTHER
+  status      String   @default("NEW") // NEW, CONTACTED, QUALIFIED, LOST, CONVERTED
+  notes       String?  @db.Text
+  
+  assignedToId Int?
+  assignedTo  Employee? @relation(fields: [assignedToId], references: [id])
+  
+  opportunities Opportunity[]
+  activities    CRMActivity[]
+  
+  partnerId   Int?      @unique // If converted to a client
+  partner     Partner?  @relation(fields: [partnerId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Opportunity {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String?  @db.Text
+  value         Float    @default(0)
+  probability   Int      @default(0) // 0-100%
+  expectedClose DateTime?
+  stage         String   @default("DISCOVERY") // DISCOVERY, PROPOSAL, NEGOTIATION, WON, LOST
+  
+  leadId        Int
+  lead          Lead     @relation(fields: [leadId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model CRMActivity {
+  id          Int      @id @default(autoincrement())
+  type        String   // CALL, EMAIL, MEETING, NOTE
+  subject     String
+  description String?  @db.Text
+  date        DateTime @default(now())
+  
+  leadId      Int
+  lead        Lead     @relation(fields: [leadId], references: [id])
+  
+  employeeId  Int?
+  employee    Employee? @relation(fields: [employeeId], references: [id])
+  
+  createdAt   DateTime @default(now())
+}
+
+model Feedback {
+  id          Int      @id @default(autoincrement())
+  clientId    Int
+  client      Partner  @relation(fields: [clientId], references: [id])
+  engineerId  Int
+  engineer    Employee @relation(fields: [engineerId], references: [id])
+  taskId      Int?     @unique
+  task        Task?    @relation(fields: [taskId], references: [id])
+  rating      Int      // 1-5 نجوم
+  comment     String?  @db.Text
+  createdAt   DateTime @default(now())
+}
+
+// 15. Material Requests via Field Ops
+model MaterialRequest {
+  id            Int       @id @default(autoincrement())
+  reqNumber     String?   @unique
+  siteVisitId   Int?
+  siteVisit     SiteVisit? @relation(fields: [siteVisitId], references: [id])
+  taskId        Int?
+  task          Task?      @relation(fields: [taskId], references: [id])
+  
+  engineerId    Int
+  engineer      Employee   @relation(fields: [engineerId], references: [id])
+  
+  productId     Int
+  product       Product    @relation(fields: [productId], references: [id])
+  
+  quantity      Float      @default(1)
+  status        String     @default("PENDING") // PENDING, APPROVED, DELIVERED, REJECTED
+  urgency       String     @default("NORMAL")  // NORMAL, URGENT, EMERGENCY
+  notes         String?    @db.Text
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }

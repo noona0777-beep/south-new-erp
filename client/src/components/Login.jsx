@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Mail, Lock, LogIn, Loader2, AlertCircle, Eye, EyeOff, ChevronLeft, Phone, Hash, ShieldCheck, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import API_URL from '../config';
+import API_URL from '@/config';
 
 const Login = ({ onSuccess }) => {
     const [mode, setMode] = useState('login');
+    const [userType, setUserType] = useState('EMPLOYEE');
     const [credentials, setCredentials] = useState({ email: '', password: '', contact: '', otp: '', newPassword: '', phone: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -21,7 +22,12 @@ const Login = ({ onSuccess }) => {
         setError('');
         setLoading(true);
         try {
-            const res = await axios.post(`${API_URL}/login`, { email: credentials.email, password: credentials.password });
+            const endpoint = userType === 'CLIENT' ? `${API_URL}/client-portal/login` : `${API_URL}/login`;
+            const payload = userType === 'CLIENT'
+                ? { identifier: credentials.email, password: credentials.password }
+                : { email: credentials.email, password: credentials.password };
+
+            const res = await axios.post(endpoint, payload);
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             onSuccess(res.data.user);
@@ -99,8 +105,7 @@ const Login = ({ onSuccess }) => {
     // Shared UI Utilities
     const inputContainerStyle = (name) => ({
         position: 'relative',
-        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        transform: focusedField === name ? 'scale(1.02)' : 'scale(1)',
+        transition: 'all 0.3s ease',
         marginBottom: '20px'
     });
 
@@ -118,6 +123,16 @@ const Login = ({ onSuccess }) => {
         boxSizing: 'border-box',
         transition: 'all 0.3s ease',
         boxShadow: focusedField === name ? '0 8px 20px rgba(10, 26, 47, 0.08)' : 'none',
+    });
+
+    const iconStyle = (name) => ({
+        position: 'absolute',
+        right: '16px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        color: focusedField === name ? '#0A1A2F' : '#94A3B8',
+        pointerEvents: 'none',
+        zIndex: 2
     });
 
     const buttonProps = {
@@ -143,20 +158,29 @@ const Login = ({ onSuccess }) => {
 
     const renderLoginForm = () => (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+
+            {/* User Type Toggle */}
+            <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: '12px', padding: '6px', marginBottom: '24px' }}>
+                <button type="button" onClick={() => setUserType('EMPLOYEE')} style={{ flex: 1, padding: '10px', border: 'none', background: userType === 'EMPLOYEE' ? '#0A1A2F' : 'transparent', color: userType === 'EMPLOYEE' ? '#FFF' : '#64748B', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s' }}>دخول الموظفين</button>
+                <button type="button" onClick={() => setUserType('CLIENT')} style={{ flex: 1, padding: '10px', border: 'none', background: userType === 'CLIENT' ? '#0A1A2F' : 'transparent', color: userType === 'CLIENT' ? '#FFF' : '#64748B', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s' }}>بوابة العملاء</button>
+            </div>
+
             <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, fontSize: '0.9rem', color: '#475569' }}>البريد الإلكتروني</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, fontSize: '0.9rem', color: '#475569' }}>
+                    {userType === 'CLIENT' ? 'البريد الإلكتروني أو الجوال' : 'البريد الإلكتروني'}
+                </label>
                 <div style={inputContainerStyle('email')}>
-                    <Mail size={20} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: focusedField === 'email' ? '#0A1A2F' : '#94A3B8' }} />
-                    <input type="email" name="email" value={credentials.email} onChange={handleChange} onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField('')} required placeholder="admin@south.com" style={inputStyle('email')} />
+                    <Mail size={20} style={iconStyle('email')} />
+                    <input type="text" name="email" value={credentials.email} onChange={handleChange} onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField('')} required placeholder="admin@south.com" style={inputStyle('email')} autoComplete="off" />
                 </div>
             </div>
 
             <div style={{ marginBottom: '18px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, fontSize: '0.9rem', color: '#475569' }}>كلمة المرور</label>
                 <div style={inputContainerStyle('password')}>
-                    <Lock size={20} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: focusedField === 'password' ? '#0A1A2F' : '#94A3B8' }} />
+                    <Lock size={20} style={iconStyle('password')} />
                     <input type={showPass ? 'text' : 'password'} name="password" value={credentials.password} onChange={handleChange} onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField('')} required placeholder="••••••••" style={inputStyle('password')} />
-                    <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8' }}>{showPass ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                    <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', zIndex: 3 }}>{showPass ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                 </div>
             </div>
 
@@ -165,7 +189,7 @@ const Login = ({ onSuccess }) => {
                 <button type="button" onClick={() => setMode('forgot-username')} style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '0.85rem', cursor: 'pointer' }}>نسيت اسم المستخدم؟</button>
             </div>
 
-            <motion.button type="submit" onClick={handleLogin} {...buttonProps} disabled={loading}>
+            <motion.button type="button" onClick={handleLogin} {...buttonProps} disabled={loading}>
                 {loading ? <Loader2 size={24} className="spin" /> : <><LogIn size={22} /> دخول للنظام</>}
             </motion.button>
         </motion.div>
@@ -182,11 +206,11 @@ const Login = ({ onSuccess }) => {
             </div>
 
             <div style={inputContainerStyle('contact')}>
-                <Mail size={20} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: focusedField === 'contact' ? '#0A1A2F' : '#94A3B8' }} />
-                <input name="contact" value={credentials.contact} onChange={handleChange} onFocus={() => setFocusedField('contact')} onBlur={() => setFocusedField('')} required placeholder="البريد الإلكتروني أو الجوال" style={inputStyle('contact')} />
+                <Mail size={20} style={iconStyle('contact')} />
+                <input type="text" name="contact" value={credentials.contact} onChange={handleChange} onFocus={() => setFocusedField('contact')} onBlur={() => setFocusedField('')} required placeholder="البريد الإلكتروني أو الجوال" style={inputStyle('contact')} autoComplete="off" />
             </div>
 
-            <motion.button type="submit" onClick={handleForgotPassword} {...buttonProps} disabled={loading} style={{ ...buttonProps.style, marginTop: '10px' }}>
+            <motion.button type="button" onClick={handleForgotPassword} {...buttonProps} disabled={loading} style={{ ...buttonProps.style, marginTop: '10px' }}>
                 {loading ? <Loader2 size={24} className="spin" /> : 'إرسال الرمز'}
             </motion.button>
 
@@ -202,11 +226,11 @@ const Login = ({ onSuccess }) => {
             </div>
 
             <div style={inputContainerStyle('otp')}>
-                <Hash size={20} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: focusedField === 'otp' ? '#0A1A2F' : '#94A3B8' }} />
+                <Hash size={20} style={iconStyle('otp')} />
                 <input name="otp" value={credentials.otp} onChange={handleChange} onFocus={() => setFocusedField('otp')} onBlur={() => setFocusedField('')} required placeholder="0 0 0 0 0 0" style={{ ...inputStyle('otp'), textAlign: 'center', letterSpacing: '8px', fontSize: '1.5rem', fontWeight: 800 }} />
             </div>
 
-            <motion.button type="submit" onClick={handleVerifyOtp} {...buttonProps} disabled={loading}>
+            <motion.button type="button" onClick={handleVerifyOtp} {...buttonProps} disabled={loading}>
                 {loading ? <Loader2 size={24} className="spin" /> : 'تحقق الآن'}
             </motion.button>
             <button type="button" onClick={() => setMode('forgot-password')} style={backButtonStyle}>لم يصلك الرمز؟ إعادة إرسال</button>
@@ -219,10 +243,10 @@ const Login = ({ onSuccess }) => {
                 <h2 style={{ fontSize: '1.6rem', color: '#0A1A2F', fontWeight: 800 }}>كلمة مرور جديدة</h2>
             </div>
             <div style={inputContainerStyle('newPassword')}>
-                <Lock size={20} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: focusedField === 'newPassword' ? '#0A1A2F' : '#94A3B8' }} />
+                <Lock size={20} style={iconStyle('newPassword')} />
                 <input type="password" name="newPassword" value={credentials.newPassword} onChange={handleChange} onFocus={() => setFocusedField('newPassword')} onBlur={() => setFocusedField('')} required placeholder="كلمة المرور الجديدة" style={inputStyle('newPassword')} />
             </div>
-            <motion.button type="submit" onClick={handleResetPassword} {...buttonProps} disabled={loading}>
+            <motion.button type="button" onClick={handleResetPassword} {...buttonProps} disabled={loading}>
                 {loading ? <Loader2 size={24} className="spin" /> : 'تحديث كلمة المرور'}
             </motion.button>
         </motion.div>
@@ -235,10 +259,10 @@ const Login = ({ onSuccess }) => {
                 <p style={{ color: '#64748B', fontSize: '0.95rem' }}>أدخل رقم الجوال المربوط بحسابك</p>
             </div>
             <div style={inputContainerStyle('phone')}>
-                <Phone size={20} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: focusedField === 'phone' ? '#0A1A2F' : '#94A3B8' }} />
-                <input name="phone" value={credentials.phone} onChange={handleChange} onFocus={() => setFocusedField('phone')} onBlur={() => setFocusedField('')} required placeholder="05XXXXXXXX" style={inputStyle('phone')} />
+                <Phone size={20} style={iconStyle('phone')} />
+                <input type="text" name="phone" value={credentials.phone} onChange={handleChange} onFocus={() => setFocusedField('phone')} onBlur={() => setFocusedField('')} required placeholder="05XXXXXXXX" style={inputStyle('phone')} autoComplete="off" />
             </div>
-            <motion.button type="submit" onClick={handleForgotUsername} {...buttonProps} disabled={loading}>
+            <motion.button type="button" onClick={handleForgotUsername} {...buttonProps} disabled={loading}>
                 {loading ? <Loader2 size={24} className="spin" /> : 'طلب التذكير'}
             </motion.button>
             <button type="button" onClick={() => setMode('login')} style={backButtonStyle}><ChevronLeft size={18} /> عودة</button>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
-import API_URL from '../../../config';
+import API_URL from '@/config';
 import { Search, Printer, Download, ArrowRight, ArrowLeft, Clock, AlertOctagon } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 

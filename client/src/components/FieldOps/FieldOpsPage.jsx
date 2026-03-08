@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { HardHat, ClipboardList, AlertTriangle, BrainCircuit, Users, MapPin, Building2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import API_URL from '../../config';
+import API_URL from '@/config';
 
 import TasksBoard from './TasksBoard';
 import SiteVisits from './SiteVisits';

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Printer, ChevronRight, User, Briefcase, Users, MapPin, Phone, Building, Download } from 'lucide-react';
-import API_URL from '../../config';
+import API_URL from '@/config';
 
 const DataRecordSummary = () => {
     const { type, id } = useParams();

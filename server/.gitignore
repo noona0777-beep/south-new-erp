@@ -24,3 +24,8 @@ npm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# WhatsApp Auth & Cache
+.wwebjs_auth/
+.wwebjs_cache/
+whatsapp-qr*.png

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Printer, ChevronRight, Download } from 'lucide-react';
 import QRCode from 'qrcode.react';
-import API_URL from '../../config';
+import API_URL from '@/config';
 
 const InvoicePrint = () => {
     const { id } = useParams();

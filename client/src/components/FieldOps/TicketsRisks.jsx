@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AlertOctagon, CheckCircle2, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import API_URL from '../../config';
+import API_URL from '@/config';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 

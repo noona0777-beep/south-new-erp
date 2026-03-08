@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import API_URL from '../../config';
-import { Settings, User, Building2, Save, Plus, Trash2, Eye, EyeOff, Shield, Bell, Database, RefreshCw, Clock, AlertOctagon } from 'lucide-react';
+import API_URL from '@/config';
+import { Settings, User, Building2, Save, Plus, Trash2, Eye, EyeOff, Shield, Bell, Database, RefreshCw, Clock, AlertOctagon, MessageSquare, DollarSign, Briefcase, Users, Activity, X, Search } from 'lucide-react';
+import { motion } from 'framer-motion';
 import AuditLogs from '../Admin/AuditLogs';
 import { useMemo, useState } from 'react';
 
@@ -48,14 +49,17 @@ const CompanyTab = () => {
     const [form, setForm] = useState({});
     const [saved, setSaved] = useState(false);
 
-    const { isLoading, error } = useQuery({
+    const { data: qData, isLoading, error } = useQuery({
         queryKey: ['companyInfo'],
         queryFn: async () => {
             const res = await axios.get(`${API_URL}/settings/companyInfo`, { headers: H() });
-            setForm(res.data || {});
             return res.data;
         }
     });
+
+    useMemo(() => {
+        if (qData) setForm(qData);
+    }, [qData]);
 
     const saveMutation = useMutation({
         mutationFn: async (data) => await axios.post(`${API_URL}/settings/companyInfo`, { value: data }, { headers: H() }),
@@ -102,14 +106,61 @@ const CompanyTab = () => {
     );
 };
 
-// ======= TAB: Users Management =======
+const PermissionItem = ({ label, active, onChange }) => (
+    <div
+        onClick={() => onChange(!active)}
+        style={{
+            display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px',
+            background: active ? '#eff6ff' : '#f8fafc', borderRadius: '10px',
+            border: `1px solid ${active ? '#3b82f6' : '#e2e8f0'}`, cursor: 'pointer',
+            transition: 'all 0.2s', flex: '1 1 200px'
+        }}
+    >
+        <div style={{
+            width: '18px', height: '18px', borderRadius: '4px',
+            border: `2px solid ${active ? '#3b82f6' : '#cbd5e1'}`,
+            background: active ? '#3b82f6' : 'white',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
+        }}>
+            {active && <Save size={12} />}
+        </div>
+        <span style={{ fontSize: '0.85rem', fontWeight: active ? '600' : '400', color: active ? '#1e40af' : '#64748b' }}>{label}</span>
+    </div>
+);
+
+// ======= TAB: Users Management (Advanced) =======
 const UsersTab = () => {
     const queryClient = useQueryClient();
     const [showForm, setShowForm] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
     const [showPass, setShowPass] = useState(false);
-    const [form, setForm] = useState({ name: '', email: '', password: '', role: 'USER' });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [form, setForm] = useState({
+        name: '', email: '', password: '', role: 'USER',
+        phone: '', status: 'ACTIVE', jobTitle: '', department: '',
+        permissions: {}
+    });
     const [msg, setMsg] = useState('');
     const me = currentUser();
+
+    const modules = [
+        { id: 'dashboard', label: 'لوحة القيادة' },
+        { id: 'invoices', label: 'المبيعات والفواتير' },
+        { id: 'quotes', label: 'عروض الأسعار' },
+        { id: 'inventory', label: 'المخزون' },
+        { id: 'clients', label: 'العملاء' },
+        { id: 'projects', label: 'المشاريع والمقاولات' },
+        { id: 'contracts', label: 'عقود المقاولات' },
+        { id: 'accounting', label: 'المحاسبة والمالية' },
+        { id: 'hr', label: 'الموارد البشرية' },
+        { id: 'real_estate', label: 'العقارات' },
+        { id: 'archive', label: 'الأرشيف' },
+        { id: 'reports', label: 'التقارير' },
+        { id: 'field_ops', label: 'الإشراف الميداني' },
+        { id: 'crm', label: 'المبيعات والعملاء (CRM)' },
+        { id: 'zatca', label: 'مراقبة زاتكا' },
+        { id: 'settings', label: 'إعدادات النظام' },
+    ];
 
     const { data: users = [], isLoading } = useQuery({
         queryKey: ['users'],
@@ -121,10 +172,20 @@ const UsersTab = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
             setMsg('✅ تم إضافة المستخدم بنجاح');
-            setForm({ name: '', email: '', password: '', role: 'USER' });
+            resetForm();
             setShowForm(false);
         },
         onError: (err) => setMsg('❌ ' + (err.response?.data?.error || 'فشل في الإضافة'))
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: async (data) => await axios.put(`${API_URL}/users/${data.id}`, data, { headers: H() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            setMsg('✅ تم تحديث بيانات المستخدم');
+            setEditingUser(null);
+        },
+        onError: (err) => setMsg('❌ ' + (err.response?.data?.error || 'فشل في التحديث'))
     });
 
     const deleteMutation = useMutation({
@@ -136,57 +197,136 @@ const UsersTab = () => {
         onError: () => setMsg('❌ فشل في الحذف')
     });
 
-    const handleAdd = () => {
-        if (!form.name || !form.email || !form.password) {
-            setMsg('يرجى تعبئة جميع الحقول');
+    const resetForm = () => setForm({
+        name: '', email: '', password: '', role: 'USER',
+        phone: '', status: 'ACTIVE', jobTitle: '', department: '',
+        permissions: {}
+    });
+
+    const handleSave = () => {
+        if (!form.name || !form.email || (!editingUser && !form.password)) {
+            setMsg('يرجى تعبئة الحقول الأساسية');
             return;
         }
-        addMutation.mutate(form);
+        if (editingUser) {
+            updateMutation.mutate({ ...form, id: editingUser.id });
+        } else {
+            addMutation.mutate(form);
+        }
         setTimeout(() => setMsg(''), 3000);
     };
 
+    const startEdit = (user) => {
+        setEditingUser(user);
+        setForm({
+            name: user.name || '',
+            email: user.email || '',
+            password: '', // Hidden for security, only if changed
+            role: user.role || 'USER',
+            phone: user.phone || '',
+            status: user.status || 'ACTIVE',
+            jobTitle: user.jobTitle || '',
+            department: user.department || '',
+            permissions: user.permissions || {}
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const handleDelete = (id) => {
-        if (id === me.id) { setMsg('❌ لا يمكن حذف المستخدم الحالي'); setTimeout(() => setMsg(''), 2000); return; }
-        if (!window.confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
+        if (id === me.id) { setMsg('❌ لا يمكن حذف حسابك الخاص'); setTimeout(() => setMsg(''), 2000); return; }
+        if (!window.confirm('هل أنت متأكد من حذف هذا المستخدم؟ سيتم فقدان صلاحياته نهائياً.')) return;
         deleteMutation.mutate(id);
         setTimeout(() => setMsg(''), 2000);
     };
 
-    const roleColors = { ADMIN: { bg: '#fef3c7', color: '#d97706' }, USER: { bg: '#eff6ff', color: '#2563eb' } };
+    const togglePermission = (modId, val) => {
+        setForm(prev => ({
+            ...prev,
+            permissions: { ...prev.permissions, [modId]: val }
+        }));
+    };
+
+    const filteredUsers = users.filter(u =>
+        u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const roleMap = {
+        ADMIN: { label: 'مدير النظام', color: '#d97706', bg: '#fef3c7', icon: <Shield size={14} /> },
+        ACCOUNTANT: { label: 'محاسب', color: '#059669', bg: '#ecfdf5', icon: <DollarSign size={14} /> },
+        MANAGER: { label: 'مدير مشاريع', color: '#2563eb', bg: '#eff6ff', icon: <Briefcase size={14} /> },
+        USER: { label: 'مستخدم', color: '#64748b', bg: '#f1f5f9', icon: <User size={14} /> }
+    };
 
     return (
         <div>
-            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
-                <h3 style={{ margin: 0, color: '#1e293b', fontWeight: '700' }}>إدارة المستخدمين</h3>
-                <button onClick={() => setShowForm(!showForm)} style={{
-                    padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none',
-                    borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '600',
-                    display: 'flex', alignItems: 'center', gap: '8px', width: 'fit-content'
-                }}>
-                    <Plus size={16} /> إضافة مستخدم
-                </button>
+            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '15px' }}>
+                <div>
+                    <h3 style={{ margin: 0, color: '#1e293b', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Users size={22} className="text-blue-600" /> إدارة المستخدمين والصلاحيات
+                    </h3>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>التحكم الكامل في حسابات الموظفين ومستويات الوصول</p>
+                </div>
+                {!showForm && !editingUser && (
+                    <button onClick={() => setShowForm(true)} style={{
+                        padding: '12px 24px', background: '#2563eb', color: 'white', border: 'none',
+                        borderRadius: '12px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '700',
+                        display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(37,99,235,0.2)'
+                    }}>
+                        <Plus size={18} /> إضافة عضو جديد
+                    </button>
+                )}
             </div>
 
             {msg && (
-                <div style={{ padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', background: msg.includes('✅') ? '#ecfdf5' : '#fef2f2', color: msg.includes('✅') ? '#065f46' : '#991b1b', fontWeight: '600' }}>
-                    {msg}
+                <div style={{ padding: '14px 20px', borderRadius: '12px', marginBottom: '20px', background: msg.includes('✅') ? '#ecfdf5' : '#fef2f2', color: msg.includes('✅') ? '#065f46' : '#991b1b', fontWeight: '600', border: '1px solid currentColor', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Activity size={18} /> {msg}
                 </div>
             )}
 
-            {showForm && (
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '20px', marginBottom: '20px' }}>
-                    <h4 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>مستخدم جديد</h4>
-                    <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <InputField label="الاسم الكامل" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="اسم المستخدم" />
-                        <InputField label="البريد الإلكتروني" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="user@company.com" type="email" />
+            {(showForm || editingUser) && (
+                <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '28px', marginBottom: '30px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+                        <h4 style={{ margin: 0, color: '#1e293b', fontSize: '1.1rem', fontWeight: '700' }}>{editingUser ? 'تعديل بيانات العضو' : 'إضافة عضو جديد للنظام'}</h4>
+                        <button onClick={() => { setShowForm(false); setEditingUser(null); resetForm(); }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}><X size={20} /></button>
+                    </div>
+
+                    <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                        <InputField label="الاسم الكامل" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="مثال: محمد علي" />
+                        <InputField label="البريد الإلكتروني (اسم المستخدم)" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="user@company.com" type="email" />
+                        <InputField label="رقم الجوال" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="9665XXXXXXXX" />
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>المسمى الوظيفي</label>
+                            <input value={form.jobTitle} onChange={e => setForm(p => ({ ...p, jobTitle: e.target.value }))} style={{ padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo' }} placeholder="محاسب أول، مهندس موقع..." />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>الصلاحية الرئيسية</label>
+                            <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))} style={{ padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo', cursor: 'pointer' }}>
+                                <option value="USER">مستخدم (صلاحيات محدودة)</option>
+                                <option value="ACCOUNTANT">محاسب (مالية وتقارير)</option>
+                                <option value="MANAGER">مدير تشغيل (مشاريع وعقود)</option>
+                                <option value="ADMIN">مدير نظام (تحكم كامل)</option>
+                            </select>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>حالة الحساب</label>
+                            <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))} style={{ padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo', cursor: 'pointer', background: form.status === 'BLOCKED' ? '#fff1f2' : 'white' }}>
+                                <option value="ACTIVE">نشط (يسمح بالدخول)</option>
+                                <option value="BLOCKED">معطل (يمنع من الدخول)</option>
+                            </select>
+                        </div>
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>كلمة المرور</label>
+                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>{editingUser ? 'تغيير كلمة المرور (اختياري)' : 'كلمة المرور'}</label>
                             <div style={{ position: 'relative' }}>
                                 <input
                                     type={showPass ? 'text' : 'password'}
                                     value={form.password}
                                     onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                                    placeholder="كلمة المرور"
+                                    placeholder={editingUser ? "اتركه فارغاً لعدم التغيير" : "كلمة مرور قوية"}
                                     style={{ padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo', fontSize: '0.9rem', width: '100%', boxSizing: 'border-box' }}
                                 />
                                 <button onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
@@ -194,78 +334,138 @@ const UsersTab = () => {
                                 </button>
                             </div>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>الصلاحية</label>
-                            <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))} style={{
-                                padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo', fontSize: '0.9rem', cursor: 'pointer'
-                            }}>
-                                <option value="USER">مستخدم عادي</option>
-                                <option value="ADMIN">مدير النظام</option>
-                            </select>
+                    </div>
+
+                    <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
+                        <h5 style={{ margin: '0 0 16px 0', color: '#1e293b', fontWeight: '700', fontSize: '0.95rem' }}>صلاحيات الوصول المخصصة (Modules Permissions)</h5>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '16px' }}>يمكنك تفعيل أو تعطيل الوصول لأقسام معينة بغض النظر عن الصلاحية الرئيسية.</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                            {modules.map(mod => (
+                                <PermissionItem
+                                    key={mod.id}
+                                    label={mod.label}
+                                    active={form.permissions[mod.id] === true}
+                                    onChange={(v) => togglePermission(mod.id, v)}
+                                />
+                            ))}
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                        <button onClick={handleAdd} disabled={addMutation.isPending} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '700' }}>
-                            {addMutation.isPending ? 'جاري الحفظ...' : 'حفظ المستخدم'}
+
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '30px' }}>
+                        <button onClick={handleSave} disabled={addMutation.isPending || updateMutation.isPending} style={{ padding: '12px 32px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '700', fontSize: '1rem' }}>
+                            {(addMutation.isPending || updateMutation.isPending) ? 'جاري الحفظ...' : (editingUser ? 'تحديث البيانات' : 'إنشاء الحساب الآن')}
                         </button>
-                        <button onClick={() => setShowForm(false)} style={{ padding: '10px 24px', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo' }}>
+                        <button onClick={() => { setShowForm(false); setEditingUser(null); resetForm(); }} style={{ padding: '10px 24px', background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', fontFamily: 'Cairo' }}>
                             إلغاء
                         </button>
                     </div>
-                </div>
+                </motion.div>
             )}
 
-            {isLoading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                    <Clock size={32} className="animate-spin" style={{ margin: '0 auto 12px', display: 'block' }} />
-                    جاري التحميل...
-                </div>
-            ) : (
-                <div className="table-responsive" style={{ background: 'white', borderRadius: '14px', border: '1px solid #f1f5f9', overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo', minWidth: '700px' }}>
-                        <thead>
-                            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-                                {['الاسم', 'البريد الإلكتروني', 'الصلاحية', 'تاريخ الإنشاء', 'إجراء'].map(h => (
-                                    <th key={h} style={{ padding: '14px 16px', textAlign: 'right', fontWeight: '700', fontSize: '0.85rem', color: '#64748b' }}>{h}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.length === 0 ? (
-                                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>لا يوجد مستخدمون</td></tr>
-                            ) : users.map(u => (
-                                <tr key={u.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                                    <td style={{ padding: '14px 16px', fontWeight: '600', color: '#1e293b' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                                                {u.name?.charAt(0)}
-                                            </div>
-                                            {u.name}
-                                            {u.id === me.id && <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1d4ed8', padding: '2px 8px', borderRadius: '20px' }}>أنت</span>}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '0.9rem' }}>{u.email}</td>
-                                    <td style={{ padding: '14px 16px' }}>
-                                        <span style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: roleColors[u.role]?.bg || '#f1f5f9', color: roleColors[u.role]?.color || '#64748b' }}>
-                                            {u.role === 'ADMIN' ? '🔑 مدير' : '👤 مستخدم'}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '14px 16px', color: '#94a3b8', fontSize: '0.85rem' }}>
-                                        {new Date(u.createdAt).toLocaleDateString('ar-SA')}
-                                    </td>
-                                    <td style={{ padding: '14px 16px' }}>
-                                        <button onClick={() => handleDelete(u.id)} disabled={deleteMutation.isPending} style={{
-                                            padding: '6px 12px', background: '#fef2f2', color: '#ef4444', border: 'none',
-                                            borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'Cairo', fontSize: '0.8rem'
-                                        }}>
-                                            <Trash2 size={14} /> {deleteMutation.isPending ? 'حذف...' : 'حذف'}
-                                        </button>
-                                    </td>
+            {!showForm && !editingUser && (
+                <>
+                    <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '400px' }}>
+                        <Search size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <input
+                            type="text"
+                            placeholder="ابحث عن اسم، بريد، أو رقم هاتف..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{ width: '100%', padding: '12px 45px 12px 15px', borderRadius: '12px', border: '1px solid #f1f5f9', background: 'white', outline: 'none', fontFamily: 'Cairo', fontSize: '0.9rem' }}
+                        />
+                    </div>
+
+                    <div className="table-responsive" style={{ background: 'white', borderRadius: '18px', border: '1px solid #f1f5f9', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo' }}>
+                            <thead>
+                                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                                    {['المستخدم', 'بيانات الاتصال', 'المسمى الوظيفي', 'الصلاحية', 'الحالة', 'آخر دخول', 'إجراء'].map(h => (
+                                        <th key={h} style={{ padding: '16px', textAlign: 'right', fontWeight: '700', fontSize: '0.85rem', color: '#64748b' }}>{h}</th>
+                                    ))}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {isLoading ? (
+                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '50px' }}><Clock className="animate-spin" style={{ margin: 'auto' }} /></td></tr>
+                                ) : filteredUsers.length === 0 ? (
+                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '50px', color: '#94a3b8' }}>لا توجد نتائج مطابقة لبحثك</td></tr>
+                                ) : filteredUsers.map(u => (
+                                    <tr key={u.id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.2s' }} className="hover:bg-slate-50">
+                                        <td style={{ padding: '16px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                                <div style={{
+                                                    width: '56px', height: '56px', borderRadius: '14px',
+                                                    background: u.role === 'ADMIN' ? '#eff6ff' : '#f1f5f9',
+                                                    overflow: 'hidden', border: '1px solid #e2e8f0',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                    {u.email === 'admin@south.com' || u.name === 'Naif' ? (
+                                                        <img src="/naif.png" alt="Naif" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <span style={{ fontWeight: 'bold', fontSize: '1.4rem', color: u.role === 'ADMIN' ? '#2563eb' : '#64748b' }}>
+                                                            {u.name?.charAt(0)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: '800', color: '#1e293b', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        {u.name}
+                                                        {u.id === me.id && <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1d4ed8', padding: '3px 10px', borderRadius: '20px', fontWeight: '900' }}>أنت</span>}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.85rem', color: '#3b82f6', fontWeight: '600' }}>{u.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '16px', color: '#64748b', fontSize: '0.85rem' }}>{u.phone || '—'}</td>
+                                        <td style={{ padding: '16px', color: '#1e293b', fontSize: '0.85rem', fontWeight: '500' }}>{u.jobTitle || 'عضو نظام'}</td>
+                                        <td style={{ padding: '16px' }}>
+                                            <div style={{
+                                                display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '10px',
+                                                fontSize: '0.8rem', fontWeight: '700', width: 'fit-content',
+                                                background: roleMap[u.role]?.bg || '#f1f5f9', color: roleMap[u.role]?.color || '#64748b'
+                                            }}>
+                                                {roleMap[u.role]?.icon}
+                                                {roleMap[u.role]?.label || u.role}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '16px' }}>
+                                            <span style={{
+                                                padding: '4px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold',
+                                                background: u.status === 'BLOCKED' ? '#fef2f2' : '#f0fdf4',
+                                                color: u.status === 'BLOCKED' ? '#ef4444' : '#22c55e',
+                                                border: `1px solid ${u.status === 'BLOCKED' ? '#fee2e2' : '#dcfce7'}`
+                                            }}>
+                                                {u.status === 'BLOCKED' ? '🚫 معطل' : '✅ نشط'}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '16px', color: '#94a3b8', fontSize: '0.8rem' }}>
+                                            {u.lastLogin ? new Date(u.lastLogin).toLocaleString('ar-SA', { dateStyle: 'short', timeStyle: 'short' }) : 'لم يدخل بعد'}
+                                        </td>
+                                        <td style={{ padding: '16px' }}>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button
+                                                    onClick={() => startEdit(u)}
+                                                    style={{ padding: '8px', background: '#f8fafc', color: '#2563eb', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }}
+                                                    title="تعديل الصلاحيات"
+                                                >
+                                                    <Shield size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(u.id)}
+                                                    disabled={deleteMutation.isPending}
+                                                    style={{ padding: '8px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2', borderRadius: '8px', cursor: 'pointer' }}
+                                                    title="حذف الحساب"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
             )}
         </div>
     );
@@ -277,14 +477,17 @@ const SystemTab = () => {
     const [prefs, setPrefs] = useState({});
     const [saved, setSaved] = useState(false);
 
-    const { isLoading } = useQuery({
+    const { data: qData, isLoading } = useQuery({
         queryKey: ['systemPrefs'],
         queryFn: async () => {
             const res = await axios.get(`${API_URL}/settings/systemPrefs`, { headers: H() });
-            setPrefs(res.data || {});
             return res.data;
         }
     });
+
+    useMemo(() => {
+        if (qData) setPrefs(qData);
+    }, [qData]);
 
     const saveMutation = useMutation({
         mutationFn: async (data) => await axios.post(`${API_URL}/settings/systemPrefs`, { value: data }, { headers: H() }),
@@ -388,12 +591,76 @@ const SystemTab = () => {
     );
 };
 
+// ======= TAB: WhatsApp Integration =======
+const WhatsAppTab = () => {
+    const { data } = useQuery({
+        queryKey: ['whatsappStatus'],
+        queryFn: async () => {
+            const res = await axios.get(`${API_URL}/whatsapp/status`, { headers: H() });
+            return res.data;
+        },
+        refetchInterval: 5000
+    });
+
+    return (
+        <div style={{ maxWidth: '600px' }}>
+            <h3 style={{ margin: '0 0 16px 0', color: '#1e293b', fontWeight: '700' }}>ارتباط واتساب (مجاني)</h3>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '24px' }}>
+                اربط جوالك الخاص بالنظام لإرسال رسائل استعادة كلمة المرور والتنبيهات مجاناً دون الحاجة لمزود خدمة خارجي.
+            </p>
+
+            <div style={{
+                background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', textAlign: 'center'
+            }}>
+                <div style={{
+                    padding: '8px 16px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: '700',
+                    background: (data?.status === 'READY' || data?.status === 'AUTHENTICATED') ? '#ecfdf5' : '#fef2f2',
+                    color: (data?.status === 'READY' || data?.status === 'AUTHENTICATED') ? '#10b981' : '#ef4444',
+                    border: '1px solid currentColor'
+                }}>
+                    حالة الاتصال: {data?.status === 'READY' ? 'متصل وجاهز ✅' : (data?.status || 'جاري تهيئة العميل...')}
+                </div>
+
+                {data?.status === 'DISCONNECTED' && data?.qrAvailable && (
+                    <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.08)' }}>
+                        <p style={{ fontWeight: '700', marginBottom: '15px', fontSize: '0.95rem', color: '#1e293b' }}>امسح الكود التالي عبر واتساب جوالك:</p>
+                        <img
+                            src={`${API_URL}/whatsapp/qr?t=${data?.qrLastUpdate || Date.now()}`}
+                            alt="WhatsApp QR"
+                            style={{ width: '220px', height: '220px', border: '4px solid #f8fafc', borderRadius: '8px' }}
+                        />
+                        <div style={{ marginTop: '15px', fontSize: '0.85rem', color: '#64748b', textAlign: 'right' }}>
+                            1. افتح تطبيق واتساب على جوالك.<br />
+                            2. اضغط على القائمة (أو الإعدادات) &gt; الأجهزة المرتبطة.<br />
+                            3. اضغط على "ربط جهاز" ووجه الكاميرا لهذا الكود.
+                        </div>
+                    </div>
+                )}
+
+                {data?.status === 'READY' && (
+                    <div style={{ color: '#10b981', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px', padding: '20px' }}>
+                        <MessageSquare size={60} />
+                        <p style={{ fontWeight: '700', fontSize: '1.1rem' }}>النظام مربوط حالياً برقمك بنجاح!</p>
+                        <p style={{ fontSize: '0.9rem', color: '#64748b' }}>يمكنك الآن اختبار استعادة كلمة المرور عبر الجوال.</p>
+                    </div>
+                )}
+
+                {!data?.qrAvailable && data?.status === 'DISCONNECTED' && (
+                    <p style={{ color: '#64748b', fontSize: '0.9rem' }}>جاري توليد كود الـ QR... يرجى الانتظار ثوانٍ.</p>
+                )}
+            </div>
+        </div>
+    );
+};
+
 // ======= Main Settings Page =======
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('company');
 
     const tabs = [
         { key: 'company', label: 'معلومات المنشأة', icon: <Building2 /> },
+        { key: 'whatsapp', label: 'التواصل الذكي', icon: <MessageSquare /> },
         { key: 'users', label: 'المستخدمون', icon: <User /> },
         { key: 'logs', label: 'سجل العمليات', icon: <Shield /> },
         { key: 'system', label: 'إعدادات النظام', icon: <Settings /> },
@@ -419,6 +686,7 @@ export default function SettingsPage() {
 
             <div style={{ background: 'white', borderRadius: '16px', padding: window.innerWidth < 600 ? '20px' : '28px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', minHeight: '400px' }}>
                 {activeTab === 'company' && <CompanyTab />}
+                {activeTab === 'whatsapp' && <WhatsAppTab />}
                 {activeTab === 'users' && <UsersTab />}
                 {activeTab === 'logs' && <AuditLogs />}
                 {activeTab === 'system' && <SystemTab />}

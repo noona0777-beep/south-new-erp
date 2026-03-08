@@ -20,7 +20,9 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.13",
     "openai": "^6.25.0",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "qrcode": "^1.5.4",
+    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#main"
   },
   "devDependencies": {
     "nodemon": "^3.1.0",

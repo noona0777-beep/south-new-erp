@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import API_URL from '../../config';
+import API_URL from '@/config';
 import { Shield, Clock, User } from 'lucide-react';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });

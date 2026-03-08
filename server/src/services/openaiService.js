@@ -10,6 +10,22 @@ const openai = new OpenAI({
  * @returns {Promise<Object>} - النتائج المستخرجة (المواصفات، المخالفات، التقدم، إلخ)
  */
 async function analyzeConstructionImage(base64Image) {
+    // Check if the API key is provided and not the default dummy one
+    const isMockMode = !process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-proj-dummy' || process.env.OPENAI_API_KEY.includes('YOUR_');
+
+    if (isMockMode) {
+        // Return simulated professional report for demonstration
+        console.log("⚠️ OpenAI Key missing. Returning Mock Analysis Data.");
+        return {
+            "detectedObjects": ["أعمال حدادة", "قوالب خشبية (نجارة)", "خرسانة سابقة الصب"],
+            "cracksDetected": false,
+            "coverDepthEstimated": "4.5cm",
+            "anomalies": ["وجود بعض الأتربة في قاع الحفر", "توزيع الحديد يحتاج لمراجعة بسيطة"],
+            "progressExtracted": 45,
+            "sbcViolations": "SBC 304 - (مخالفة طفيفة في تباعد الكانات)"
+        };
+    }
+
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-4o",

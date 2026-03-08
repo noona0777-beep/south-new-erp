@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { MapPin, Plus, Clock, User } from 'lucide-react';
-import API_URL from '../../config';
+import { MapPin, Plus, Clock, User, Package } from 'lucide-react';
+import API_URL from '@/config';
 import CreateVisitModal from './CreateVisitModal';
+import MaterialRequestModal from './MaterialRequestModal';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -12,6 +13,7 @@ const SiteVisits = ({ projectId }) => {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
 
     const { data: visits = [], isLoading } = useQuery({
         queryKey: ['fieldOps', 'visits', projectId],
@@ -28,11 +30,20 @@ const SiteVisits = ({ projectId }) => {
         <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#1e293b' }}>سجل الزيارات الميدانية</h2>
-                <button
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-                >
-                    <Plus size={18} /> تسجيل رحلة جديدة
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                        onClick={() => setIsMaterialModalOpen(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#f1f5f9', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        <Package size={18} /> طلب توريد مواد
+                    </button>
+                    <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        <Plus size={18} /> تسجيل رحلة جديدة
+                    </button>
+                </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -62,6 +73,11 @@ const SiteVisits = ({ projectId }) => {
             <CreateVisitModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
+                projectId={projectId}
+            />
+            <MaterialRequestModal
+                isOpen={isMaterialModalOpen}
+                onClose={() => setIsMaterialModalOpen(false)}
                 projectId={projectId}
             />
         </div>

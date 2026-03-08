@@ -6,7 +6,7 @@ import {
     Plus, RefreshCw, DollarSign, X, Check,
     ArrowUpRight, ArrowDownLeft, Landmark, Trash2, BookOpen, Clock, AlertOctagon
 } from 'lucide-react';
-import API_URL from '../../config';
+import API_URL from '@/config';
 import { useToast } from '../../context/ToastContext';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });

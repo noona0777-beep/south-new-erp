@@ -31,6 +31,14 @@ export const PermissionProvider = ({ children }) => {
 
     const hasPermission = (moduleName) => {
         if (!user) return false;
+
+        // 1. Check if user has explicit custom permissions (from database)
+        if (user.permissions) {
+            if (user.permissions.all === true) return true;
+            if (user.permissions[moduleName] === true) return true;
+        }
+
+        // 2. Fallback to role-based defaults
         const roleKey = (user.role || 'user').toLowerCase();
         const perms = rolePermissions[roleKey] || rolePermissions.user;
         return perms.all || perms[moduleName] || false;

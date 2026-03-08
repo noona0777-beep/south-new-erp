@@ -1,0 +1,15 @@
+{
+    "ignore": [
+        "**/*.png",
+        "**/*.xml",
+        "**/*.log",
+        ".wwebjs_auth/**",
+        "extreme_audit.js",
+        "invisible_audit.js",
+        "whatsapp-qr.png"
+    ],
+    "watch": [
+        "src"
+    ],
+    "ext": "js,mjs,cjs,json"
+}

@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Plus, Clock, CheckCircle2, AlertCircle, LayoutGrid, List } from 'lucide-react';
+import { Plus, Clock, CheckCircle2, AlertCircle, LayoutGrid, List, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
-import API_URL from '../../config';
+import API_URL from '@/config';
 import CreateTaskModal from './CreateTaskModal';
+import MaterialRequestModal from './MaterialRequestModal';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -14,6 +15,7 @@ const TasksBoard = ({ projectId }) => {
     const queryClient = useQueryClient();
     const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'list'
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
 
     // Fetch Tasks for Project
     const { data: tasks = [], isLoading } = useQuery({
@@ -52,6 +54,12 @@ const TasksBoard = ({ projectId }) => {
                         <button onClick={() => setViewMode('kanban')} style={{ padding: '8px 12px', background: viewMode === 'kanban' ? '#e2e8f0' : 'white', border: 'none', cursor: 'pointer' }}><LayoutGrid size={18} color="#64748b" /></button>
                         <button onClick={() => setViewMode('list')} style={{ padding: '8px 12px', background: viewMode === 'list' ? '#e2e8f0' : 'white', border: 'none', borderRight: '1px solid #e2e8f0', cursor: 'pointer' }}><List size={18} color="#64748b" /></button>
                     </div>
+                    <button
+                        onClick={() => setIsMaterialModalOpen(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#f1f5f9', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        <Package size={18} /> طلب توريد مواد
+                    </button>
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
                         style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
@@ -144,6 +152,11 @@ const TasksBoard = ({ projectId }) => {
             <CreateTaskModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
+                projectId={projectId}
+            />
+            <MaterialRequestModal
+                isOpen={isMaterialModalOpen}
+                onClose={() => setIsMaterialModalOpen(false)}
                 projectId={projectId}
             />
         </div>

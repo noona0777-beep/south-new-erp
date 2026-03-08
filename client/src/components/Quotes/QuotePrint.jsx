@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Printer, ChevronRight, Download } from 'lucide-react';
 import QRCode from 'qrcode.react';
-import API_URL from '../../config';
+import API_URL from '@/config';
 
 const QuotePrint = () => {
     const { id } = useParams();
@@ -23,6 +23,7 @@ const QuotePrint = () => {
             .then(res => {
                 const qt = res.data;
                 setQuote(qt);
+
                 // For quotes, we use a simple URL or a structured content for the QR
                 setQrValue(window.location.href);
             })

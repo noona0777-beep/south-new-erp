@@ -6,7 +6,7 @@ import {
     Download, ExternalLink, Filter, Search,
     User, Briefcase, Users, Upload, X, Check, Eye, Printer, Clock, AlertOctagon
 } from 'lucide-react';
-import API_URL from '../../config';
+import API_URL from '@/config';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 

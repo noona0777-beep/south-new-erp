@@ -21,7 +21,11 @@ import ContractsPage from './components/Contracts/ContractsPage';
 import ContractPrint from './components/Contracts/ContractPrint';
 import FieldOpsPage from './components/FieldOps/FieldOpsPage';
 import DataRecordSummary from './components/Common/DataRecordSummary';
-import API_URL from './config';
+import ClientLayout from './components/ClientPortal/ClientLayout';
+import CRMDashboard from './components/CRM/CRMDashboard';
+import LeadsPage from './components/CRM/LeadsPage';
+import PipelineKanban from './components/CRM/PipelineKanban';
+import API_URL from '@/config';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { buttonClick, fadeInUp } from './components/Common/MotionComponents';
@@ -54,7 +58,7 @@ axios.interceptors.request.use((config) => {
 import {
     LayoutDashboard, ShoppingCart, Users, Briefcase, Building2,
     DollarSign, FileBarChart2, Settings, Bell, Search, Menu, X,
-    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages, ShieldCheck, Activity, HardHat
+    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages, ShieldCheck, Activity, HardHat, Target, TrendingUp
 } from 'lucide-react';
 
 /* --- UI Components --- */
@@ -433,18 +437,21 @@ const Layout = ({ user, onLogout }) => {
                     {hasPermission('archive') && <NavLink to="/archive" icon={<Folder />} label={t('archive')} active={isActive('/archive')} i18n={i18n} onClick={closeSidebar} />}
                     {hasPermission('reports') && <NavLink to="/reports" icon={<FileBarChart2 />} label={t('reports')} active={isActive('/reports')} i18n={i18n} onClick={closeSidebar} />}
                     {hasPermission('all') && <NavLink to="/field-ops" icon={<HardHat />} label={t('field_ops', 'الإشراف الميداني')} active={isActive('/field-ops')} i18n={i18n} onClick={closeSidebar} />}
+                    {hasPermission('all') && <NavLink to="/crm" icon={<TrendingUp />} label={t('crm_dashboard', 'لوحة المبيعات')} active={isActive('/crm')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('all') && <NavLink to="/crm/leads" icon={<Target />} label={t('crm_leads', 'العملاء المحتملين')} active={isActive('/crm/leads')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('all') && <NavLink to="/crm/pipeline" icon={<Activity />} label={t('crm_pipeline', 'مسار المبيعات')} active={isActive('/crm/pipeline')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('all') && <NavLink to="/zatca" icon={<ShieldCheck />} label={t('zatca_dashboard', 'مراقبة زاتكا')} active={isActive('/zatca')} i18n={i18n} onClick={closeSidebar} />}
                     <NavLink to="/users" icon={<Settings />} label={t('settings')} active={isActive('/users')} i18n={i18n} onClick={closeSidebar} />
                 </nav>
 
                 <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #1e293b' }}>
                     <div style={{ background: '#1e293b', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                            {user.name?.charAt(0)}
+                        <div style={{ width: '42px', height: '42px', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <img src="/naif.png" alt="Naif" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{user.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{user.role}</div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#fff' }}>{user.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#3b82f6', fontWeight: '700' }}>Naif</div>
                         </div>
                         <button onClick={onLogout} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '8px', borderRadius: '8px' }}>
                             <LogOut size={20} />
@@ -563,6 +570,9 @@ const Layout = ({ user, onLogout }) => {
                                 <Route path="/archive" element={<DocumentsPage />} />
                                 <Route path="/reports" element={<ReportsPage />} />
                                 <Route path="/field-ops" element={<FieldOpsPage />} />
+                                <Route path="/crm" element={<CRMDashboard />} />
+                                <Route path="/crm/leads" element={<LeadsPage />} />
+                                <Route path="/crm/pipeline" element={<PipelineKanban />} />
                                 <Route path="/zatca" element={<ZatcaDashboard />} />
                                 <Route path="/users" element={<SettingsPage />} />
                             </Routes>
@@ -591,6 +601,10 @@ const AppContent = () => {
     return (
         !user ? (
             <Login onSuccess={setUser} />
+        ) : user.role === 'CLIENT' ? (
+            <Routes>
+                <Route path="/*" element={<ClientLayout user={user} onLogout={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); }} />} />
+            </Routes>
         ) : (
             <Routes>
                 <Route path="/invoices/:id/print" element={<InvoicePrint />} />

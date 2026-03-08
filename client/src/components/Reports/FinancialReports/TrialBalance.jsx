@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
-import API_URL from '../../../config';
+import API_URL from '@/config';
 import { Printer, Download, Clock, AlertOctagon } from 'lucide-react';
 
 const format = (num) => (num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

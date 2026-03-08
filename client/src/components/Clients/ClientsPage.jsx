@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Users, Search, Plus, Phone, MapPin, Receipt, FileText, User, Folder, AlertOctagon } from 'lucide-react';
-import API_URL from '../../config';
+import API_URL from '@/config';
 
 const ClientsPage = () => {
     const queryClient = useQueryClient();

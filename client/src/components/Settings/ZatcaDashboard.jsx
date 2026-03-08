@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { fadeInUp } from '../Common/MotionComponents';
-import API_URL from '../../config';
+import API_URL from '@/config';
 
 const ZatcaDashboard = () => {
     const { data: status, isLoading: statusLoading } = useQuery({
