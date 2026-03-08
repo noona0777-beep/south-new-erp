@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: south-new-erp-1
+    env: node
+    buildCommand: npm run render-build
+    startCommand: npm run render-start
