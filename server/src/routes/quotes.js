@@ -80,6 +80,51 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.put('/:id', async (req, res) => {
+    const { partnerId, date, validUntil, items, discount, notes } = req.body;
+    const id = parseInt(req.params.id);
+
+    let subtotal = 0;
+    const quoteItemsData = items.map(item => {
+        const lineTotal = Number(item.quantity) * Number(item.unitPrice);
+        subtotal += lineTotal;
+        return {
+            productId: item.productId ? Number(item.productId) : null,
+            description: item.description,
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            taxRate: 0.15,
+            total: lineTotal
+        };
+    });
+    const totalBeforeTax = subtotal - (discount || 0);
+    const taxAmount = totalBeforeTax * 0.15;
+    const total = totalBeforeTax + taxAmount;
+
+    try {
+        // Delete old items and recreate
+        await prisma.quoteItem.deleteMany({ where: { quoteId: id } });
+        const quote = await prisma.quote.update({
+            where: { id },
+            data: {
+                date: date ? new Date(date) : new Date(),
+                validUntil: validUntil ? new Date(validUntil) : null,
+                partnerId: partnerId ? Number(partnerId) : null,
+                subtotal,
+                discount: Number(discount) || 0,
+                taxAmount,
+                total,
+                notes,
+                items: { create: quoteItemsData }
+            },
+            include: { items: true, partner: true }
+        });
+        res.json(quote);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update quote: ' + error.message });
+    }
+});
+
 router.patch('/:id/status', async (req, res) => {
     try {
         const { status } = req.body;
