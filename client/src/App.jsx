@@ -25,6 +25,7 @@ import ClientLayout from './components/ClientPortal/ClientLayout';
 import CRMDashboard from './components/CRM/CRMDashboard';
 import LeadsPage from './components/CRM/LeadsPage';
 import PipelineKanban from './components/CRM/PipelineKanban';
+import AIDashboard from './components/AI/AIDashboard';
 import API_URL from '@/config';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -58,7 +59,7 @@ axios.interceptors.request.use((config) => {
 import {
     LayoutDashboard, ShoppingCart, Users, Briefcase, Building2,
     DollarSign, FileBarChart2, Settings, Bell, Search, Menu, X,
-    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages, ShieldCheck, Activity, HardHat, Target, TrendingUp
+    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages, ShieldCheck, Activity, HardHat, Target, TrendingUp, Brain
 } from 'lucide-react';
 
 /* --- UI Components --- */
@@ -440,6 +441,7 @@ const Layout = ({ user, onLogout }) => {
                     {hasPermission('all') && <NavLink to="/crm" icon={<TrendingUp />} label={t('crm_dashboard', 'لوحة المبيعات')} active={isActive('/crm')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('all') && <NavLink to="/crm/leads" icon={<Target />} label={t('crm_leads', 'العملاء المحتملين')} active={isActive('/crm/leads')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('all') && <NavLink to="/crm/pipeline" icon={<Activity />} label={t('crm_pipeline', 'مسار المبيعات')} active={isActive('/crm/pipeline')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('all') && <NavLink to="/ai" icon={<Brain />} label={'مركز الذكاء الاصطناعي'} active={isActive('/ai')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('all') && <NavLink to="/zatca" icon={<ShieldCheck />} label={t('zatca_dashboard', 'مراقبة زاتكا')} active={isActive('/zatca')} i18n={i18n} onClick={closeSidebar} />}
                     <NavLink to="/users" icon={<Settings />} label={t('settings')} active={isActive('/users')} i18n={i18n} onClick={closeSidebar} />
                 </nav>
@@ -573,6 +575,7 @@ const Layout = ({ user, onLogout }) => {
                                 <Route path="/crm" element={<CRMDashboard />} />
                                 <Route path="/crm/leads" element={<LeadsPage />} />
                                 <Route path="/crm/pipeline" element={<PipelineKanban />} />
+                                <Route path="/ai" element={<AIDashboard />} />
                                 <Route path="/zatca" element={<ZatcaDashboard />} />
                                 <Route path="/users" element={<SettingsPage />} />
                             </Routes>
