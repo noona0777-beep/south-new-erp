@@ -646,6 +646,17 @@ const WhatsAppTab = () => {
                     </div>
                 )}
 
+                {data?.status === 'CLOUD_MODE' && (
+                    <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', padding: '20px', borderRadius: '12px', textAlign: 'right', direction: 'rtl' }}>
+                        <p style={{ fontWeight: '700', color: '#92400e', marginBottom: '10px', fontSize: '1rem' }}>☁️ وضع السحابة - الواتساب غير متاح</p>
+                        <p style={{ color: '#78350f', fontSize: '0.9rem', lineHeight: '1.8' }}>
+                            ميزة ربط الواتساب تعمل فقط عند تشغيل النظام <strong>محلياً على جهازك</strong>.<br />
+                            السبب: متصفح Chrome الذي يحتاجه الواتساب غير متاح على خوادم الاستضافة المجانية.<br /><br />
+                            <strong>للاستخدام:</strong> شغّل السيرفر على جهازك (npm run server) وسيظهر باركود الربط تلقائياً.
+                        </p>
+                    </div>
+                )}
+
                 {!data?.qrAvailable && data?.status === 'DISCONNECTED' && (
                     <p style={{ color: '#64748b', fontSize: '0.9rem' }}>جاري توليد كود الـ QR... يرجى الانتظار ثوانٍ.</p>
                 )}
