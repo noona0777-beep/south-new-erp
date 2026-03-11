@@ -15,7 +15,7 @@ const GeneralLedger = () => {
     const { data: accounts = [] } = useQuery({
         queryKey: ['report', 'account-list'],
         queryFn: async () => {
-            const res = await axios.get(`${API_URL}/accounting/reports/trial-balance`, { headers: H() });
+            const res = await axios.get(`${API_URL}/reports/trial-balance`, { headers: H() });
             return res.data;
         }
     });
@@ -24,7 +24,7 @@ const GeneralLedger = () => {
     const { data: report, isLoading, error, refetch } = useQuery({
         queryKey: ['report', 'general-ledger', selectedAccount, startDate, endDate],
         queryFn: async () => {
-            const res = await axios.get(`${API_URL}/accounting/reports/general-ledger?accountId=${selectedAccount}&startDate=${startDate}&endDate=${endDate}`, {
+            const res = await axios.get(`${API_URL}/reports/general-ledger?accountId=${selectedAccount}&startDate=${startDate}&endDate=${endDate}`, {
                 headers: H()
             });
             return res.data;
