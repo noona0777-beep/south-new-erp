@@ -17,13 +17,20 @@ const { getOrCreateWarehouse } = require('./utils/helpers');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// 3. Middleware
+// 3. Performance & Security Middleware
+try {
+    const compression = require('compression');
+    app.use(compression()); // gzip all responses
+} catch (e) { console.log('⚠️ compression not installed yet'); }
+
+try {
+    const rateLimit = require('express-rate-limit');
+    const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500, message: { error: 'Too many requests, please try again later.' } });
+    app.use('/api/', limiter);
+} catch (e) { console.log('⚠️ express-rate-limit not installed yet'); }
+
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use(express.json({ limit: '50mb' }));
-app.use((req, res, next) => {
-    // console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next();
-});
 
 // 4. Routes Mapping
 const routes = {
