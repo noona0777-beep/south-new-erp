@@ -145,6 +145,7 @@ model Notification {
   type      String   // LOW_STOCK, PROJECT_DEADLINE, INVOICE_OVERDUE
   title     String
   message   String
+  link      String?  @db.Text
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 }

@@ -113,22 +113,54 @@ router.post('/employees/:id/pay-salary', async (req, res) => {
 router.post('/payroll/run', async (req, res) => {
     const { month, year } = req.body;
     try {
-        const employees = await prisma.employee.findMany({ where: { status: 'ACTIVE' } });
-        const results = [];
-        for (const emp of employees) {
-            const existing = await prisma.salaryRecord.findFirst({
-                where: { employeeId: emp.id, month: parseInt(month), year: parseInt(year) }
-            });
-            if (!existing) {
-                await prisma.salaryRecord.create({
-                    data: { employeeId: emp.id, month: parseInt(month), year: parseInt(year), baseSalary: emp.salary, netSalary: emp.salary, status: 'PAID' }
+        const result = await prisma.$transaction(async (tx) => {
+            const employees = await tx.employee.findMany({ where: { status: 'ACTIVE' } });
+            const results = [];
+            let totalPayroll = 0;
+
+            for (const emp of employees) {
+                const existing = await tx.salaryRecord.findFirst({
+                    where: { employeeId: emp.id, month: parseInt(month), year: parseInt(year) }
                 });
-                results.push({ name: emp.name, salary: emp.salary, status: 'processed' });
-            } else {
-                results.push({ name: emp.name, salary: emp.salary, status: 'skipped' });
+                if (!existing) {
+                    await tx.salaryRecord.create({
+                        data: { employeeId: emp.id, month: parseInt(month), year: parseInt(year), baseSalary: emp.salary, netSalary: emp.salary, status: 'PAID' }
+                    });
+                    totalPayroll += emp.salary;
+                    results.push({ name: emp.name, salary: emp.salary, status: 'processed' });
+                } else {
+                    results.push({ name: emp.name, salary: emp.salary, status: 'skipped' });
+                }
             }
-        }
-        res.json({ success: true, results, total: results.filter(r => r.status === 'processed').reduce((s, r) => s + r.salary, 0) });
+
+            // Auto Journal Entry for Bulk Payroll
+            if (totalPayroll > 0) {
+                const salaryAccount = await tx.account.findFirst({ where: { code: '5101' } });
+                const cashAccount = await tx.account.findFirst({ where: { code: '1101' } });
+                
+                if (salaryAccount && cashAccount) {
+                    await tx.transaction.create({
+                        data: {
+                            date: new Date(),
+                            description: `صرف رواتب جماعي - ${month}/${year}`,
+                            reference: `BULK-SAL-${month}-${year}-${Date.now()}`,
+                            type: 'JOURNAL',
+                            entries: {
+                                create: [
+                                    { accountId: salaryAccount.id, debit: totalPayroll, credit: 0, description: `إجمالي رواتب ${month}/${year}` },
+                                    { accountId: cashAccount.id, debit: 0, credit: totalPayroll, description: `صرف رواتب ${month}/${year}` },
+                                ]
+                            }
+                        }
+                    });
+                    await tx.account.update({ where: { id: salaryAccount.id }, data: { balance: { increment: totalPayroll } } });
+                    await tx.account.update({ where: { id: cashAccount.id }, data: { balance: { increment: -totalPayroll } } });
+                }
+            }
+            return { results, totalPayroll };
+        });
+
+        res.json({ success: true, results: result.results, total: result.totalPayroll });
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 

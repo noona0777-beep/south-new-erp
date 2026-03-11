@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import Login from './components/Login';
 import InvoicesPage from './components/Invoices/InvoicesPage';
 import InvoicePrint from './components/Invoices/InvoicePrint';
@@ -337,6 +337,7 @@ const Layout = ({ user, onLogout }) => {
     const { hasPermission } = usePermission();
     const isRtl = i18n.language === 'ar';
     const location = useLocation();
+    const navigate = useNavigate();
     const isActive = (path) => location.pathname === path;
     const [currentTime, setCurrentTime] = useState(new Date());
     const { data: companyInfo } = useQuery({
@@ -357,6 +358,17 @@ const Layout = ({ user, onLogout }) => {
     const markAllAsRead = async () => {
         await axios.put(`${API_URL}/notifications/read-all`);
         refetchNotifications();
+    };
+
+    const handleNotificationClick = async (n) => {
+        if (!n.isRead) {
+            await axios.put(`${API_URL}/notifications/${n.id}/read`);
+            refetchNotifications();
+        }
+        if (n.link) {
+            navigate(n.link);
+            setShowNotifications(false);
+        }
     };
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -543,7 +555,11 @@ const Layout = ({ user, onLogout }) => {
                                         </div>
                                         <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
                                             {notifications.map(n => (
-                                                <div key={n.id} style={{ padding: '10px', borderRadius: '8px', background: n.isRead ? 'transparent' : 'rgba(37, 99, 235, 0.05)', marginBottom: '8px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                                <div 
+                                                    key={n.id} 
+                                                    onClick={() => handleNotificationClick(n)}
+                                                    style={{ cursor: n.link ? 'pointer' : 'default', padding: '10px', borderRadius: '8px', background: n.isRead ? 'transparent' : 'rgba(37, 99, 235, 0.05)', marginBottom: '8px', border: '1px solid rgba(0,0,0,0.05)' }}
+                                                >
                                                     <div style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{n.title}</div>
                                                     <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{n.message}</div>
                                                 </div>
