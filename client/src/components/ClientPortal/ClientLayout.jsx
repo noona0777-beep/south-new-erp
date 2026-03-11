@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, FileText, LogOut, Menu, X, HardHat, Building2, Phone, Mail } from 'lucide-react';
+import { LayoutDashboard, Briefcase, FileText, LogOut, Menu, X, HardHat, Building2, Phone, Mail, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import API_URL from '@/config';
 import ClientDashboard from './ClientDashboard';
 import ClientProjects from './ClientProjects';
 import ClientInvoices from './ClientInvoices';
+import ClientDocuments from './ClientDocuments';
+import ClientSupport from './ClientSupport';
 
 const ClientLayout = ({ user, onLogout }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -77,6 +79,8 @@ const ClientLayout = ({ user, onLogout }) => {
                     <NavLink to="/client-portal" icon={<LayoutDashboard />} label="ملخص معلوماتي" />
                     {permissions.trackProjects !== false && <NavLink to="/client-portal/projects" icon={<Briefcase />} label="مشاريعي" />}
                     {permissions.viewFinancials === true && <NavLink to="/client-portal/invoices" icon={<FileText />} label="الفواتير والمالية" />}
+                    <NavLink to="/client-portal/documents" icon={<FileText />} label="الأرشيف والمستندات" />
+                    <NavLink to="/client-portal/support" icon={<MessageCircle size={20} />} label="الدعم الفني" />
                 </nav>
 
                 <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #1e293b' }}>
@@ -118,6 +122,8 @@ const ClientLayout = ({ user, onLogout }) => {
                                 <Route path="/client-portal" element={<ClientDashboard user={user} />} />
                                 <Route path="/client-portal/projects" element={<ClientProjects />} />
                                 <Route path="/client-portal/invoices" element={<ClientInvoices />} />
+                                <Route path="/client-portal/documents" element={<ClientDocuments />} />
+                                <Route path="/client-portal/support" element={<ClientSupport />} />
                             </Routes>
                         </motion.div>
                     </AnimatePresence>

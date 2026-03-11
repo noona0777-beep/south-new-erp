@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MapPin, LogIn, LogOut, Clock, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
+import { MapPin, LogIn, LogOut, Clock, Calendar, CheckCircle, AlertTriangle, Map as MapIcon, Globe } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import API_URL from '@/config';
 import { exportToExcel } from '../../utils/excelExport';
+
+// Fix Leaflet marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -126,16 +137,49 @@ const GeoAttendanceTab = ({ employees }) => {
                 </div>
             )}
 
+            {/* Attendance Master Map (Administrative View) */}
+            <div style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', marginBottom: '20px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                    <div style={{ background: '#eff6ff', padding: '8px', borderRadius: '10px', color: '#3b82f6' }}><Globe size={20} /></div>
+                    <h3 style={{ margin: 0, color: '#0f172a' }}>خريطة الانتشار الميداني اليومي</h3>
+                </div>
+                <div style={{ height: '350px', borderRadius: '14px', overflow: 'hidden', border: '1px solid #e2e8f0', zIndex: 0 }}>
+                    <MapContainer 
+                        center={[24.7136, 46.6753]} 
+                        zoom={6} 
+                        style={{ height: '100%', width: '100%' }}
+                        zoomControl={false}
+                    >
+                        <ZoomControl position="topright" />
+                        <TileLayer 
+                            url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" 
+                            attribution='&copy; Google Maps Satellite' 
+                        />
+                        {records.filter(r => r.checkInLat && r.checkInLng).map(record => (
+                            <Marker key={record.id} position={[record.checkInLat, record.checkInLng]}>
+                                <Popup>
+                                    <div style={{ textAlign: 'right', fontFamily: 'Cairo' }}>
+                                        <strong style={{ color: '#1e3a8a' }}>{record.employee?.name}</strong><br />
+                                        <span>دخل الساعة: {formatTime(record.checkIn)}</span><br />
+                                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{record.notes}</span>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        ))}
+                    </MapContainer>
+                </div>
+            </div>
+
             {/* Attendance Logs */}
             <div style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <Calendar size={18} color="#64748b" />
                         <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontFamily: 'Cairo', outline: 'none' }} />
-                        <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: '600' }}>{records.length} موظفاً سجلوا حضورهم</span>
+                        <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: '600' }}>{records.length} سجل حضور</span>
                     </div>
-                    <button onClick={exportData} disabled={records.length === 0} style={{ padding: '8px 16px', background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold' }}>
-                        📥 تصدير الإحداثيات
+                    <button onClick={exportData} disabled={records.length === 0} style={{ padding: '8px 16px', background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        📥 تصدير الداتا (Excel)
                     </button>
                 </div>
 

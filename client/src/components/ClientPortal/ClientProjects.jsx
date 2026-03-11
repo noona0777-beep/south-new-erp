@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, Calendar, CheckCircle2, ChevronDown, ChevronUp, MapPin, Activity, Building2, FileImage, FileText, Star, ThumbsUp } from 'lucide-react';
+import { Briefcase, Calendar, CheckCircle2, ChevronDown, ChevronUp, MapPin, Activity, Building2, FileImage, FileText, Star, ThumbsUp, Globe } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import API_URL from '@/config';
+
+// Fix Leaflet marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 const ClientProjects = () => {
     const [projects, setProjects] = useState([]);
@@ -230,7 +241,32 @@ const ClientProjects = () => {
                                                             <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>لم تسجل زيارات ميدانية للموقع بعد.</div>
                                                         )}
                                                     </div>
+                                                </div>
+                                            )}
 
+                                            {/* Project Location Map (Client View) */}
+                                            {project.lat && project.lng && (
+                                                <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
+                                                    <h4 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <Globe size={18} color="#059669" /> موقع المشروع على الخريطة (Satellite)
+                                                    </h4>
+                                                    <div style={{ height: '300px', borderRadius: '14px', overflow: 'hidden', border: '1px solid #e2e8f0', zIndex: 0 }}>
+                                                        <MapContainer 
+                                                            center={[project.lat, project.lng]} 
+                                                            zoom={16} 
+                                                            style={{ height: '100%', width: '100%' }}
+                                                            zoomControl={false}
+                                                        >
+                                                            <ZoomControl position="topright" />
+                                                            <TileLayer 
+                                                                url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" 
+                                                                attribution='&copy; Google Maps Satellite' 
+                                                            />
+                                                            <Marker position={[project.lat, project.lng]}>
+                                                                <Popup>{project.name}</Popup>
+                                                            </Marker>
+                                                        </MapContainer>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>

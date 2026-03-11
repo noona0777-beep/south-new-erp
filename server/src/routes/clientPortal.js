@@ -256,13 +256,139 @@ const router = express.Router();
                     comment: comment || (visitId ? `تقييم للزيارة رقم ${visitId}` : '')
                 }
             });
-
             res.json({ message: 'شكراً لتقييمك! تم تسجيل رأيك بنجاح', feedback });
         } catch (error) {
             console.error('Rating Error:', error);
             res.status(500).json({ error: 'فشل تسجيل التقييم' });
         }
     });
+    
+    // 7. Client Documents (Archive)
+    router.get('/documents', async (req, res) => {
+        try {
+            const partnerId = req.client.id;
+            
+            const documents = await prisma.document.findMany({
+                where: {
+                    OR: [
+                        { partnerId: partnerId },
+                        { project: { clientId: partnerId } }
+                    ]
+                },
+                include: {
+                    project: { select: { name: true } }
+                },
+                orderBy: { createdAt: 'desc' }
+            });
 
-module.exports = router;
+            res.json(documents);
+        } catch (error) {
+            console.error('Fetch Documents Error:', error);
+            res.status(500).json({ error: 'فشل جلب المستندات' });
+        }
+    });
+
+    // 9. Support Tickets List
+    router.get('/support-tickets', async (req, res) => {
+        try {
+            const tickets = await prisma.supportTicket.findMany({
+                where: { clientId: req.client.id },
+                include: { project: { select: { name: true } } },
+                orderBy: { updatedAt: 'desc' }
+            });
+            res.json(tickets);
+        } catch (error) {
+            res.status(500).json({ error: 'فشل جلب تذاكر الدعم' });
+        }
+    });
+
+    // 10. Create Support Ticket
+    router.post('/support-tickets', async (req, res) => {
+        try {
+            const { subject, description, category, projectId, priority } = req.body;
+            
+            const ticket = await prisma.supportTicket.create({
+                data: {
+                    clientId: req.client.id,
+                    projectId: projectId ? parseInt(projectId) : null,
+                    subject,
+                    description,
+                    category: category || 'GENERAL',
+                    priority: priority || 'MEDIUM',
+                    status: 'OPEN',
+                    ticketNo: `TK-${Date.now().toString().slice(-6)}`
+                }
+            });
+
+            // Add the initial message
+            await prisma.ticketMessage.create({
+                data: {
+                    ticketId: ticket.id,
+                    senderId: req.client.id,
+                    senderType: 'CLIENT',
+                    senderName: req.client.name,
+                    message: description
+                }
+            });
+
+            res.status(201).json(ticket);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'فشل إنشاء التذكرة' });
+        }
+    });
+
+    // 11. Get Ticket Details (including messages)
+    router.get('/support-tickets/:id', async (req, res) => {
+        try {
+            const ticket = await prisma.supportTicket.findFirst({
+                where: { id: parseInt(req.params.id), clientId: req.client.id },
+                include: {
+                    messages: { orderBy: { createdAt: 'asc' } },
+                    project: { select: { name: true } }
+                }
+            });
+            if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
+            res.json(ticket);
+        } catch (error) {
+            res.status(500).json({ error: 'فشل جلب تفاصيل التذكرة' });
+        }
+    });
+
+    // 12. Add Message to Ticket
+    router.post('/support-tickets/:id/messages', async (req, res) => {
+        try {
+            const { message } = req.body;
+            const ticketId = parseInt(req.params.id);
+
+            // Verify ownership
+            const ticket = await prisma.supportTicket.findFirst({
+                where: { id: ticketId, clientId: req.client.id }
+            });
+
+            if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
+
+            const newMessage = await prisma.ticketMessage.create({
+                data: {
+                    ticketId,
+                    senderId: req.client.id,
+                    senderType: 'CLIENT',
+                    senderName: req.client.name,
+                    message
+                }
+            });
+
+            // Update ticket status to OPEN or IN_PROGRESS if client replies
+            await prisma.supportTicket.update({
+                where: { id: ticketId },
+                data: { updatedAt: new Date() }
+            });
+
+            res.status(201).json(newMessage);
+        } catch (error) {
+            res.status(500).json({ error: 'فشل إرسال الرد' });
+        }
+    });
+
+    module.exports = router;
 

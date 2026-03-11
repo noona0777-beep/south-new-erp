@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import API_URL from '@/config';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Briefcase, Calendar, MapPin, User, CheckSquare, Clock, AlertCircle, Folder, AlertOctagon, Map } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { Plus, Briefcase, Calendar, MapPin, User, CheckSquare, Clock, AlertCircle, Folder, AlertOctagon, Map as MapIcon, Globe } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -21,6 +21,7 @@ const ProjectsPage = () => {
     const queryClient = useQueryClient();
     const [showForm, setShowForm] = useState(false);
     const [selectedProject, setSelectedProject] = useState(null);
+    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
 
     // Form State for Project
     const [projectData, setProjectData] = useState({
@@ -164,11 +165,20 @@ const ProjectsPage = () => {
                         {selectedProject.lat && selectedProject.lng && (
                             <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
                                 <h4 style={{ margin: '0 0 14px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Map size={18} color="#3b82f6" /> نقطة المشروع (GPS)
+                                    <MapIcon size={18} color="#3b82f6" /> نقطة المشروع (GPS)
                                 </h4>
                                 <div style={{ height: '220px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', zIndex: 0 }}>
-                                    <MapContainer center={[selectedProject.lat, selectedProject.lng]} zoom={14} style={{ height: '100%', width: '100%' }}>
-                                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
+                                    <MapContainer 
+                                        center={[selectedProject.lat, selectedProject.lng]} 
+                                        zoom={16} 
+                                        style={{ height: '100%', width: '100%' }}
+                                        zoomControl={false}
+                                    >
+                                        <ZoomControl position="topright" />
+                                        <TileLayer 
+                                            url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" 
+                                            attribution='&copy; Google Maps Satellite' 
+                                        />
                                         <Marker position={[selectedProject.lat, selectedProject.lng]}>
                                             <Popup>{selectedProject.name}</Popup>
                                         </Marker>
@@ -243,16 +253,26 @@ const ProjectsPage = () => {
                     <h2 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>المشاريع والمقاولات</h2>
                     <p style={{ margin: 0, color: '#64748b' }}>إدارة المشاريع الإنشائية ومهام العمل</p>
                 </div>
-                <button
-                    onClick={() => setShowForm(true)}
-                    style={{
-                        background: '#2563eb', color: 'white', border: 'none', padding: '12px 24px',
-                        borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold',
-                        display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgb(37 99 235 / 0.3)', width: 'fit-content'
-                    }}
-                >
-                    <Plus size={20} /> مشروع جديد
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ background: '#f1f5f9', padding: '4px', borderRadius: '10px', display: 'flex', gap: '4px' }}>
+                        <button onClick={() => setViewMode('grid')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'grid' ? 'white' : 'transparent', color: viewMode === 'grid' ? '#2563eb' : '#64748b', boxShadow: viewMode === 'grid' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Briefcase size={16} /> الشبكة
+                        </button>
+                        <button onClick={() => setViewMode('map')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'map' ? 'white' : 'transparent', color: viewMode === 'map' ? '#2563eb' : '#64748b', boxShadow: viewMode === 'map' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Globe size={16} /> الخريطة العالمية
+                        </button>
+                    </div>
+                    <button
+                        onClick={() => setShowForm(true)}
+                        style={{
+                            background: '#2563eb', color: 'white', border: 'none', padding: '12px 24px',
+                            borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold',
+                            display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgb(37 99 235 / 0.3)', width: 'fit-content'
+                        }}
+                    >
+                        <Plus size={20} /> مشروع جديد
+                    </button>
+                </div>
             </div>
 
             {showForm && (
@@ -301,6 +321,27 @@ const ProjectsPage = () => {
                 <div style={{ textAlign: 'center', padding: '60px', color: '#ef4444', background: 'white', borderRadius: '16px' }}>
                     <AlertOctagon size={32} style={{ margin: '0 auto 16px', display: 'block' }} />
                     خطأ في تحميل المشاريع. يرجى المحاولة مرة أخرى.
+                </div>
+            ) : viewMode === 'map' ? (
+                <div style={{ height: '600px', borderRadius: '20px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', zIndex: 0 }}>
+                    <MapContainer center={[24.7136, 46.6753]} zoom={6} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+                        <ZoomControl position="topright" />
+                        <TileLayer 
+                            url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" 
+                            attribution='&copy; Google Maps Satellite' 
+                        />
+                        {projects.filter(p => p.lat && p.lng).map(project => (
+                            <Marker key={project.id} position={[project.lat, project.lng]}>
+                                <Popup>
+                                    <div style={{ textAlign: 'right', fontFamily: 'Cairo' }}>
+                                        <strong style={{ color: '#1e3a8a' }}>{project.name}</strong><br />
+                                        <span>الحالة: {getStatusLabel(project.status).label}</span><br />
+                                        <button onClick={() => setSelectedProject(project)} style={{ marginTop: '8px', padding: '4px 8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>فتح التفاصيل</button>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        ))}
+                    </MapContainer>
                 </div>
             ) : (
                 <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>

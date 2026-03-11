@@ -56,7 +56,8 @@ const routes = {
     materialRequests: require('./routes/materialRequests'),
     logs: require('./routes/logs'),
     ai: require('./routes/ai'),
-    attendance: require('./routes/attendance')
+    attendance: require('./routes/attendance'),
+    support: require('./routes/support')
 };
 
 // --- Basic APIs ---
@@ -91,6 +92,7 @@ app.use('/api/crm', authenticate, routes.crm);
 app.use('/api/material-requests', authenticate, routes.materialRequests);
 app.use('/api/ai', authenticate, routes.ai);
 app.use('/api/attendance', authenticate, routes.attendance);
+app.use('/api/support', authenticate, routes.support);
 
 // Category 2: Generic /API Mount (For routers that define their own top-level paths like /products, /accounts, /employees)
 app.use('/api', routes.auth);
@@ -98,9 +100,6 @@ app.use('/api', routes.inventory);
 app.use('/api', routes.hr);
 app.use('/api', routes.accounting);
 app.use('/api', routes.realEstate);
-
-// Legacy/Compatibility support for direct /hr calls if any
-app.use('/api/hr', routes.hr);
 
 // 5. Static Files (React SPA)
 const clientDistPath = path.join(__dirname, '../../client/dist');
