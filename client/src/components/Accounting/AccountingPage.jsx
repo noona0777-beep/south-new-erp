@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import API_URL from '@/config';
 import { useToast } from '../../context/ToastContext';
+import { exportToExcel } from '../../utils/excelExport';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -452,6 +453,25 @@ export default function AccountingPage() {
     const [showJournalModal, setShowJournalModal] = useState(false);
     const [showAccountModal, setShowAccountModal] = useState(false);
 
+    const handleExportJournal = () => {
+        const exportData = [];
+        journal.forEach(entry => {
+            entry.entries?.forEach(line => {
+                exportData.push({
+                    'تاريخ القيد': new Date(entry.date).toLocaleDateString('ar-SA'),
+                    'رقم المرجع': entry.reference || '—',
+                    'البيان الأساسي': entry.description,
+                    'اسم الحساب': line.account?.name || 'غير معروف',
+                    'رمز الحساب': line.account?.code || '—',
+                    'وصف السطر': line.description || '',
+                    'مدين (ر.س)': line.debit || 0,
+                    'دائن (ر.س)': line.credit || 0
+                });
+            });
+        });
+        exportToExcel(exportData, `دفتر_اليومية_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}`, 'قيود اليومية');
+    };
+
     // Queries
     const { data: accounts = [], isLoading: accountsLoading, error: accountsError } = useQuery({
         queryKey: ['accounts'],
@@ -606,6 +626,12 @@ export default function AccountingPage() {
                             {/* Journal Tab */}
                             {activeTab === 'journal' && (
                                 <div>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+                                        <button onClick={handleExportJournal} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#10b981', border: 'none', padding: '10px 18px', borderRadius: '10px', color: 'white', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'Cairo', boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)' }}>
+                                            <FileText size={18} />
+                                            تصدير Excel
+                                        </button>
+                                    </div>
                                     {journal.length > 0 ? (
                                         <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>

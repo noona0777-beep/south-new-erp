@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import API_URL from '@/config';
-import { Shield, CreditCard, PieChart, Clock, AlertOctagon } from 'lucide-react';
+import { Shield, CreditCard, PieChart, Clock, AlertOctagon, FileText } from 'lucide-react';
+import { exportToExcel } from '../../../utils/excelExport';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -20,6 +21,30 @@ const BalanceSheet = () => {
     });
 
     const format = (v) => Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+    const handleExportExcel = () => {
+        if (!report) return;
+        const exportData = [];
+        
+        // الأصول
+        exportData.push({ 'القسم الرئيس': 'الأصول (Assets)', 'اسم الحساب': '', 'المبلغ (ر.س)': '' });
+        report.assets.forEach(a => exportData.push({ 'القسم الرئيس': '', 'اسم الحساب': a.name, 'المبلغ (ر.س)': Math.abs(a.balance) }));
+        exportData.push({ 'القسم الرئيس': 'إجمالي الأصول', 'اسم الحساب': '', 'المبلغ (ر.س)': Math.abs(report.totalAssets) });
+        exportData.push({ 'القسم الرئيس': '', 'اسم الحساب': '', 'المبلغ (ر.س)': '' }); // فاصل
+        
+        // الالتزامات
+        exportData.push({ 'القسم الرئيس': 'الالتزامات (Liabilities)', 'اسم الحساب': '', 'المبلغ (ر.س)': '' });
+        report.liabilities.forEach(a => exportData.push({ 'القسم الرئيس': '', 'اسم الحساب': a.name, 'المبلغ (ر.س)': Math.abs(a.balance) }));
+        exportData.push({ 'القسم الرئيس': 'إجمالي الالتزامات', 'اسم الحساب': '', 'المبلغ (ر.س)': Math.abs(report.totalLiabilities) });
+        exportData.push({ 'القسم الرئيس': '', 'اسم الحساب': '', 'المبلغ (ر.س)': '' }); // فاصل
+
+        // حقوق الملكية
+        exportData.push({ 'القسم الرئيس': 'حقوق الملكية (Equity)', 'اسم الحساب': '', 'المبلغ (ر.س)': '' });
+        report.equity.forEach(a => exportData.push({ 'القسم الرئيس': '', 'اسم الحساب': a.name, 'المبلغ (ر.س)': Math.abs(a.balance) }));
+        exportData.push({ 'القسم الرئيس': 'إجمالي حقوق الملكية', 'اسم الحساب': '', 'المبلغ (ر.س)': Math.abs(report.totalEquity) });
+        
+        exportToExcel(exportData, `الميزانية_العمومية_${asOfDate}`, 'الميزانية العمومية');
+    };
 
     if (isLoading) return (
         <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
@@ -100,7 +125,14 @@ const BalanceSheet = () => {
                     <label style={{ fontSize: '0.85rem', color: '#64748b' }}>حتى تاريخ:</label>
                     <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} style={{ border: 'none', background: 'transparent', fontFamily: 'Cairo', outline: 'none', width: '130px' }} />
                 </div>
-                <button onClick={handlePrint} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', width: 'fit-content' }}>🖨️ طباعة</button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={handlePrint} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', width: 'fit-content', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        🖨️ طباعة
+                    </button>
+                    <button onClick={handleExportExcel} style={{ background: '#10b981', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', width: 'fit-content', color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileText size={16} /> تصدير Excel
+                    </button>
+                </div>
             </div>
 
             <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>

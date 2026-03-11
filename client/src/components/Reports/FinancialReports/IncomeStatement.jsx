@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import API_URL from '@/config';
-import { TrendingUp, TrendingDown, DollarSign, Clock, AlertOctagon } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Clock, AlertOctagon, FileText } from 'lucide-react';
+import { exportToExcel } from '../../../utils/excelExport';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -21,6 +22,25 @@ const IncomeStatement = () => {
     });
 
     const format = (v) => Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+    const handleExportExcel = () => {
+        if (!report) return;
+        const exportData = [];
+        
+        exportData.push({ 'نوع البند': 'الإيرادات', 'اسم الحساب': '', 'المبلغ (ر.س)': '' });
+        report.revenues.forEach(r => exportData.push({ 'نوع البند': '', 'اسم الحساب': r.name, 'المبلغ (ر.س)': r.balance }));
+        exportData.push({ 'نوع البند': 'إجمالي الإيرادات', 'اسم الحساب': '', 'المبلغ (ر.س)': report.totalRevenue });
+        exportData.push({ 'نوع البند': '', 'اسم الحساب': '', 'المبلغ (ر.س)': '' }); // فارغ للترتيب
+        
+        exportData.push({ 'نوع البند': 'المصروفات', 'اسم الحساب': '', 'المبلغ (ر.س)': '' });
+        report.expenses.forEach(e => exportData.push({ 'نوع البند': '', 'اسم الحساب': e.name, 'المبلغ (ر.س)': Math.abs(e.balance) }));
+        exportData.push({ 'نوع البند': 'إجمالي المصروفات', 'اسم الحساب': '', 'المبلغ (ر.س)': Math.abs(report.totalExpenses) });
+        exportData.push({ 'نوع البند': '', 'اسم الحساب': '', 'المبلغ (ر.س)': '' }); // فارغ للترتيب
+
+        exportData.push({ 'نوع البند': report.netIncome >= 0 ? 'صافي الربح' : 'صافي الخسارة', 'اسم الحساب': '', 'المبلغ (ر.س)': Math.abs(report.netIncome) });
+        
+        exportToExcel(exportData, `قائمة_الدخل_${startDate}_إلى_${endDate}`, 'قائمة الدخل');
+    };
 
     if (isLoading) return (
         <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
@@ -94,10 +114,15 @@ const IncomeStatement = () => {
     <div class="amount">${fmt(report.netIncome)} ر.س</div>
   </div>
   <div class="footer">تم إنشاء هذا التقرير بواسطة نظام الجنوب الجديد - ${new Date().toLocaleDateString('ar-SA')}</div>
-  <script>window.onload=function(){setTimeout(function(){window.print();},500);};</script>
-</body></html>`);
+                    <script>window.onload=function(){setTimeout(function(){window.print();},500);};</script>
+                </body></html>`);
                     pw.document.close();
-                }} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', fontSize: '0.9rem', width: 'fit-content' }}>🖨️ طباعة</button>
+                }} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', fontSize: '0.9rem', width: 'fit-content', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    🖨️ طباعة
+                </button>
+                <button onClick={handleExportExcel} style={{ background: '#10b981', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', fontSize: '0.9rem', width: 'fit-content', color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileText size={16} /> تصدير Excel
+                </button>
             </div>
 
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>

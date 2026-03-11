@@ -77,9 +77,9 @@ router.post('/refresh', async (req, res) => {
             const contracts = await prisma.constructionContract.findMany({
                 where: {
                     status: { notIn: ['CANCELLED', 'COMPLETED'] },
-                    endDate: { not: null, gte: today, lte: in30Days }
+                    endDate: { gte: today, lte: in30Days }
                 },
-                include: { client: true },
+                include: { partner: true },
                 take: 10
             });
             for (const c of contracts) {

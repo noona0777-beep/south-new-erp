@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import API_URL from '@/config';
 import { Printer, Download, Clock, AlertOctagon } from 'lucide-react';
+import { exportToExcel } from '../../../utils/excelExport';
 
 const format = (num) => (num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -24,24 +25,22 @@ const TrialBalance = () => {
     const totalDebit = accounts.reduce((s, a) => s + (a.balance > 0 ? a.balance : 0), 0);
     const totalCredit = accounts.reduce((s, a) => s + (a.balance < 0 ? Math.abs(a.balance) : 0), 0);
 
-    const exportToCSV = () => {
-        const headers = ['كود الحساب', 'اسم الحساب', 'مدين', 'دائن'];
-        const rows = accounts.map(a => [
-            a.code,
-            a.name,
-            a.balance > 0 ? a.balance : 0,
-            a.balance < 0 ? Math.abs(a.balance) : 0
-        ]);
+    const exportExcel = () => {
+        const exportData = accounts.map(a => ({
+            'كود الحساب': a.code,
+            'اسم الحساب': a.name,
+            'مدين': a.balance > 0 ? a.balance : 0,
+            'دائن': a.balance < 0 ? Math.abs(a.balance) : 0
+        }));
 
-        // Add footer
-        rows.push(['', 'المجموع', totalDebit, totalCredit]);
+        exportData.push({
+            'كود الحساب': '',
+            'اسم الحساب': 'المجموع الإجمالي',
+            'مدين': totalDebit,
+            'دائن': totalCredit
+        });
 
-        const content = [headers, ...rows].map(e => e.join(',')).join('\n');
-        const blob = new Blob(['\ufeff' + content], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `TrialBalance_${asOfDate}.csv`;
-        link.click();
+        exportToExcel(exportData, `ميزان_المراجعة_${asOfDate}`, 'ميزان المراجعة');
     };
 
     if (isLoading) return (
@@ -119,7 +118,7 @@ const TrialBalance = () => {
                     }} className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
                         <Printer size={16} /> طباعة
                     </button>
-                    <button onClick={exportToCSV} className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}>
+                    <button onClick={exportExcel} className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#10b981', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}>
                         <Download size={16} /> تصدير Excel
                     </button>
                 </div>

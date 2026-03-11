@@ -6,9 +6,10 @@ import {
     Settings2, Tag, Save, Minus, RefreshCw,
     ArrowUp, ArrowDown, BarChart3, CheckCircle2,
     DollarSign, AlertTriangle, TrendingDown, Layers,
-    ChevronDown, Filter, AlertOctagon
+    ChevronDown, Filter, AlertOctagon, FileText
 } from 'lucide-react';
 import API_URL from '@/config';
+import { exportToExcel } from '../../utils/excelExport';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -210,6 +211,18 @@ export default function InventoryPage() {
 
     const toggleSort = f => { if (sortBy === f) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortBy(f); setSortDir('asc'); } };
 
+    const handleExportInventory = () => {
+        const exportData = filtered.map(p => ({
+            'اسم الصنف': p.name,
+            'القسم': p.category?.name || 'بدون قسم',
+            'التكلفة (ر.س)': p.cost || 0,
+            'سعر البيع (ر.س)': p.price || 0,
+            'الكمية المتوفرة': p.stocks?.[0]?.quantity ?? 0,
+            'إجمالي التكلفة': (p.cost || 0) * (p.stocks?.[0]?.quantity ?? 0)
+        }));
+        exportToExcel(exportData, `جرد_المخزون_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}`, 'المخزون');
+    };
+
     const filtered = products
         .filter(p => activeCat === 'all' || p.categoryId === activeCat)
         .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
@@ -285,6 +298,10 @@ export default function InventoryPage() {
                     <button onClick={load}
                         style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid rgba(59,130,246,0.2)', background: 'rgba(59,130,246,0.07)', cursor: 'pointer', color: '#60a5fa', fontFamily: 'Cairo', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <RefreshCw size={13} className={productsLoading ? 'animate-spin' : ''} /> تحديث
+                    </button>
+                    <button onClick={handleExportInventory}
+                        style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'rgba(16,185,129,0.15)', cursor: 'pointer', color: '#10b981', fontFamily: 'Cairo', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem' }}>
+                        <FileText size={14} /> تصدير Excel
                     </button>
                     <button onClick={() => { setSel(null); setPForm({ name: '', cost: '', price: '', quantity: 0, categoryId: activeCat !== 'all' ? activeCat : '' }); setErr(''); setModal('add-p'); }}
                         style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7, boxShadow: '0 4px 16px rgba(37,99,235,0.4)', fontSize: '0.9rem' }}>
