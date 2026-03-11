@@ -5,33 +5,36 @@ import { Briefcase, CreditCard, FileText, AlertCircle, ChevronLeft } from 'lucid
 import API_URL from '@/config';
 
 // Reusable card template for client stats
-const StatCard = ({ title, value, subtext, icon, color }) => (
-    <motion.div
-        whileHover={{ y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
-        style={{
-            background: 'white',
-            padding: '24px',
-            borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '16px',
-            position: 'relative',
-            overflow: 'hidden'
-        }}
-    >
-        <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '4px', background: color }} />
-        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${color}15`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {icon}
-        </div>
-        <div>
-            <div style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 600, marginBottom: '8px' }}>{title}</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>{value}</div>
-            <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{subtext}</div>
-        </div>
-    </motion.div>
-);
+const StatCard = ({ title, value, subtext, icon, color, visible = true }) => {
+    if (!visible) return null;
+    return (
+        <motion.div
+            whileHover={{ y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
+            style={{
+                background: 'white',
+                padding: '24px',
+                borderRadius: '16px',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '16px',
+                position: 'relative',
+                overflow: 'hidden'
+            }}
+        >
+            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '4px', background: color }} />
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${color}15`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {icon}
+            </div>
+            <div>
+                <div style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 600, marginBottom: '8px' }}>{title}</div>
+                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>{value}</div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{subtext}</div>
+            </div>
+        </motion.div>
+    );
+};
 
 const ClientDashboard = ({ user }) => {
     const [stats, setStats] = useState(null);
@@ -73,6 +76,7 @@ const ClientDashboard = ({ user }) => {
                     subtext="إجمالي المشاريع المرتبطة بحسابك"
                     icon={<Briefcase size={24} />}
                     color="#3b82f6"
+                    visible={stats?.permissions?.trackProjects !== false}
                 />
                 <StatCard
                     title="الرصيد المتبقي (المطلوب سداده)"
@@ -80,6 +84,7 @@ const ClientDashboard = ({ user }) => {
                     subtext={`من إجمالي ${stats?.totalInvoiced?.toLocaleString()} ر.س`}
                     icon={<AlertCircle size={24} />}
                     color={stats?.balance > 0 ? '#ef4444' : '#10b981'}
+                    visible={stats?.permissions?.viewFinancials === true}
                 />
                 <StatCard
                     title="المبالغ المدفوعة"
@@ -87,6 +92,7 @@ const ClientDashboard = ({ user }) => {
                     subtext="إجمالي الدفعات المسجلة بالنظام"
                     icon={<CreditCard size={24} />}
                     color="#10b981"
+                    visible={stats?.permissions?.viewFinancials === true}
                 />
                 <StatCard
                     title="تذاكر الدعم"

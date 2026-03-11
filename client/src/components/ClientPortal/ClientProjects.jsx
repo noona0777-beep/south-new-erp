@@ -6,6 +6,7 @@ import API_URL from '@/config';
 
 const ClientProjects = () => {
     const [projects, setProjects] = useState([]);
+    const [permissions, setPermissions] = useState({});
     const [loading, setLoading] = useState(true);
     const [expandedProject, setExpandedProject] = useState(null);
     const [projectDetails, setProjectDetails] = useState({}); // Cache for details
@@ -22,6 +23,9 @@ const ClientProjects = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProjects(res.data);
+            if (res.data.length > 0 && res.data[0].permissions) {
+                setPermissions(res.data[0].permissions);
+            }
         } catch (error) {
             console.error('Error fetching projects:', error);
         } finally {
@@ -45,6 +49,7 @@ const ClientProjects = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setProjectDetails(prev => ({ ...prev, [projectId]: res.data }));
+                if (res.data.permissions) setPermissions(res.data.permissions);
             } catch (error) {
                 console.error('Error fetching project details:', error);
             } finally {
@@ -121,7 +126,7 @@ const ClientProjects = () => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
                                     <div style={{ textAlign: 'left', minWidth: '120px' }}>
                                         <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>نسبة الإنجاز (AI)</div>
-                                        {project.progress !== null ? (
+                                        {permissions.trackProjects !== false && project.progress !== null ? (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <div style={{ flex: 1, height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
                                                     <div style={{ width: `${project.progress}%`, height: '100%', background: '#10b981', borderRadius: '4px' }} />
@@ -129,7 +134,7 @@ const ClientProjects = () => {
                                                 <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#10b981' }}>{project.progress}%</span>
                                             </div>
                                         ) : (
-                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>غير متوفرة</span>
+                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{permissions.trackProjects === false ? 'محجوبة' : 'غير متوفرة'}</span>
                                         )}
                                     </div>
                                     {expandedProject === project.id ? <ChevronUp size={20} color="#64748b" /> : <ChevronDown size={20} color="#64748b" />}
@@ -167,7 +172,7 @@ const ClientProjects = () => {
                                                                         <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '12px' }}>مرحلة: {task.phase || 'عام'}</div>
 
                                                                         {/* Embedded AI findings for the client */}
-                                                                        {task.aiReports?.length > 0 && (
+                                                                        {permissions.viewAI !== false && task.aiReports?.length > 0 && (
                                                                             <div style={{ marginTop: '12px', padding: '12px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', fontSize: '0.85rem' }}>
                                                                                 <strong style={{ color: '#065f46', display: 'block', marginBottom: '4px' }}>تحليل الذكاء الاصطناعي الأخير:</strong>
                                                                                 <p style={{ margin: 0, color: '#047857' }}>نسبة إنجاز المرحلة: {task.aiReports[0].progressExtracted || 0}%</p>
@@ -200,18 +205,22 @@ const ClientProjects = () => {
 
                                                                             {/* Rating UI */}
                                                                             <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #fcd34d', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#92400e' }}>قيم أداء المهندس في هذه الزيارة:</span>
-                                                                                <div style={{ display: 'flex', gap: '4px' }}>
-                                                                                    {[1, 2, 3, 4, 5].map(star => (
-                                                                                        <button
-                                                                                            key={star}
-                                                                                            onClick={() => submitRating(visit.id, visit.engineerId, star)}
-                                                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                                                                                        >
-                                                                                            <Star size={18} fill={star <= (visit.rating || 0) ? "#f59e0b" : "none"} color="#f59e0b" />
-                                                                                        </button>
-                                                                                    ))}
-                                                                                </div>
+                                                                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#92400e' }}>
+                                                                                    {permissions.canRate !== false ? 'قيم أداء المهندس في هذه الزيارة:' : 'التقييمات معطلة حالياً'}
+                                                                                </span>
+                                                                                {permissions.canRate !== false && (
+                                                                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                                                                        {[1, 2, 3, 4, 5].map(star => (
+                                                                                            <button
+                                                                                                key={star}
+                                                                                                onClick={() => submitRating(visit.id, visit.engineerId, star)}
+                                                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                                                                            >
+                                                                                                <Star size={18} fill={star <= (visit.rating || 0) ? "#f59e0b" : "none"} color="#f59e0b" />
+                                                                                            </button>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                         </div>
                                                                     </div>

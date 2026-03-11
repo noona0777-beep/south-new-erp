@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { FileText, Download, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { FileText, Printer, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import API_URL from '@/config';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { useNavigate } from 'react-router-dom';
 // Import font data if you have it, else rely on system fonts for basic English/Numbers
 // import { fontData } from '../Common/Amiri-Regular';
 
 const ClientInvoices = () => {
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchInvoices();
@@ -53,21 +53,10 @@ const ClientInvoices = () => {
         );
     };
 
-    const downloadPDF = async (invoice) => {
-        // Fallback simple PDF logic for the client view
-        const doc = new jsPDF({ format: 'a4', orientation: 'p' });
-        doc.setLanguage("ar"); // if amiri isn't loaded, English text will work mainly
-
-        doc.setFontSize(22);
-        doc.text(`Invoice #${invoice.invoiceNumber}`, 105, 20, { align: 'center' });
-
-        doc.setFontSize(12);
-        doc.text(`Date: ${new Date(invoice.date).toLocaleDateString()}`, 20, 40);
-        doc.text(`Amount: ${invoice.total} SAR`, 20, 50);
-
-        doc.text("If you need the full tax invoice (ZATCA), please contact administration.", 105, 100, { align: 'center' });
-
-        doc.save(`Invoice_${invoice.invoiceNumber}.pdf`);
+    const openProfessionalPrint = (invoiceId) => {
+        // We use the central InvoicePrint component that is already correctly styled
+        // We open it in a new tab with hideToolbar=true to make it look like a clean PDF view
+        window.open(`/invoices/${invoiceId}/print?hideToolbar=true`, '_blank');
     };
 
     if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>جاري تحميل الفواتير المالية...</div>;
@@ -115,12 +104,12 @@ const ClientInvoices = () => {
 
                             <div style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
                                 <button
-                                    onClick={() => downloadPDF(invoice)}
+                                    onClick={() => openProfessionalPrint(invoice.id)}
                                     style={{ flex: 1, padding: '10px', background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s' }}
                                     onMouseOver={(e) => Object.assign(e.target.style, { background: '#dbeafe' })}
                                     onMouseOut={(e) => Object.assign(e.target.style, { background: '#eff6ff' })}
                                 >
-                                    <Download size={16} /> تحميل PDF
+                                    <Printer size={16} /> عرض وطباعة الفاتورة الرسمية
                                 </button>
                             </div>
                         </motion.div>

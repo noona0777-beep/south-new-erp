@@ -621,18 +621,21 @@ const AppContent = () => {
     return (
         !user ? (
             <Login onSuccess={setUser} />
-        ) : user.role === 'CLIENT' ? (
-            <Routes>
-                <Route path="/*" element={<ClientLayout user={user} onLogout={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); }} />} />
-            </Routes>
         ) : (
             <Routes>
+                {/* Public/Shared Printable Routes (Accessible by both Staff and Clients) */}
                 <Route path="/invoices/:id/print" element={<InvoicePrint />} />
                 <Route path="/quotes/:id/print" element={<QuotePrint />} />
                 <Route path="/contracts/:id/print" element={<ContractPrint />} />
                 <Route path="/clients/:id/statement" element={<ClientStatement />} />
                 <Route path="/archive/summary/:type/:id" element={<DataRecordSummary />} />
-                <Route path="/*" element={<Layout user={user} onLogout={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); }} />} />
+
+                {/* Role-Based Layouts */}
+                {user.role === 'CLIENT' ? (
+                    <Route path="/*" element={<ClientLayout user={user} onLogout={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); }} />} />
+                ) : (
+                    <Route path="/*" element={<Layout user={user} onLogout={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); }} />} />
+                )}
             </Routes>
         )
     );

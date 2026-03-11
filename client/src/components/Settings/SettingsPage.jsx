@@ -43,6 +43,22 @@ const InputField = ({ label, value, onChange, type = 'text', placeholder, readOn
     </div>
 );
 
+const PermissionItem = ({ label, active, onChange }) => (
+    <div 
+        onClick={() => onChange(!active)}
+        style={{ 
+            display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', 
+            borderRadius: '10px', border: `1px solid ${active ? '#2563eb' : '#e2e8f0'}`,
+            background: active ? '#eff6ff' : '#f8fafc', cursor: 'pointer', transition: 'all 0.2s'
+        }}
+    >
+        <div style={{ width: '20px', height: '20px', borderRadius: '4px', border: `2px solid ${active ? '#2563eb' : '#cbd5e1'}`, background: active ? '#2563eb' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {active && <div style={{ width: '6px', height: '6px', background: 'white', borderRadius: '1px' }} />}
+        </div>
+        <span style={{ fontSize: '0.85rem', fontWeight: active ? '700' : '600', color: active ? '#1e40af' : '#64748b' }}>{label}</span>
+    </div>
+);
+
 // ======= TAB: Company Info =======
 const CompanyTab = () => {
     const queryClient = useQueryClient();
@@ -106,27 +122,7 @@ const CompanyTab = () => {
     );
 };
 
-const PermissionItem = ({ label, active, onChange }) => (
-    <div
-        onClick={() => onChange(!active)}
-        style={{
-            display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px',
-            background: active ? '#eff6ff' : '#f8fafc', borderRadius: '10px',
-            border: `1px solid ${active ? '#3b82f6' : '#e2e8f0'}`, cursor: 'pointer',
-            transition: 'all 0.2s', flex: '1 1 200px'
-        }}
-    >
-        <div style={{
-            width: '18px', height: '18px', borderRadius: '4px',
-            border: `2px solid ${active ? '#3b82f6' : '#cbd5e1'}`,
-            background: active ? '#3b82f6' : 'white',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
-        }}>
-            {active && <Save size={12} />}
-        </div>
-        <span style={{ fontSize: '0.85rem', fontWeight: active ? '600' : '400', color: active ? '#1e40af' : '#64748b' }}>{label}</span>
-    </div>
-);
+
 
 // ======= TAB: Users Management (Advanced) =======
 const UsersTab = () => {
@@ -665,6 +661,151 @@ const WhatsAppTab = () => {
     );
 };
 
+// ======= TAB: Client Portal Management =======
+const ClientPortalTab = () => {
+    const queryClient = useQueryClient();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [editingClient, setEditingClient] = useState(null);
+    const [form, setForm] = useState({ email: '', password: '', portalPermissions: {} });
+    const [msg, setMsg] = useState('');
+
+    const portalModules = [
+        { id: 'viewFinancials', label: 'عرض الفواتير والمالية' },
+        { id: 'trackProjects', label: 'متابعة تطور المشاريع' },
+        { id: 'viewVisits', label: 'الاطلاع على التقارير الميدانية' },
+        { id: 'canRate', label: 'السماح بالتقييم والتعليق' },
+        { id: 'viewArchive', label: 'الوصول للأرشيف والوثائق' },
+        { id: 'viewAI', label: 'تحليلات الذكاء الاصطناعي' },
+    ];
+
+    const { data: clients = [], isLoading } = useQuery({
+        queryKey: ['portalClients'],
+        queryFn: async () => (await axios.get(`${API_URL}/partners?type=CUSTOMER`, { headers: H() })).data
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: async (data) => await axios.put(`${API_URL}/partners/${data.id}`, data, { headers: H() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['portalClients'] });
+            setMsg('✅ تم تحديث بيانات الدخول للعميل بنجاح');
+            setEditingClient(null);
+            setTimeout(() => setMsg(''), 3000);
+        },
+        onError: () => setMsg('❌ فشل في تحديث البيانات')
+    });
+
+    const handleSave = () => {
+        if (!form.email) return setMsg('❌ البريد الإلكتروني مطلوب');
+        updateMutation.mutate({ ...editingClient, ...form });
+    };
+
+    const togglePortalPermission = (id, val) => {
+        setForm(prev => ({
+            ...prev,
+            portalPermissions: { ...prev.portalPermissions, [id]: val }
+        }));
+    };
+
+    const filtered = clients.filter(c => 
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        c.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (isLoading) return <div style={{ padding: '20px', textAlign: 'center' }}><Activity className="animate-spin" /></div>;
+
+    return (
+        <div className="fade-in">
+            <div style={{ marginBottom: '24px' }}>
+                <h3 style={{ margin: 0, color: '#1e293b', fontWeight: '800' }}>إدارة حسابات بوابة العملاء</h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>هنا يمكنك منح العملاء صلاحية الدخول لمتابعة مشاريعهم وفواتيرهم</p>
+            </div>
+
+            {msg && <div style={{ padding: '12px', background: msg.includes('✅') ? '#f0fdf4' : '#fef2f2', color: msg.includes('✅') ? '#166534' : '#991b1b', borderRadius: '10px', marginBottom: '20px', fontWeight: 'bold' }}>{msg}</div>}
+
+            <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '400px' }}>
+                <Search size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <input 
+                    placeholder="بحث عن عميل..." 
+                    value={searchTerm} 
+                    onChange={e => setSearchTerm(e.target.value)}
+                    style={{ width: '100%', padding: '12px 45px 12px 15px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'Cairo' }}
+                />
+            </div>
+
+            <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead style={{ background: '#f8fafc' }}>
+                        <tr>
+                            <th style={{ padding: '15px', textAlign: 'right', fontSize: '0.85rem', color: '#64748b' }}>العميل</th>
+                            <th style={{ padding: '15px', textAlign: 'right', fontSize: '0.85rem', color: '#64748b' }}>بريد البوابة</th>
+                            <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>حالة الدخول</th>
+                            <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filtered.map(c => (
+                            <tr key={c.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                <td style={{ padding: '15px', fontWeight: 'bold', color: '#1e293b' }}>{c.name}</td>
+                                <td style={{ padding: '15px', color: '#3b82f6' }}>{c.email || '—'}</td>
+                                <td style={{ padding: '15px', textAlign: 'center' }}>
+                                    <span style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '20px', background: c.email && c.password ? '#f0fdf4' : '#f1f5f9', color: c.email && c.password ? '#22c55e' : '#94a3b8', fontWeight: 'bold' }}>
+                                        {c.email && c.password ? 'مفعّل' : 'غير مفعّل'}
+                                    </span>
+                                </td>
+                                <td style={{ padding: '15px', textAlign: 'center' }}>
+                                    <button 
+                                        onClick={() => { 
+                                            setEditingClient(c); 
+                                            setForm({ 
+                                                email: c.email || '', 
+                                                password: '', 
+                                                portalPermissions: c.portalPermissions || {} 
+                                            }); 
+                                        }}
+                                        style={{ background: '#eff6ff', border: 'none', color: '#2563eb', padding: '6px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                    >
+                                        إدارة الحساب
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {editingClient && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ background: 'white', padding: '30px', borderRadius: '20px', width: '100%', maxWidth: '450px' }}>
+                        <h4 style={{ margin: '0 0 20px 0' }}>إدارة بوابة العميل: {editingClient.name}</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <InputField label="البريد الإلكتروني للدخول" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                            <InputField label="كلمة المرور الجديدة" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="اتركها فارغة لعدم التغيير" />
+                            
+                            <div style={{ marginTop: '10px' }}>
+                                <label style={{ fontWeight: '700', fontSize: '0.85rem', color: '#1e293b', display: 'block', marginBottom: '10px' }}>صلاحيات البواية المخصصة:</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    {portalModules.map(m => (
+                                        <PermissionItem 
+                                            key={m.id} 
+                                            label={m.label} 
+                                            active={form.portalPermissions[m.id] === true}
+                                            onChange={(v) => togglePortalPermission(m.id, v)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                <button onClick={handleSave} style={{ flex: 1, padding: '12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>حفظ التعديلات</button>
+                                <button onClick={() => setEditingClient(null)} style={{ flex: 1, padding: '12px', background: '#f1f5f9', border: 'none', color: '#64748b', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>إلغاء</button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 // ======= Main Settings Page =======
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('company');
@@ -672,6 +813,7 @@ export default function SettingsPage() {
     const tabs = [
         { key: 'company', label: 'معلومات المنشأة', icon: <Building2 /> },
         { key: 'whatsapp', label: 'التواصل الذكي', icon: <MessageSquare /> },
+        { key: 'portal', label: 'بوابة العملاء', icon: <Briefcase /> },
         { key: 'users', label: 'المستخدمون', icon: <User /> },
         { key: 'logs', label: 'سجل العمليات', icon: <Shield /> },
         { key: 'system', label: 'إعدادات النظام', icon: <Settings /> },
@@ -698,6 +840,7 @@ export default function SettingsPage() {
             <div style={{ background: 'white', borderRadius: '16px', padding: window.innerWidth < 600 ? '20px' : '28px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', minHeight: '400px' }}>
                 {activeTab === 'company' && <CompanyTab />}
                 {activeTab === 'whatsapp' && <WhatsAppTab />}
+                {activeTab === 'portal' && <ClientPortalTab />}
                 {activeTab === 'users' && <UsersTab />}
                 {activeTab === 'logs' && <AuditLogs />}
                 {activeTab === 'system' && <SystemTab />}

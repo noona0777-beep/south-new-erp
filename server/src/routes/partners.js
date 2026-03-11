@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
+const bcrypt = require('bcryptjs');
 
 router.get('/', async (req, res) => {
     try {
@@ -18,14 +19,22 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const { name, type, phone, address, vatNumber } = req.body;
+        const { name, type, phone, address, vatNumber, email, password } = req.body;
+        
+        let hashedPassword = null;
+        if (password) {
+            hashedPassword = await bcrypt.hash(password, 10);
+        }
+
         const partner = await prisma.partner.create({
             data: {
                 name,
                 type: type || 'CUSTOMER',
                 phone,
                 address,
-                vatNumber
+                vatNumber,
+                email,
+                password: hashedPassword
             }
         });
         res.json(partner);
@@ -37,9 +46,18 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
     try {
+        const { id } = req.params;
+        const data = { ...req.body };
+        
+        if (data.password && data.password.trim() !== '') {
+            data.password = await bcrypt.hash(data.password, 10);
+        } else {
+            delete data.password; // Don't overwrite with empty string
+        }
+
         const partner = await prisma.partner.update({
-            where: { id: parseInt(req.params.id) },
-            data: req.body
+            where: { id: parseInt(id) },
+            data
         });
         res.json(partner);
     } catch (error) {

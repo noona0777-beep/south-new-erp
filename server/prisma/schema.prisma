@@ -51,6 +51,7 @@ model Partner {
   password     String?
   balance      Float     @default(0.0)
   creditLimit  Float?
+  portalPermissions Json? // الصلاحيات الخاصة ببوابة العملاء (فواتير، مشاريع، إلخ)
   
   invoices     Invoice[]
   quotes       Quote[]

@@ -56,7 +56,7 @@ const router = express.Router();
     // ==========================================
     // MIDDLEWARE: Check Client Authentication
     // ==========================================
-    const authenticateClient = (req, res, next) => {
+    const authenticateClient = async (req, res, next) => {
         const token = req.header('Authorization')?.split(' ')[1];
         if (!token) return res.status(401).json({ error: 'غير مصرح للوصول' });
 
@@ -65,7 +65,14 @@ const router = express.Router();
             if (decoded.role !== 'CLIENT') {
                 return res.status(403).json({ error: 'صلاحيات غير كافية' });
             }
-            req.client = decoded;
+            
+            // Fetch latest permissions from DB
+            const partner = await prisma.partner.findUnique({
+                where: { id: decoded.id },
+                select: { portalPermissions: true }
+            });
+
+            req.client = { ...decoded, permissions: partner?.portalPermissions || {} };
             next();
         } catch (err) {
             res.status(400).json({ error: 'الرمز السري (Token) غير صالح' });
@@ -99,12 +106,15 @@ const router = express.Router();
                 }
             });
 
+            const canViewFinancials = req.client.permissions.viewFinancials === true;
+
             res.json({
                 projectsCount,
-                totalInvoiced,
-                totalPaid,
-                balance: totalInvoiced - totalPaid,
-                openTicketsCount
+                totalInvoiced: canViewFinancials ? totalInvoiced : 0,
+                totalPaid: canViewFinancials ? totalPaid : 0,
+                balance: canViewFinancials ? totalInvoiced - totalPaid : 0,
+                openTicketsCount,
+                permissions: req.client.permissions // Send to frontend to hide UI parts
             });
 
         } catch (error) {
@@ -145,13 +155,34 @@ const router = express.Router();
                     name: p.name,
                     status: p.status,
                     startDate: p.startDate,
-                    progress: hasAIReport ? latestProgress : null, // null means unknown
+                    progress: (req.client.permissions.trackProjects !== false) && hasAIReport ? latestProgress : null, 
                     tasksCount: p.tasks.length,
                     visitsCount: p.siteVisits.length
                 };
             });
 
             res.json(formattedProjects);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    // 4. Client Invoices
+    router.get('/invoices', async (req, res) => {
+        try {
+            const partnerId = req.client.id;
+            
+            // Check permission
+            if (req.client.permissions.viewFinancials !== true) {
+                return res.json([]); // Return empty if not permitted, or 403
+            }
+
+            const invoices = await prisma.invoice.findMany({
+                where: { partnerId: partnerId },
+                orderBy: { date: 'desc' }
+            });
+
+            res.json(invoices);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
@@ -167,22 +198,25 @@ const router = express.Router();
 
             if (!project) return res.status(404).json({ error: 'المشروع غير موجود أو غير مصرح لك' });
 
-            const visits = await prisma.siteVisit.findMany({
+            const canViewVisits = req.client.permissions.viewVisits !== false;
+            const canViewAI = req.client.permissions.viewAI !== false;
+
+            const visits = canViewVisits ? await prisma.siteVisit.findMany({
                 where: { projectId: project.id },
                 orderBy: { date: 'desc' },
                 include: { engineer: { select: { name: true } } }
-            });
+            }) : [];
 
-            const tasks = await prisma.task.findMany({
+            let tasks = await prisma.task.findMany({
                 where: { projectId: project.id, type: 'FIELD' },
                 orderBy: { createdAt: 'desc' },
                 include: {
-                    aiReports: true,
+                    aiReports: canViewAI,
                     attachments: true
                 }
             });
 
-            res.json({ visits, tasks });
+            res.json({ visits, tasks, permissions: req.client.permissions });
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
@@ -193,6 +227,10 @@ const router = express.Router();
         try {
             const { taskId, engineerId, visitId, rating, comment } = req.body;
             const clientId = req.client.id;
+
+            if (req.client.permissions.canRate === false) {
+                return res.status(403).json({ error: 'صلاحية التقييم معطلة لحسابك حالياً' });
+            }
 
             if (!rating || rating < 1 || rating > 5) {
                 return res.status(400).json({ error: 'الرجاء تقديم تقييم صحيح من 1 إلى 5' });

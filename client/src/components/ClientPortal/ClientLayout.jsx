@@ -11,12 +11,21 @@ import ClientInvoices from './ClientInvoices';
 const ClientLayout = ({ user, onLogout }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [companyInfo, setCompanyInfo] = useState({ name: 'بوابة العملاء' });
+    const [permissions, setPermissions] = useState({});
     const location = useLocation();
 
     useEffect(() => {
         axios.get(`${API_URL}/settings/companyInfo`)
             .then(res => setCompanyInfo(res.data))
             .catch(() => {});
+
+        // Fetch permissions from dashboard endpoint
+        const token = localStorage.getItem('token');
+        axios.get(`${API_URL}/client-portal/dashboard`, {
+            headers: { Authorization: `Bearer ${token}` }
+        }).then(res => {
+            if (res.data.permissions) setPermissions(res.data.permissions);
+        }).catch(() => {});
     }, []);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -66,8 +75,8 @@ const ClientLayout = ({ user, onLogout }) => {
 
                 <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <NavLink to="/client-portal" icon={<LayoutDashboard />} label="ملخص معلوماتي" />
-                    <NavLink to="/client-portal/projects" icon={<Briefcase />} label="مشاريعي" />
-                    <NavLink to="/client-portal/invoices" icon={<FileText />} label="الفواتير والمالية" />
+                    {permissions.trackProjects !== false && <NavLink to="/client-portal/projects" icon={<Briefcase />} label="مشاريعي" />}
+                    {permissions.viewFinancials === true && <NavLink to="/client-portal/invoices" icon={<FileText />} label="الفواتير والمالية" />}
                 </nav>
 
                 <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #1e293b' }}>
@@ -105,10 +114,10 @@ const ClientLayout = ({ user, onLogout }) => {
                 <main style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
                     <AnimatePresence mode="wait">
                         <motion.div key={location.pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                            <Routes location={location}>
-                                <Route path="/" element={<ClientDashboard user={user} />} />
-                                <Route path="/projects" element={<ClientProjects />} />
-                                <Route path="/invoices" element={<ClientInvoices />} />
+                            <Routes>
+                                <Route path="/client-portal" element={<ClientDashboard user={user} />} />
+                                <Route path="/client-portal/projects" element={<ClientProjects />} />
+                                <Route path="/client-portal/invoices" element={<ClientInvoices />} />
                             </Routes>
                         </motion.div>
                     </AnimatePresence>
