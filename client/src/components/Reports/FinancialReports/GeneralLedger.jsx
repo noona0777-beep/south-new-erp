@@ -161,10 +161,10 @@ const GeneralLedger = () => {
                     >
                         <Search size={18} /> تحديث الكشف
                     </button>
-                    <button onClick={() => window.print()} style={{ padding: '10px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', color: '#64748b' }} title="طباعة">
+                    <button onClick={handlePrintLedger} style={{ padding: '10px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', color: '#64748b' }} title="طباعة / PDF">
                         <Printer size={18} />
                     </button>
-                    <button onClick={handleDownloadPDF} style={{ padding: '10px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', color: '#ef4444' }} title="تحميل بصيغة PDF">
+                    <button onClick={handlePrintLedger} style={{ padding: '10px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', color: '#ef4444' }} title="تحميل بصيغة PDF">
                         <Download size={18} />
                     </button>
                 </div>
