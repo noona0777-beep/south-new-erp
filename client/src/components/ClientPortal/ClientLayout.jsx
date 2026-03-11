@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, FileText, LogOut, Menu, X, HardHat, Building2 } from 'lucide-react';
+import { LayoutDashboard, Briefcase, FileText, LogOut, Menu, X, HardHat, Building2, Phone, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+import API_URL from '@/config';
 import ClientDashboard from './ClientDashboard';
 import ClientProjects from './ClientProjects';
 import ClientInvoices from './ClientInvoices';
 
 const ClientLayout = ({ user, onLogout }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [companyInfo, setCompanyInfo] = useState({ name: 'بوابة العملاء' });
     const location = useLocation();
+
+    useEffect(() => {
+        axios.get(`${API_URL}/settings/companyInfo`)
+            .then(res => setCompanyInfo(res.data))
+            .catch(() => {});
+    }, []);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const closeSidebar = () => setIsSidebarOpen(false);
@@ -49,15 +58,16 @@ const ClientLayout = ({ user, onLogout }) => {
                 transform: window.innerWidth <= 768 && !isSidebarOpen ? 'translateX(100%)' : 'translateX(0)',
                 transition: 'transform 0.3s ease'
             }}>
-                <div style={{ marginBottom: '40px', textAlign: 'center', paddingBottom: '24px', borderBottom: '1px solid #1e293b' }}>
+                <div style={{ marginBottom: '30px', textAlign: 'center', paddingBottom: '24px', borderBottom: '1px solid #1e293b' }}>
                     <img src="/logo.png" alt="Logo" style={{ width: '120px', height: 'auto', margin: '0 auto 16px' }} onError={(e) => e.target.style.display = 'none'} />
-                    <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>بوابة العملاء</h2>
+                    <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>{companyInfo.name || 'بوابة العملاء'}</h2>
+                    {companyInfo.phone && <p style={{ margin: '5px 0 0 0', fontSize: '0.85rem', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}><Phone size={14}/> {companyInfo.phone}</p>}
                 </div>
 
                 <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <NavLink to="/" icon={<LayoutDashboard />} label="ملخص معلوماتي" />
-                    <NavLink to="/projects" icon={<Briefcase />} label="مشاريعي" />
-                    <NavLink to="/invoices" icon={<FileText />} label="الفواتير والمالية" />
+                    <NavLink to="/client-portal" icon={<LayoutDashboard />} label="ملخص معلوماتي" />
+                    <NavLink to="/client-portal/projects" icon={<Briefcase />} label="مشاريعي" />
+                    <NavLink to="/client-portal/invoices" icon={<FileText />} label="الفواتير والمالية" />
                 </nav>
 
                 <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #1e293b' }}>

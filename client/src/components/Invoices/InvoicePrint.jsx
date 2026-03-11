@@ -104,10 +104,10 @@ const InvoicePrint = () => {
                     {/* Header Section */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                         <div>
-                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#1e3a8a', fontWeight: '900' }}>{companyInfo.name || 'مؤسسة الجنوب الجديد'}</h1>
-                            <p style={{ margin: '5px 0', color: '#64748b', fontSize: '1rem', fontWeight: 'bold' }}>للتطوير و الاستثمار و التسويق العقاري</p>
+                            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#1e3a8a', fontWeight: '900' }}>{companyInfo.name || 'مؤسسة الجنوب الوثيق'}</h1>
+                            <p style={{ margin: '5px 0', color: '#64748b', fontSize: '1rem', fontWeight: 'bold' }}>{companyInfo.region || 'للتطوير و الاستثمار و التسويق العقاري'}</p>
                             <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>الرقم الضريبي: <span dir="ltr">{companyInfo.vatNumber || '310123456700003'}</span></p>
-                            <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>العنوان: أحد المسارحة ، جازان</p>
+                            <p style={{ margin: '2px 0', fontSize: '0.85rem', color: '#475569' }}>العنوان: {companyInfo.address || 'أحد المسارحة ، جازان'}</p>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ background: '#1e3a8a', color: '#fff', padding: '12px 30px', borderRadius: '50px', fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '8px' }}>
@@ -188,8 +188,8 @@ const InvoicePrint = () => {
 
                 {/* Footer */}
                 <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '15px', marginTop: '30px' }}>
-                    <p style={{ margin: '0 0 5px 0' }}>شكراً لاستخدامكم خدمات مؤسسة الجنوب الجديد</p>
-                    <p style={{ margin: 0 }}>تم إصدار هذه الفاتورة إلكترونياً وهي معتمدة. لا يتطلب توقيع.</p>
+                    <p style={{ margin: '0 0 5px 0' }}>شكراً لاستخدامكم خدمات {companyInfo.name || 'مؤسسة الجنوب الوثيق'}</p>
+                    <p style={{ margin: 0 }}>تم إصدار هذه الفاتورة إلكترونياً وهي معتمدة.</p>
                 </div>
             </div>
 

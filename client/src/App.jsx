@@ -455,7 +455,7 @@ const Layout = ({ user, onLogout }) => {
                     {hasPermission('all') && <NavLink to="/crm/pipeline" icon={<Activity />} label={t('crm_pipeline', 'مسار المبيعات')} active={isActive('/crm/pipeline')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('all') && <NavLink to="/ai" icon={<Brain />} label={'مركز الذكاء الاصطناعي'} active={isActive('/ai')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('all') && <NavLink to="/zatca" icon={<ShieldCheck />} label={t('zatca_dashboard', 'مراقبة زاتكا')} active={isActive('/zatca')} i18n={i18n} onClick={closeSidebar} />}
-                    <NavLink to="/users" icon={<Settings />} label={t('settings')} active={isActive('/users')} i18n={i18n} onClick={closeSidebar} />
+                    {hasPermission('settings') && <NavLink to="/settings" icon={<Settings />} label={t('settings', 'الإعدادات ومعلومات المنشأة')} active={isActive('/settings')} i18n={i18n} onClick={closeSidebar} />}
                 </nav>
 
                 <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #1e293b' }}>
@@ -593,6 +593,7 @@ const Layout = ({ user, onLogout }) => {
                                 <Route path="/crm/pipeline" element={<PipelineKanban />} />
                                 <Route path="/ai" element={<AIDashboard />} />
                                 <Route path="/zatca" element={<ZatcaDashboard />} />
+                                <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/users" element={<SettingsPage />} />
                             </Routes>
                         </motion.div>

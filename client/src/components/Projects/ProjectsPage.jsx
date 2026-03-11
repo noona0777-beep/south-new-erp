@@ -2,7 +2,18 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import API_URL from '@/config';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Briefcase, Calendar, MapPin, User, CheckSquare, Clock, AlertCircle, Folder, AlertOctagon } from 'lucide-react';
+import { Plus, Briefcase, Calendar, MapPin, User, CheckSquare, Clock, AlertCircle, Folder, AlertOctagon, Map } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// إصلاح مشكلة ظهور أيقونة الدبوس الافتراضية في Leaflet داخل React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -14,6 +25,7 @@ const ProjectsPage = () => {
     // Form State for Project
     const [projectData, setProjectData] = useState({
         name: '', description: '', partnerId: '', location: '',
+        lat: '', lng: '',
         startDate: new Date().toISOString().split('T')[0], endDate: '',
         budget: 0, status: 'PLANNED'
     });
@@ -49,6 +61,7 @@ const ProjectsPage = () => {
             setShowForm(false);
             setProjectData({
                 name: '', description: '', partnerId: '', location: '',
+                lat: '', lng: '',
                 startDate: new Date().toISOString().split('T')[0], endDate: '',
                 budget: 0, status: 'PLANNED'
             });
@@ -87,7 +100,12 @@ const ProjectsPage = () => {
 
     const handleCreateProject = (e) => {
         e.preventDefault();
-        createProjectMutation.mutate(projectData);
+        const payload = {
+            ...projectData,
+            lat: projectData.lat ? parseFloat(projectData.lat) : null,
+            lng: projectData.lng ? parseFloat(projectData.lng) : null
+        };
+        createProjectMutation.mutate(payload);
     };
 
     const handleCreateTask = (e) => {
@@ -141,6 +159,23 @@ const ProjectsPage = () => {
                             <h4 style={{ margin: '0 0 10px 0', color: '#1e293b' }}>الوصف</h4>
                             <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: '1.6' }}>{selectedProject.description || 'لا يوجد وصف للعرض'}</p>
                         </div>
+
+                        {/* Interactive Project Map (Geographical Integration) */}
+                        {selectedProject.lat && selectedProject.lng && (
+                            <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
+                                <h4 style={{ margin: '0 0 14px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Map size={18} color="#3b82f6" /> نقطة المشروع (GPS)
+                                </h4>
+                                <div style={{ height: '220px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', zIndex: 0 }}>
+                                    <MapContainer center={[selectedProject.lat, selectedProject.lng]} zoom={14} style={{ height: '100%', width: '100%' }}>
+                                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
+                                        <Marker position={[selectedProject.lat, selectedProject.lng]}>
+                                            <Popup>{selectedProject.name}</Popup>
+                                        </Marker>
+                                    </MapContainer>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Tasks List */}
@@ -234,6 +269,14 @@ const ProjectsPage = () => {
                                 <option value="">اختر العميل...</option>
                                 {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>خط العرض (Latitude) - اختياري للخرائط</label>
+                            <input type="number" step="any" placeholder="مثال: 24.7136" value={projectData.lat} onChange={(e) => setProjectData({ ...projectData, lat: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>خط الطول (Longitude) - اختياري للخرائط</label>
+                            <input type="number" step="any" placeholder="مثال: 46.6753" value={projectData.lng} onChange={(e) => setProjectData({ ...projectData, lng: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                         </div>
                         <div style={{ gridColumn: 'span 2' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>الوصف</label>

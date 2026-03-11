@@ -55,7 +55,8 @@ const routes = {
     crm: require('./routes/crm'),
     materialRequests: require('./routes/materialRequests'),
     logs: require('./routes/logs'),
-    ai: require('./routes/ai')
+    ai: require('./routes/ai'),
+    attendance: require('./routes/attendance')
 };
 
 // --- Basic APIs ---
@@ -89,6 +90,7 @@ app.use('/api/client-portal', routes.clientPortal);
 app.use('/api/crm', authenticate, routes.crm);
 app.use('/api/material-requests', authenticate, routes.materialRequests);
 app.use('/api/ai', authenticate, routes.ai);
+app.use('/api/attendance', authenticate, routes.attendance);
 
 // Category 2: Generic /API Mount (For routers that define their own top-level paths like /products, /accounts, /employees)
 app.use('/api', routes.auth);

@@ -9,6 +9,7 @@ import {
     TrendingUp, Award, ChevronDown, ChevronUp, Building2, Search,
     FileText, Play, CheckCircle, BarChart3, Download
 } from 'lucide-react';
+import GeoAttendanceTab from './GeoAttendanceTab';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -319,7 +320,7 @@ export default function HRPage() {
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', background: '#f1f5f9', padding: '6px', borderRadius: '12px', width: 'fit-content' }}>
-                {[{ key: 'employees', label: '👤 الموظفون', }, { key: 'payroll', label: '💰 سجل الرواتب' }].map(t => (
+                {[{ key: 'employees', label: '👤 الموظفون' }, { key: 'payroll', label: '💰 سجل الرواتب' }, { key: 'geoAttendance', label: '📍 الحضور الجغرافي' }].map(t => (
                     <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ padding: '10px 22px', border: 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '600', fontSize: '0.9rem', borderRadius: '8px', transition: 'all 0.2s', background: activeTab === t.key ? 'white' : 'transparent', color: activeTab === t.key ? '#2563eb' : '#64748b', boxShadow: activeTab === t.key ? '0 2px 6px rgba(0,0,0,0.07)' : 'none' }}>{t.label}</button>
                 ))}
             </div>
@@ -440,6 +441,9 @@ export default function HRPage() {
                     </div>
                 </div>
             )}
+
+            {/* Geo Attendance Tab */}
+            {activeTab === 'geoAttendance' && <GeoAttendanceTab employees={employees} />}
 
             {/* Modals */}
             {(modal === 'add' || modal === 'edit') && <EmployeeModal employee={modal === 'edit' ? selected : null} onClose={() => { setModal(null); setSelected(null); }} onSave={(data) => saveMutation.mutate(data)} />}
