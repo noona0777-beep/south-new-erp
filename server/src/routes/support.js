@@ -4,12 +4,13 @@ const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth'); // Assuming this exists for Admin
 
 // 1. Admin: List all tickets
-router.get('/all', authenticate, async (req, res) => {
+router.get('/', authenticate, async (req, res) => {
     try {
         const tickets = await prisma.supportTicket.findMany({
             include: {
                 client: { select: { name: true } },
-                project: { select: { name: true } }
+                project: { select: { name: true } },
+                messages: { orderBy: { createdAt: 'asc' } }
             },
             orderBy: { updatedAt: 'desc' }
         });
@@ -37,7 +38,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // 3. Admin: Reply to ticket
-router.post('/:id/messages', authenticate, async (req, res) => {
+router.post('/:id/reply', authenticate, async (req, res) => {
     try {
         const { message } = req.body;
         const ticketId = parseInt(req.params.id);
@@ -47,7 +48,7 @@ router.post('/:id/messages', authenticate, async (req, res) => {
                 ticketId,
                 senderId: req.user.id,
                 senderType: 'ADMIN',
-                senderName: req.user.name,
+                senderName: req.user.name || 'Admin',
                 message
             }
         });

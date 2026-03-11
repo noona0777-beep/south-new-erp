@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bot, Send, TrendingUp, AlertTriangle, CheckCircle, Info,
     BarChart3, Target, Layers, Zap, RefreshCw, ChevronDown, ChevronUp,
-    DollarSign, Briefcase, Users, Package, Brain, Sparkles
+    DollarSign, Briefcase, Users, Package, Brain, Sparkles, HardHat, ShieldCheck, Activity
 } from 'lucide-react';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
@@ -92,6 +92,88 @@ const KPICard = ({ kpi }) => (
 // ========================
 // AI Chat Component
 // ========================
+// ========================
+// SBC Advisor Component
+// ========================
+const SBCAdvisor = () => {
+    const [question, setQuestion] = useState('');
+    const [phase, setPhase] = useState('CONSTRUCTION');
+    const [result, setResult] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    const askSBC = async () => {
+        if (!question) return;
+        setLoading(true);
+        try {
+            const res = await axios.post(`${API_URL}/ai/sbc-advisor`, { question, phase }, { headers: H() });
+            setResult(res.data);
+        } catch (error) { 
+            console.error('SBC Advisor Error:', error.response?.data || error.message);
+            alert('حدث خطأ في جلب الاستشارة: ' + (error.response?.data?.error || error.message));
+        }
+        setLoading(false);
+    };
+
+    return (
+        <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ background: '#fff7ed', padding: '10px', borderRadius: '12px', color: '#ea580c' }}><HardHat size={24} /></div>
+                <div>
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1e293b' }}>مستشار كود البناء السعودي (SBC)</h3>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>احصل على استشارات هندسية فورية مطابقة للمعايير الوطنية</p>
+                </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '15px', marginBottom: '20px' }}>
+                <input 
+                    value={question} onChange={e => setQuestion(e.target.value)}
+                    placeholder="مثلاً: ما هي اشتراطات العزل الحراري للجدران الخارجية؟"
+                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontFamily: 'Cairo', fontSize: '0.9rem' }}
+                />
+                <select 
+                    value={phase} onChange={e => setPhase(e.target.value)}
+                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontFamily: 'Cairo', fontSize: '0.9rem' }}
+                >
+                    <option value="DESIGN">المخططات والتصميم</option>
+                    <option value="CONSTRUCTION">عظم وانشاء</option>
+                    <option value="FINISHING">تشطيبات وديكور</option>
+                </select>
+            </div>
+
+            <button 
+                onClick={askSBC} disabled={loading}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #ea580c, #c2410c)', color: 'white', fontWeight: 'bold', cursor: 'pointer', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+            >
+                {loading ? <RefreshCw className="animate-spin" size={18} /> : <ShieldCheck size={18} />} تحليل الاستشارة هندسياً
+            </button>
+
+            {result && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ background: '#fff7ed', borderRadius: '14px', padding: '20px', border: '1px solid #ffedd5' }}>
+                    <div style={{ fontWeight: '800', color: '#9a3412', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                         <Info size={18} /> التقييم الفني:
+                    </div>
+                    <div style={{ color: '#431407', fontSize: '0.95rem', lineHeight: '1.7', marginBottom: '15px' }}>{result.answer}</div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div>
+                            <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#c2410c', marginBottom: '8px' }}>أهم بنود الكود ذات العلاقة:</div>
+                            {result.relevantClauses.map((c, i) => (
+                                <div key={i} style={{ fontSize: '0.8rem', color: '#7c2d12', background: 'rgba(234,88,12,0.1)', padding: '4px 10px', borderRadius: '6px', marginBottom: '4px' }}>• {c}</div>
+                            ))}
+                        </div>
+                        <div>
+                            <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#c2410c', marginBottom: '8px' }}>توصيات التنفيذ:</div>
+                            {result.recommendations.map((r, i) => (
+                                <div key={i} style={{ fontSize: '0.8rem', color: '#7c2d12', marginBottom: '4px' }}>✅ {r}</div>
+                            ))}
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+        </div>
+    );
+};
+
 const AIChat = () => {
     const [messages, setMessages] = useState([
         { role: 'assistant', content: 'مرحباً! أنا مساعدك الذكي لـ مؤسسة الجنوب الجديد 🤖\n\nيمكنني مساعدتك في:\n• تحليل الأداء المالي\n• متابعة المشاريع والعملاء\n• اقتراح قرارات استراتيجية\n• تحليل مسار المبيعات\n\nبماذا يمكنني مساعدتك اليوم؟', suggestions: ['التحليل المالي', 'صحة المشاريع', 'تحليل CRM', 'تنبيهات ذكية'] }
@@ -199,6 +281,37 @@ const AIChat = () => {
     );
 };
 
+const CashflowSection = () => {
+    const { data: cf, isLoading } = useQuery({
+        queryKey: ['cashflowPrediction'],
+        queryFn: async () => (await axios.get(`${API_URL}/ai/cashflow-prediction`, { headers: H() })).data,
+    });
+
+    if (isLoading) return null;
+
+    return (
+        <div style={{ background: 'linear-gradient(135deg, #f8fafc, #eff6ff)', borderRadius: '16px', padding: '20px', border: '1px solid #bfdbfe' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                <Activity size={20} color="#2563eb" />
+                <h3 style={{ margin: 0, color: '#1e3a8a', fontSize: '1rem' }}>توقع التدفقات النقدية والسيولة</h3>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                {cf?.predictedIncomes?.map((m, i) => (
+                    <div key={i} style={{ flex: 1, background: 'white', padding: '10px', borderRadius: '10px', textAlign: 'center', border: '1px solid #dbeafe' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{m.month}</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#2563eb' }}>{m.amount.toLocaleString('ar')}</div>
+                    </div>
+                ))}
+            </div>
+
+            <div style={{ background: '#dcfce7', color: '#166534', padding: '10px', borderRadius: '10px', fontSize: '0.82rem', border: '1px solid #bbf7d0' }}>
+                💡 <b>توصية الذكاء الاصطناعي:</b> {cf?.recommendation}
+            </div>
+        </div>
+    );
+};
+
 // ========================
 // Main AI Dashboard Page
 // ========================
@@ -237,6 +350,7 @@ export default function AIDashboard() {
         { key: 'alerts', label: 'التنبيهات الذكية', icon: <Zap size={16} /> },
         { key: 'financial', label: 'التحليل المالي', icon: <DollarSign size={16} /> },
         { key: 'projects', label: 'صحة المشاريع', icon: <Briefcase size={16} /> },
+        { key: 'sbc', label: 'مستشار SBC', icon: <HardHat size={16} /> },
         { key: 'crm', label: 'تحليل المبيعات', icon: <Target size={16} /> },
         { key: 'chat', label: 'المساعد الذكي', icon: <Bot size={16} /> },
     ];
@@ -316,11 +430,14 @@ export default function AIDashboard() {
                     {/* Financial Tab */}
                     {activeTab === 'financial' && (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                            <div>
-                                <h3 style={{ margin: '0 0 16px', color: '#1e293b' }}>رؤى مالية ذكية</h3>
-                                {financialLoading ? <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>⏳ جاري التحليل...</div> :
-                                    financialData?.insights?.map((ins, i) => <InsightCard key={i} insight={ins} />)
-                                }
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div>
+                                    <h3 style={{ margin: '0 0 16px', color: '#1e293b' }}>رؤى مالية ذكية</h3>
+                                    {financialLoading ? <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>⏳ جاري التحليل...</div> :
+                                        financialData?.insights?.map((ins, i) => <InsightCard key={i} insight={ins} />)
+                                    }
+                                </div>
+                                <CashflowSection />
                             </div>
                             <div>
                                 <h3 style={{ margin: '0 0 16px', color: '#1e293b' }}>إحصاءات الفواتير</h3>
@@ -336,6 +453,8 @@ export default function AIDashboard() {
                             </div>
                         </div>
                     )}
+
+                    {activeTab === 'sbc' && <SBCAdvisor />}
 
                     {/* Projects Tab */}
                     {activeTab === 'projects' && (

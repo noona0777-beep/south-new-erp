@@ -125,7 +125,7 @@ const GeoAttendanceTab = ({ employees }) => {
                     <button onClick={handleClockIn} disabled={loadingGeo} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: '700', fontFamily: 'Cairo', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}>
                         {loadingGeo ? <Clock className="animate-spin" size={18} /> : <LogIn size={18} />} تسجيل دخول
                     </button>
-                    <button onClick={handleClockOut} disabled={loadingGeo} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', border: 'none', background: 'white', color: '#ef4444', fontWeight: '700', border: '1px solid #fecaca', fontFamily: 'Cairo', cursor: 'pointer' }}>
+                    <button onClick={handleClockOut} disabled={loadingGeo} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', background: 'white', color: '#ef4444', fontWeight: '700', border: '1px solid #fecaca', fontFamily: 'Cairo', cursor: 'pointer' }}>
                         {loadingGeo ? <Clock className="animate-spin" size={18} /> : <LogOut size={18} />} تسجيل انصراف
                     </button>
                 </div>

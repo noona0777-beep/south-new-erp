@@ -14,7 +14,7 @@ const isMockMode = () => !process.env.OPENAI_API_KEY
 // ======================================================
 // Helper: Call OpenAI chat with a system + user prompt
 // ======================================================
-async function askAI(systemPrompt, userPrompt) {
+async function askAI(systemPrompt, userPrompt, jsonMode = true) {
     if (isMockMode()) {
         return null; // caller will handle mock
     }
@@ -24,10 +24,10 @@ async function askAI(systemPrompt, userPrompt) {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
         ],
-        max_tokens: 1000,
-        response_format: { type: 'json_object' }
+        max_tokens: 2000,
+        ...(jsonMode && { response_format: { type: 'json_object' } })
     });
-    return JSON.parse(response.choices[0].message.content);
+    return jsonMode ? JSON.parse(response.choices[0].message.content) : response.choices[0].message.content;
 }
 
 // =============================================
@@ -333,6 +333,131 @@ router.get('/executive-kpis', async (req, res) => {
                 { title: 'مهام مُغلقة هذا الشهر', value: completionRate._count.id, change: 'ميداني', trend: 'up', color: '#06b6d4' },
             ]
         });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// =============================================
+// 8. محلل كود البناء السعودي - SBC Technical Advisor
+// =============================================
+router.post('/sbc-advisor', async (req, res) => {
+    try {
+        const { question, phase } = req.body;
+
+        const phaseTranslations = {
+            'DESIGN': 'المخططات والتصميم',
+            'CONSTRUCTION': 'عظم وإنشاء',
+            'FINISHING': 'تشطيبات وديكور'
+        };
+        const phaseArabic = phaseTranslations[phase] || phase;
+
+        const systemPrompt = `أنت خبير هندسي معتمد استشاري في كود البناء السعودي (SBC). 
+يجب أن تجيب على استفسارات المستخدمين الخاصة باشتراطات ومواصفات البناء بدقة عالية بناءً على الكود السعودي وتحديثاته.
+قدم إجابات تقنية دقيقة مدعومة بأرقام بنود الكود. إليك الدليل المرجعي الأساسي للكود:
+- SBC 201: الكود المعماري
+- SBC 301: كود الأحمال والقوى
+- SBC 303: كود التربة والأساسات
+- SBC 304: كود الخرسانة الإنشائية
+- SBC 401: الكود الكهربائي
+- SBC 501: الكود الميكانيكي
+- SBC 601: كود ترشيد الطاقة
+- SBC 701: الكود الصحي (السباكة)
+- SBC 801: كود الحماية من الحرائق
+- SBC 1101: كود البناء السكني
+
+المرحلة الحالية للمشروع: ${phaseArabic}
+
+يجب أن يكون الرد حصرياً بصيغة JSON بالتنسيق التالي:
+{
+  "answer": "شرح فني دقيق للاشتراطات المطلوبة للإجابة على سؤال المستخدم مدعوماً بمتطلبات التنفيذ والاستلام.",
+  "relevantClauses": ["رقم البند - واسم البند", "بند آخر..."],
+  "recommendations": ["توصية فنية 1 للتنفيذ والاختبار", "توصية فنية 2..."]
+}`;
+
+        let result;
+
+        if (isMockMode()) {
+            let answer = '';
+            let relevantClauses = [];
+            let recommendations = [];
+            
+            const q = question.toLowerCase();
+
+            if (q.includes('عزل') || q.includes('حراري') || q.includes('طاقة')) {
+                answer = `بناءً على متطلبات كود البناء السعودي لكفاءة الطاقة (SBC 601) والكود السكني (SBC 1101)، يعتبر العزل الحراري للجدران الخارجية والأسطح إلزامياً. في مرحلة ${phaseArabic}، يجب أن لا يزيد معامل الانتقال الحراري (U-value) للجدران عن 0.342 W/m²K حسب المنطقة المناخية. كما يُشترط استخدام الزجاج المزدوج للنوافذ وتقليل الجسور الحرارية.`;
+                relevantClauses = ["SBC 601 - كفاءة الطاقة", "SBC 1101 - العزل والتهوية"];
+                recommendations = ["استخدام البلوك البركاني المعزول أو الجدارين وبينهما عزل بسماكة لا تقل عن 5 سم", "التأكد من عدم وجود جسور حرارية عند الأعمدة والجسور باستخدام ألواح بوليسترين بثق (XPS)"];
+            } else if (q.includes('خرسانة') || q.includes('تسليح') || q.includes('قواعد') || q.includes('صب')) {
+                answer =  `وفقاً للكود السعودي للمنشآت السكنية (SBC 1101) وكود الخرسانة الإنشائية (SBC 304)، يجب ألا يقل الغطاء الخرساني للقواعد الملامسة للتربة عن 75 ملم حماية للحديد من الصدأ. وفي مرحلة ${phaseArabic}، يجب التأكد من إجهاد كسر الخرسانة بحيث لا يقل عن 25 MPa للعناصر الإنشائية المعرضة لظروف بيئية قاسية. يجب إجراء اختبارات الهبوط والمكعبات الخرسانية في الموقع.`;
+                relevantClauses = ["SBC 1101 - الفصل الخامس: الخرسانة", "SBC 304 - كود الخرسانة الإنشائية", "SBC 303 - كود التربة والأساسات"];
+                recommendations = ["استخدام اسمنت مقاوم للكبريتات (SRC) في الأساسات والرقاب", "معالجة الخرسانة بالماء (Curing) أو بالمركبات الكيميائية المعتمدة لمدة لا تقل عن 7 أيام متواصلة"];
+            } else if (q.includes('سباكة') || q.includes('صرف') || q.includes('مياه') || q.includes('خزان')) {
+                answer = `يحدد الكود السعودي للتمديدات الصحية (SBC 701) المتطلبات الفنية لأعمال السباكة والمياه. في مرحلة ${phaseArabic}، يجب إجراء اختبار ضغط لشبكة تغذية المياه (1.5 مرة من ضغط التشغيل التشغيلي أو 10 بار أيهما أكبر) للتأكد من خلوها من التسريبات. كما يشير إلى وجوب عزل خزانات المياه الأرضية بمواد آمنة صحياً لا تتفاعل مع مياه الشرب.`;
+                relevantClauses = ["SBC 701 - الكود السعودي للتمديدات الصحية", "SBC 1101 - المتطلبات الصحية للسكن"];
+                recommendations = ["اختبار شبكة التغذية بجهاز الضغط لمدة 24 ساعة للتحقق من ثبات الضغط", "فصل أنظمة الصرف الصحي (الرمادي والأسود) حسب التصميم لتقليل الروائح، وعزل المواسير المعلقة لتخفيف الصوت"];
+            } else if (q.includes('كهرباء') || q.includes('اسلاك') || q.includes('طبلون') || q.includes('تأريض')) {
+                answer = `ينص الكود الكهربائي السعودي (SBC 401) على ضرورة تنفيذ نظام تأريض (Grounding) منخفض المقاومة لحماية الأرواح والممتلكات من التماسات الكهربائية. في مرحلة ${phaseArabic}، يجب تمديد دوائر الإضاءة بأسلاك لا تقل مساحة مقطعها عن 2.5 مم² والبرايز 4 مم² مع ضرورة استخدام قواطع الحماية من التسريب الأرضي (GFCI) في الأماكن الرطبة كالحمامات والمطابخ.`;
+                relevantClauses = ["SBC 401 - الكود الكهربائي السعودي", "SBC 1101 - الفصل التاسع: التركيبات الكهربائية"];
+                recommendations = ["قياس مقاومة التأريض بحيث لا تتجاوز 5 أوم (يفضل 1 أوم للأنظمة الحساسة)", "تلوين الأسلاك حسب التوصيف القياسي (أحمر/أصفر/أزرق للفيزات، أسود للمحايد، أخضر/أصفر للتأريض)"];
+            } else if (q.includes('حريق') || q.includes('دفاع مدني') || q.includes('انذار') || q.includes('ابواب')) {
+                answer = `بموجب كود الحماية من الحرائق (SBC 801)، تُتطلب إجراءات صارمة للسلامة والأمان. في مرحلة ${phaseArabic}، يجب تركيب أنظمة إنذار مبكر (كواشف دخان وحرارة) مرتبطة بلوحة تحكم، كما يجب أن تكون أبواب مخارج الطوارئ وغرف الكهرباء مقاومة للحريق لمدة لا تقل عن 90 دقيقة.`;
+                relevantClauses = ["SBC 801 - كود الحماية من الحرائق", "SBC 201 - الكود المعماري العام"];
+                recommendations = ["استخدام مواد تشطيب داخلية (دهانات/أرضيات) ذات تصنيف منخفض في انتشار اللهب والدخان", "تركيب كواشف الدخان في الممرات والصالات وفي غرف النوم للوحدات المطلوبة"];
+            } else if (q.includes('تربة') || q.includes('حفر') || q.includes('احلال') || q.includes('ردم')) {
+                answer = `ينظم كود التربة والأساسات (SBC 303) أعمال الحفر وتجهيز الموقع. في مرحلة ${phaseArabic}، لا يُسمح بتأسيس القواعد قبل إجراء فحص للتربة (تقرير الجسات) للتأكد من قدرة تحمل التربة (Bearing Capacity). إذا كانت التربة ضعيفة، يشترط عمل طبقات إحلال تُدك وتُختبر (Sand Cone Test) بحيث لا تقل نسبة الدمك عن 95% لمعظم المشاريع السكنية.`;
+                relevantClauses = ["SBC 303 - كود التربة والأساسات", "SBC 1101 - متطلبات الموقع والمواد"];
+                recommendations = ["إزالة الطبقة السطحية العضوية بالكامل قبل الحفر", "حماية جوانب الحفر في حال تجاوز العمق للمترين أو عند قرب المنشآت المجاورة تجنباً للانهيارات المحتملة"];
+            } else {
+                answer = `مرحباً بك. للإجابة الدقيقة على سؤالك حول "${question}" في دورة ${phaseArabic} للمشروع، ينص كود البناء السعودي العام (SBC 201) و (SBC 1101 للمشاريع السكنية) على ضرورة اتباع المخططات الهندسية المعتمدة لضمان الجودة والسلامة الانشائية. لتقديم تحليل تقني مفصل، يرجى تزويدي بمزيد من التفاصيل حول العنصر أو الاستفسار المرجو (كهرباء، سباكة، عزل، خرسانة، حريق ...).`;
+                relevantClauses = ["SBC 201 - الكود المعماري العام", "SBC 1101 - كود البناء السكني"];
+                recommendations = ["الاستعانة بالمخطط الهندسي المعتمد من المكاتب الاستشارية للمبنى والمستند لمتطلبات منصة بلدي", "التأكد من مطابقة جميع المواد المستخدمة لمواصفات الهيئة السعودية للمواصفات والمقاييس (SASO)"];
+            }
+
+            result = { answer, relevantClauses, recommendations };
+        } else {
+            result = await askAI(systemPrompt, `سؤال العميل: ${question}`);
+        }
+
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// =============================================
+// 9. توقع التدفقات النقدية - Cashflow Prediction
+// =============================================
+router.get('/cashflow-prediction', async (req, res) => {
+    try {
+        const [invoices, projects] = await Promise.all([
+            prisma.invoice.findMany({ where: { status: 'POSTED' } }),
+            prisma.project.findMany({ where: { status: 'IN_PROGRESS' } })
+        ]);
+
+        const data = {
+            totalExpected: invoices.reduce((s, i) => s + i.total, 0),
+            projectRemainingValues: projects.reduce((s, p) => s + (p.contractValue || 0), 0)
+        };
+
+        if (isMockMode()) {
+            return res.json({
+                currentCash: data.totalExpected * 0.4,
+                predictedIncomes: [
+                    { month: 'أبريل', amount: data.totalExpected * 0.5 },
+                    { month: 'مايو', amount: data.totalExpected * 0.3 },
+                    { month: 'يونيو', amount: data.totalExpected * 0.2 }
+                ],
+                confidenceScore: 85,
+                recommendation: "السيولة المتوقعة للشهر القادم قوية، يُنصح بجدولة دفعات الموردين في منتصف الشهر لتفادي فجوات التدفق النقدي."
+            });
+        }
+
+        const result = await askAI(
+            'أنت محلل مالي خبير. توقع التدفقات النقدية للأشهر الـ 3 القادمة بناءً على الفواتير المعلقة وقيم المشاريع.',
+            `البيانات: ${JSON.stringify(data)}. قدم النتائج بصيغة JSON: { "currentCash": 0, "predictedIncomes": [], "confidenceScore": 0, "recommendation": "" }`
+        );
+        res.json(result);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

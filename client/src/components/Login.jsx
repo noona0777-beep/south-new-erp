@@ -32,7 +32,8 @@ const Login = ({ onSuccess }) => {
             localStorage.setItem('user', JSON.stringify(res.data.user));
             onSuccess(res.data.user);
         } catch (err) {
-            setError(err.response?.data?.error || 'فشل الاتصال بالسيرفر');
+            console.error('Login Failed:', err);
+            setError(err.response?.data?.error || err.message || 'فشل الاتصال بالسيرفر');
         } finally {
             setLoading(false);
         }

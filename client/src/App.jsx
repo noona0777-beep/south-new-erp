@@ -26,6 +26,7 @@ import CRMDashboard from './components/CRM/CRMDashboard';
 import LeadsPage from './components/CRM/LeadsPage';
 import PipelineKanban from './components/CRM/PipelineKanban';
 import AIDashboard from './components/AI/AIDashboard';
+import AdminSupportPage from './components/Support/AdminSupportPage';
 import API_URL from '@/config';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -59,7 +60,7 @@ axios.interceptors.request.use((config) => {
 import {
     LayoutDashboard, ShoppingCart, Users, Briefcase, Building2,
     DollarSign, FileBarChart2, Settings, Bell, Search, Menu, X,
-    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages, ShieldCheck, Activity, HardHat, Target, TrendingUp, Brain
+    ChevronLeft, FileText, Folder, UserPlus, Package, AlertOctagon, LogOut, Languages, ShieldCheck, Activity, HardHat, Target, TrendingUp, Brain, MessageSquare
 } from 'lucide-react';
 
 /* --- UI Components --- */
@@ -456,6 +457,7 @@ const Layout = ({ user, onLogout }) => {
                     {hasPermission('all') && <NavLink to="/ai" icon={<Brain />} label={'مركز الذكاء الاصطناعي'} active={isActive('/ai')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('all') && <NavLink to="/zatca" icon={<ShieldCheck />} label={t('zatca_dashboard', 'مراقبة زاتكا')} active={isActive('/zatca')} i18n={i18n} onClick={closeSidebar} />}
                     {hasPermission('settings') && <NavLink to="/settings" icon={<Settings />} label={t('settings', 'الإعدادات ومعلومات المنشأة')} active={isActive('/settings')} i18n={i18n} onClick={closeSidebar} />}
+                    {hasPermission('all') && <NavLink to="/support" icon={<MessageSquare />} label={'دعم العملاء (التذاكر)'} active={isActive('/support')} i18n={i18n} onClick={closeSidebar} />}
                 </nav>
 
                 <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #1e293b' }}>
@@ -595,6 +597,7 @@ const Layout = ({ user, onLogout }) => {
                                 <Route path="/zatca" element={<ZatcaDashboard />} />
                                 <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/users" element={<SettingsPage />} />
+                                <Route path="/support" element={<AdminSupportPage />} />
                             </Routes>
                         </motion.div>
                     </AnimatePresence>
