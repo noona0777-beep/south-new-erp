@@ -53,7 +53,51 @@ const IncomeStatement = () => {
                     <label style={{ fontSize: '0.85rem', color: '#64748b', whiteSpace: 'nowrap' }}>إلى:</label>
                     <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ width: '100%', border: '1px solid #e2e8f0', padding: '6px 10px', borderRadius: '8px', fontFamily: 'Cairo' }} />
                 </div>
-                <button onClick={() => window.print()} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', fontSize: '0.9rem', width: 'fit-content' }}>🖨️ طباعة</button>
+                <button onClick={() => {
+                    const fmt = (v) => Math.abs(v).toLocaleString('ar-SA', { minimumFractionDigits: 2 });
+                    const revRows = report.revenues.map(a => `<tr><td>${a.name}</td><td style="text-align:left;color:#10b981;font-weight:600">${fmt(a.balance)} ر.س</td></tr>`).join('');
+                    const expRows = report.expenses.map(a => `<tr><td>${a.name}</td><td style="text-align:left;color:#ef4444;font-weight:600">${fmt(a.balance)} ر.س</td></tr>`).join('');
+                    const isProfit = report.netIncome >= 0;
+                    const pw = window.open('', '_blank', 'width=800,height=700');
+                    pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<title>قائمة الدخل</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Cairo,sans-serif;direction:rtl;padding:15mm;color:#0f172a;max-width:700px;margin:0 auto}
+  h1{text-align:center;font-size:1.6rem;color:#1e3a5f;margin-bottom:4px}
+  .sub{text-align:center;color:#64748b;font-size:0.9rem;margin-bottom:24px}
+  .section{margin-bottom:28px}
+  .section-title{font-size:1.1rem;font-weight:700;padding-bottom:8px;border-bottom:2px solid #e2e8f0;margin-bottom:12px;display:flex;gap:8px;align-items:center}
+  .rev .section-title{color:#2563eb} .exp .section-title{color:#ef4444}
+  table{width:100%;border-collapse:collapse}
+  td{padding:9px 4px;border-bottom:1px dotted #e2e8f0;font-size:0.9rem}
+  .total-row td{font-weight:800;border-top:2px solid #e2e8f0;border-bottom:none;font-size:1rem;padding-top:12px}
+  .net{padding:18px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;margin-top:16px;border:2px solid ${isProfit?'#10b981':'#ef4444'};background:${isProfit?'#ecfdf5':'#fef2f2'}}
+  .net h2{font-size:1.3rem;color:${isProfit?'#065f46':'#991b1b'}}
+  .net .amount{font-size:1.8rem;font-weight:900;color:${isProfit?'#10b981':'#ef4444'}}
+  .footer{margin-top:20px;text-align:center;font-size:0.75rem;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px}
+  @page{margin:15mm;size:A4}
+</style></head><body>
+  <h1>قائمة الدخل</h1>
+  <p class="sub">للفترة من ${startDate} إلى ${endDate}</p>
+  <div class="section rev">
+    <div class="section-title">📈 الإيرادات</div>
+    <table>${revRows}<tr class="total-row"><td>إجمالي الإيرادات</td><td style="text-align:left;color:#10b981">${fmt(report.totalRevenue)} ر.س</td></tr></table>
+  </div>
+  <div class="section exp">
+    <div class="section-title">📉 المصروفات</div>
+    <table>${expRows}<tr class="total-row"><td>إجمالي المصروفات</td><td style="text-align:left;color:#ef4444">${fmt(report.totalExpenses)} ر.س</td></tr></table>
+  </div>
+  <div class="net">
+    <div><h2>${isProfit?'صافي الربح':'صافي الخسارة'}</h2><p style="color:#64748b;font-size:0.85rem">بعد خصم كافة المصاريف</p></div>
+    <div class="amount">${fmt(report.netIncome)} ر.س</div>
+  </div>
+  <div class="footer">تم إنشاء هذا التقرير بواسطة نظام الجنوب الجديد - ${new Date().toLocaleDateString('ar-SA')}</div>
+  <script>window.onload=function(){setTimeout(function(){window.print();},500);};</script>
+</body></html>`);
+                    pw.document.close();
+                }} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', fontSize: '0.9rem', width: 'fit-content' }}>🖨️ طباعة</button>
             </div>
 
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>

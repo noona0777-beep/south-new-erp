@@ -74,7 +74,49 @@ const TrialBalance = () => {
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    <button onClick={() => window.print()} className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
+                    <button onClick={() => {
+                        const rows = accounts.map(a => `
+                            <tr>
+                                <td style="color:#64748b">${a.code}</td>
+                                <td style="font-weight:600">${a.name}</td>
+                                <td style="text-align:center;color:#10b981;font-weight:700">${a.balance > 0 ? format(a.balance) : '-'}</td>
+                                <td style="text-align:center;color:#ef4444;font-weight:700">${a.balance < 0 ? format(Math.abs(a.balance)) : '-'}</td>
+                            </tr>`).join('');
+                        const pw = window.open('', '_blank', 'width=900,height=700');
+                        pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<title>ميزان المراجعة - ${asOfDate}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Cairo,sans-serif;direction:rtl;padding:15mm;color:#0f172a;background:white}
+  h1{text-align:center;font-size:1.5rem;color:#1e3a5f;margin-bottom:4px}
+  .sub{text-align:center;color:#64748b;font-size:0.9rem;margin-bottom:20px}
+  table{width:100%;border-collapse:collapse;font-size:0.88rem}
+  thead tr{background:#1e3a5f;color:white}
+  thead th{padding:10px 14px;text-align:right;font-weight:700;border:1px solid #1e3a5f}
+  tbody tr:nth-child(even){background:#f8fafc}
+  tbody td{padding:9px 14px;border:1px solid #e2e8f0}
+  tfoot tr{background:#f1f5f9;font-weight:800;border-top:2px solid #e2e8f0;font-size:1rem}
+  tfoot td{padding:12px 14px}
+  .footer{margin-top:20px;text-align:center;font-size:0.75rem;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px}
+  @page{margin:15mm;size:A4}
+</style></head><body>
+  <h1>ميزان المراجعة</h1>
+  <p class="sub">حتى تاريخ: ${asOfDate}</p>
+  <table>
+    <thead><tr><th>كود الحساب</th><th>اسم الحساب</th><th style="text-align:center">مدين (Debit)</th><th style="text-align:center">دائن (Credit)</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr>
+      <td colspan="2">المجموع الإجمالي:</td>
+      <td style="text-align:center;color:#10b981">${format(totalDebit)}</td>
+      <td style="text-align:center;color:#ef4444">${format(totalCredit)}</td>
+    </tr></tfoot>
+  </table>
+  <div class="footer">تم إنشاء هذا التقرير بواسطة نظام الجنوب الجديد - ${new Date().toLocaleDateString('ar-SA')}</div>
+  <script>window.onload=function(){setTimeout(function(){window.print();},500);};</script>
+</body></html>`);
+                        pw.document.close();
+                    }} className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
                         <Printer size={16} /> طباعة
                     </button>
                     <button onClick={exportToCSV} className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}>
