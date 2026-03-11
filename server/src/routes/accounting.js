@@ -120,4 +120,90 @@ router.get('/reports/income-statement', async (req, res) => {
     }
 });
 
+router.get('/reports/balance-sheet', async (req, res) => {
+    try {
+        const { date } = req.query;
+        const asOfDate = date ? new Date(date) : new Date();
+        const accounts = await prisma.account.findMany({ orderBy: { code: 'asc' } });
+
+        const withBalance = await Promise.all(accounts.map(async (acc) => {
+            const entries = await prisma.journalEntry.findMany({
+                where: { accountId: acc.id, transaction: { date: { lte: asOfDate } } }
+            });
+            const debit = entries.reduce((s, e) => s + e.debit, 0);
+            const credit = entries.reduce((s, e) => s + e.credit, 0);
+            // Assets/Expenses: debit nature. Liabilities/Equity/Revenue: credit nature
+            let balance = 0;
+            if (acc.code.startsWith('1') || acc.code.startsWith('5')) {
+                balance = debit - credit;
+            } else {
+                balance = credit - debit;
+            }
+            return { ...acc, balance };
+        }));
+
+        const assets = withBalance.filter(a => a.code.startsWith('1') && a.balance !== 0);
+        const liabilities = withBalance.filter(a => a.code.startsWith('2') && a.balance !== 0);
+        const equity = withBalance.filter(a => a.code.startsWith('3') && a.balance !== 0);
+
+        const totalAssets = assets.reduce((s, a) => s + a.balance, 0);
+        const totalLiabilities = liabilities.reduce((s, a) => s + a.balance, 0);
+        const totalEquity = equity.reduce((s, a) => s + a.balance, 0);
+
+        res.json({ assets, liabilities, equity, totalAssets, totalLiabilities, totalEquity });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/reports/general-ledger', async (req, res) => {
+    try {
+        const { accountId, startDate, endDate } = req.query;
+        if (!accountId) return res.status(400).json({ error: 'accountId required' });
+
+        const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+        const end = endDate ? new Date(endDate) : new Date();
+        end.setHours(23, 59, 59, 999);
+
+        const account = await prisma.account.findUnique({ where: { id: parseInt(accountId) } });
+        if (!account) return res.status(404).json({ error: 'Account not found' });
+
+        // Opening balance: all entries before startDate
+        const openingEntries = await prisma.journalEntry.findMany({
+            where: { accountId: parseInt(accountId), transaction: { date: { lt: start } } }
+        });
+        const openingDebit = openingEntries.reduce((s, e) => s + e.debit, 0);
+        const openingCredit = openingEntries.reduce((s, e) => s + e.credit, 0);
+        const isDebitNature = account.code.startsWith('1') || account.code.startsWith('5');
+        const openingBalance = isDebitNature ? openingDebit - openingCredit : openingCredit - openingDebit;
+
+        // Period movements
+        const entries = await prisma.journalEntry.findMany({
+            where: { accountId: parseInt(accountId), transaction: { date: { gte: start, lte: end } } },
+            include: { transaction: true },
+            orderBy: { transaction: { date: 'asc' } }
+        });
+
+        let runningBalance = openingBalance;
+        const movements = entries.map(e => {
+            const debit = e.debit || 0;
+            const credit = e.credit || 0;
+            if (isDebitNature) runningBalance += debit - credit;
+            else runningBalance += credit - debit;
+            return {
+                id: e.id,
+                date: e.transaction.date,
+                description: e.description || e.transaction.description,
+                reference: e.transaction.reference || e.transaction.id,
+                debit, credit,
+                balance: runningBalance
+            };
+        });
+
+        res.json({ account, openingBalance, movements, closingBalance: runningBalance });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

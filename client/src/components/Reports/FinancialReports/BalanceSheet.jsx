@@ -12,7 +12,7 @@ const BalanceSheet = () => {
     const { data: report, isLoading, error } = useQuery({
         queryKey: ['report', 'balance-sheet', asOfDate],
         queryFn: async () => {
-            const res = await axios.get(`${API_URL}/reports/balance-sheet?date=${asOfDate}`, {
+            const res = await axios.get(`${API_URL}/accounting/reports/balance-sheet?date=${asOfDate}`, {
                 headers: H()
             });
             return res.data;

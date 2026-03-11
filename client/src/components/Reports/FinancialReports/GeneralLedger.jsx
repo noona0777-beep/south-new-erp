@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import API_URL from '@/config';
-import { Search, Printer, Download, ArrowRight, ArrowLeft, Clock, AlertOctagon } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
+import { Search, Printer, Download, Clock, AlertOctagon } from 'lucide-react';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -16,7 +15,7 @@ const GeneralLedger = () => {
     const { data: accounts = [] } = useQuery({
         queryKey: ['report', 'account-list'],
         queryFn: async () => {
-            const res = await axios.get(`${API_URL}/reports/trial-balance`, { headers: H() });
+            const res = await axios.get(`${API_URL}/accounting/reports/trial-balance`, { headers: H() });
             return res.data;
         }
     });
@@ -25,7 +24,7 @@ const GeneralLedger = () => {
     const { data: report, isLoading, error, refetch } = useQuery({
         queryKey: ['report', 'general-ledger', selectedAccount, startDate, endDate],
         queryFn: async () => {
-            const res = await axios.get(`${API_URL}/reports/general-ledger?accountId=${selectedAccount}&startDate=${startDate}&endDate=${endDate}`, {
+            const res = await axios.get(`${API_URL}/accounting/reports/general-ledger?accountId=${selectedAccount}&startDate=${startDate}&endDate=${endDate}`, {
                 headers: H()
             });
             return res.data;
@@ -35,44 +34,8 @@ const GeneralLedger = () => {
 
     const format = (v) => v === 0 ? '-' : Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2 });
 
-    const handleDownloadPDF = async () => {
-        const element = document.getElementById('ledger-content');
-        if (!element) return;
-
-        // Save original style to restore later
-        const originalStyle = element.getAttribute('style') || '';
-
-        // Temporarily adjust styles for perfect PDF capture
-        element.style.width = '100%';
-        element.style.height = 'auto';
-        element.style.position = 'relative';
-        element.style.overflow = 'visible';
-
-        // Scroll to top to avoid html2canvas capturing blank space
-        const currentScrollY = window.scrollY;
-        window.scrollTo(0, 0);
-
-        const opt = {
-            margin: [10, 10, 10, 10], // Top, Left, Bottom, Right
-            filename: `GeneralLedger_${report?.account?.code || 'Statement'}.pdf`,
-            image: { type: 'jpeg', quality: 1 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                scrollY: 0,
-                windowWidth: element.scrollWidth
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } // Landscape to fit tables better
-        };
-
-        try {
-            await html2pdf().set(opt).from(element).save();
-        } finally {
-            // Restore everything
-            element.setAttribute('style', originalStyle);
-            window.scrollTo(0, currentScrollY);
-        }
+    const handleDownloadPDF = () => {
+        window.print();
     };
 
     return (
