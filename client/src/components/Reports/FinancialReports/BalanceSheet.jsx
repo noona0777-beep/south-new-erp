@@ -41,6 +41,57 @@ const BalanceSheet = () => {
         </div>
     );
 
+    const handlePrint = () => {
+        if (!report) return;
+        const fmt = (v) => Math.abs(v).toLocaleString('ar-SA', { minimumFractionDigits: 2 });
+        const makeRows = (arr) => arr.map(a => `<tr><td>${a.name}</td><td style="text-align:left;font-weight:600">${fmt(a.balance)} ر.س</td></tr>`).join('');
+
+        const pw = window.open('', '_blank', 'width=900,height=700');
+        pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<title>الميزانية العمومية - حتى ${asOfDate}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:Cairo,sans-serif; direction:rtl; padding:15mm; color:#0f172a; }
+  h1 { text-align:center; font-size:1.5rem; color:#1e3a5f; margin-bottom:4px; }
+  .sub { text-align:center; color:#64748b; font-size:0.9rem; margin-bottom:20px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:16px; }
+  .col { border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
+  .col-title { padding:10px 14px; color:white; font-weight:700; font-size:1rem; }
+  .assets .col-title { background:#2563eb; }
+  .liabilities .col-title { background:#ef4444; }
+  .equity .col-title { background:#f59e0b; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:8px 14px; border-bottom:1px solid #f1f5f9; font-size:0.85rem; }
+  .total-row { background:#f8fafc; font-weight:700; border-top:2px solid #e2e8f0; }
+  .balance-check { text-align:center; padding:12px; border:1px solid #e2e8f0; border-radius:8px; font-size:0.85rem; }
+  @page { margin:15mm; size:A4; }
+</style></head><body>
+  <h1>الميزانية العمومية</h1>
+  <p class="sub">حتى تاريخ: ${asOfDate}</p>
+  <div class="grid">
+    <div class="col assets">
+      <div class="col-title">🛡️ الأصول (Assets)</div>
+      <table>${makeRows(report.assets)}<tr class="total-row"><td>إجمالي الأصول</td><td style="text-align:left">${fmt(report.totalAssets)} ر.س</td></tr></table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="col liabilities">
+        <div class="col-title">💳 الالتزامات (Liabilities)</div>
+        <table>${makeRows(report.liabilities)}<tr class="total-row"><td>إجمالي الالتزامات</td><td style="text-align:left">${fmt(report.totalLiabilities)} ر.س</td></tr></table>
+      </div>
+      <div class="col equity">
+        <div class="col-title">📊 حقوق الملكية (Equity)</div>
+        <table>${makeRows(report.equity)}<tr class="total-row"><td>إجمالي حقوق الملكية</td><td style="text-align:left">${fmt(report.totalEquity)} ر.س</td></tr></table>
+      </div>
+      <div class="balance-check">${Math.abs(report.totalAssets-(report.totalLiabilities+report.totalEquity))<1?'✅ الميزانية متزنة':'⚠️ الميزانية غير متزنة'}</div>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:0.75rem;color:#94a3b8;margin-top:16px;">تم إنشاء هذا التقرير بواسطة نظام الجنوب الجديد</p>
+  <script>window.onload=function(){setTimeout(function(){window.print();},500);};</script>
+</body></html>`);
+        pw.document.close();
+    };
+
     return (
         <div style={{ direction: 'rtl' }}>
             <div className="no-print mobile-grid-1" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', background: 'white', padding: '16px', borderRadius: '16px', border: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
@@ -49,7 +100,7 @@ const BalanceSheet = () => {
                     <label style={{ fontSize: '0.85rem', color: '#64748b' }}>حتى تاريخ:</label>
                     <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} style={{ border: 'none', background: 'transparent', fontFamily: 'Cairo', outline: 'none', width: '130px' }} />
                 </div>
-                <button onClick={() => window.print()} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', width: 'fit-content' }}>🖨️ طباعة</button>
+                <button onClick={handlePrint} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Cairo', width: 'fit-content' }}>🖨️ طباعة</button>
             </div>
 
             <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>

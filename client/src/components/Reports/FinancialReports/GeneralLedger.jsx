@@ -34,9 +34,100 @@ const GeneralLedger = () => {
 
     const format = (v) => v === 0 ? '-' : Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2 });
 
-    const handleDownloadPDF = () => {
-        window.print();
+    const handlePrintLedger = () => {
+        if (!report) return;
+        const format = (v) => v === 0 ? '-' : Math.abs(v).toLocaleString('ar-SA', { minimumFractionDigits: 2 });
+
+        const rows = report.movements?.map(m => `
+            <tr>
+                <td>${new Date(m.date).toLocaleDateString('ar-SA')}</td>
+                <td>${m.description || ''}</td>
+                <td style="text-align:center; color:#64748b">${m.reference || ''}</td>
+                <td style="text-align:center; color:#10b981; font-weight:600">${m.debit > 0 ? format(m.debit) : '-'}</td>
+                <td style="text-align:center; color:#ef4444; font-weight:600">${m.credit > 0 ? format(m.credit) : '-'}</td>
+                <td style="text-align:center; font-weight:700">${format(m.balance)}</td>
+            </tr>`).join('') || '';
+
+        const printWindow = window.open('', '_blank', 'width=1000,height=750');
+        printWindow.document.write(`<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8">
+  <title>كشف حساب - ${report.account?.name}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Cairo, sans-serif; direction: rtl; padding: 15mm; color: #0f172a; background: white; }
+    .header { text-align: center; border-bottom: 3px solid #1e3a5f; padding-bottom: 16px; margin-bottom: 24px; }
+    .header h1 { font-size: 1.5rem; font-weight: 900; color: #1e3a5f; }
+    .header p { color: #64748b; font-size: 0.9rem; margin-top: 4px; }
+    .meta { display: flex; justify-content: space-between; background: #f8fafc; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem; border: 1px solid #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead tr { background: #1e3a5f; color: white; }
+    thead th { padding: 10px 12px; text-align: right; font-weight: 700; border: 1px solid #1e3a5f; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    tbody tr:hover { background: #eff6ff; }
+    tbody td { padding: 9px 12px; border: 1px solid #e2e8f0; }
+    .opening-row { background: #fafafa !important; font-weight: 600; }
+    .closing-row { background: #0f172a !important; color: white; font-weight: 700; }
+    .closing-row td { border-color: #0f172a; }
+    .footer { margin-top: 24px; text-align: center; font-size: 0.75rem; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+    @page { margin: 15mm; size: A4; }
+    @media print { body { padding: 0; } button { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>كشف حساب تفصيلي</h1>
+    <p>الحساب: <strong>${report.account?.name} (${report.account?.code})</strong></p>
+    <p>للفترة من ${startDate} إلى ${endDate}</p>
+  </div>
+  <div class="meta">
+    <span>رصيد أول المدة: <strong>${format(report.openingBalance)} ر.س</strong></span>
+    <span>عدد الحركات: <strong>${report.movements?.length || 0}</strong></span>
+    <span>الرصيد الختامي: <strong>${format(report.closingBalance)} ر.س</strong></span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>التاريخ</th>
+        <th>البيان / الوصف</th>
+        <th style="text-align:center">المرجع</th>
+        <th style="text-align:center">مدين (+)</th>
+        <th style="text-align:center">دائن (-)</th>
+        <th style="text-align:center">الرصيد</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="opening-row">
+        <td>${startDate}</td>
+        <td colspan="4">رصيد أول المدة (افتتاحي)</td>
+        <td style="text-align:center; font-weight:700">${format(report.openingBalance)}</td>
+      </tr>
+      ${rows}
+    </tbody>
+    <tfoot>
+      <tr class="closing-row">
+        <td>${endDate}</td>
+        <td colspan="4">الرصيد الختامي في نهاية الفترة</td>
+        <td style="text-align:center">${format(report.closingBalance)}</td>
+      </tr>
+    </tfoot>
+  </table>
+  <div class="footer">
+    <p>تم إنشاء هذا التقرير بواسطة نظام الجنوب الجديد - ${new Date().toLocaleDateString('ar-SA')}</p>
+  </div>
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 500);
     };
+  </script>
+</body>
+</html>`);
+        printWindow.document.close();
+    };
+
+    const handleDownloadPDF = handlePrintLedger;
 
     return (
         <div style={{ background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
