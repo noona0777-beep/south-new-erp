@@ -67,15 +67,28 @@ const MiniBarChart = ({ data, color = '#2563eb' }) => {
 // Print CSS
 // ─────────────────────────────────────────
 const printStyles = `
+/* ====== SCREEN: hide print area ====== */
+.print-only { display: none !important; }
+.no-print { display: block; }
+
+/* ====== PRINT: show only print area ====== */
 @media print {
-    body * { visibility: hidden !important; }
-    #print-area, #print-area * { visibility: visible !important; }
-    #print-area { position: absolute; left: 0; top: 0; width: 100%; direction: rtl; font-family: Cairo, sans-serif; }
     .no-print { display: none !important; }
+    .print-only {
+        display: block !important;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%;
+        background: white;
+        z-index: 99999;
+        padding: 0;
+        direction: rtl;
+        font-family: Cairo, sans-serif;
+    }
     @page { margin: 15mm; size: A4; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: right; font-size: 11px; }
-    th { background: #f8fafc; font-weight: bold; }
+    th { background: #f8fafc !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .print-header { text-align: center; padding: 20px 0; border-bottom: 2px solid #2563eb; margin-bottom: 20px; }
     .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
     .stat-box { border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; text-align: center; }
@@ -539,7 +552,7 @@ export default function ReportsPage() {
             <style>{printStyles}</style>
 
             {/* Header */}
-            <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}
+            <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="no-print"
                 style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e40af 100%)', borderRadius: '20px', padding: '26px', marginBottom: '24px', color: 'white', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: '-30px', left: '-30px', width: '160px', height: '160px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', position: 'relative' }}>
@@ -560,8 +573,8 @@ export default function ReportsPage() {
                 </div>
             </motion.div>
 
-            {/* Printable area (hidden visually, shown during print) */}
-            <div style={{ display: 'none' }}>
+            {/* Printable area hidden on screen, fully visible during print */}
+            <div className="print-only">
                 <PrintableReport data={data} summary={{ totalRevenue }} period={period} periodLabel={periodLabel} />
             </div>
 
@@ -585,7 +598,7 @@ export default function ReportsPage() {
 
             {/* Tab Content */}
             {!loading && (
-                <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="no-print">
                     {activeTab === 'overview' && <OverviewTab data={data} period={period} />}
                     {activeTab === 'projects' && <ProjectsReport projects={data.projects} />}
                     {activeTab === 'hr' && <HRReport employees={data.employees} />}
