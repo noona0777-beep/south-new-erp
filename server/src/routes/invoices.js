@@ -148,6 +148,19 @@ router.post('/', authenticate, async (req, res) => {
         });
 
         await logActivity(req.user.id, 'CREATE', 'INVOICE', result.id, `فاتورة #${result.invoiceNumber}`);
+
+        // WhatsApp Notification to Client
+        try {
+            const partner = await prisma.partner.findUnique({ where: { id: (partnerId && partnerId !== "") ? Number(partnerId) : -1 } });
+            if (partner && partner.phone) {
+                const { sendWhatsappMessage } = require('../lib/services');
+                const whatsappMsg = `مرحباً ${partner.name}،\n\nتم إصدار فاتورة جديدة لحسابكم بمبلغ: ${result.total.toLocaleString()} ر.س\nرقم الفاتورة: ${result.invoiceNumber}\nالتاريخ: ${new Date(result.date).toLocaleDateString()}\n\nيمكنكم عرض وتحميل الفاتورة عبر بوابة العملاء.\nشكراً لتعاملكم مع مؤسسة الجنوب الجديد.`;
+                await sendWhatsappMessage(partner.phone, whatsappMsg);
+            }
+        } catch (wsErr) {
+            console.error('WhatsApp Invoice Notify Error:', wsErr);
+        }
+
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: 'Failed to create invoice' });

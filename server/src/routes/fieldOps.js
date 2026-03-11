@@ -123,6 +123,23 @@ const router = express.Router();
                 }
             });
             res.status(201).json(visit);
+
+            // WhatsApp Notification to Client
+            try {
+                const project = await prisma.project.findUnique({
+                    where: { id: parseInt(projectId) },
+                    include: { client: { select: { phone: true, name: true } } }
+                });
+                const engineer = await prisma.employee.findUnique({ where: { id: parseInt(engineerId) } });
+
+                if (project?.client?.phone) {
+                    const { sendWhatsappMessage } = require('../lib/services');
+                    const whatsappMsg = `مرحباً ${project.client.name}،\n\nتم تنفيذ زيارة ميدانية جديدة لمشروعكم (${project.name}) من قبل المهندس: ${engineer?.name || 'فريقنا الميداني'}.\nالتاريخ: ${new Date().toLocaleDateString('ar-SA')}\nالملاحظات: ${notes?.substring(0, 50)}${notes?.length > 50 ? '...' : ''}\n\nيمكنكم الاطلاع على تفاصيل الزيارة عبر بوابة العملاء.`;
+                    await sendWhatsappMessage(project.client.phone, whatsappMsg);
+                }
+            } catch (wsErr) {
+                console.error('WhatsApp Visit Notify Error:', wsErr);
+            }
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
@@ -173,6 +190,22 @@ const router = express.Router();
                 }
             });
             res.json(aiReport);
+
+            // WhatsApp Notification to Client
+            try {
+                const task = await prisma.task.findUnique({
+                    where: { id: parseInt(taskId) },
+                    include: { project: { include: { client: { select: { phone: true, name: true } } } } }
+                });
+
+                if (task?.project?.client?.phone) {
+                    const { sendWhatsappMessage } = require('../lib/services');
+                    const whatsappMsg = `مرحباً ${task.project.client.name}،\n\nتم الانتهاء من فحص هندسي (بالذكاء الاصطناعي) لمشروعكم: ${task.project.name}\nالحالة: ${task.title}\nالمخالفات أو الملاحظات: ${sbcViolationsStr.substring(0, 50)}...\nنسبة الإنجاز المقدرة: ${aiReport.progressExtracted}%\n\nلمشاهدة التقرير الكامل، يرجى زيارة بوابة العملاء.`;
+                    await sendWhatsappMessage(task.project.client.phone, whatsappMsg);
+                }
+            } catch (wsErr) {
+                console.error('WhatsApp AI Report Notify Error:', wsErr);
+            }
         } catch (error) {
             console.error('AI Analysis Error:', error);
             if (error.message.includes('apiKey') || error.message.includes('401')) {

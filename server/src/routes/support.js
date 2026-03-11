@@ -58,6 +58,22 @@ router.post('/:id/messages', authenticate, async (req, res) => {
             data: { status: 'IN_PROGRESS', updatedAt: new Date() }
         });
 
+        // 5. WhatsApp Notification to Client
+        try {
+            const ticket = await prisma.supportTicket.findUnique({
+                where: { id: ticketId },
+                include: { client: { select: { phone: true, name: true } } }
+            });
+
+            if (ticket?.client?.phone) {
+                const { sendWhatsappMessage } = require('../lib/services');
+                const whatsappMsg = `مرحباً ${ticket.client.name}،\n\nتمت إضافة رد جديد على تذكرتك رقم (${ticket.ticketNo}): "${ticket.subject}"\n\nالرد: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}\n\nيمكنك متابعة المحادثة عبر بوابة العملاء.`;
+                await sendWhatsappMessage(ticket.client.phone, whatsappMsg);
+            }
+        } catch (wsErr) {
+            console.error('WhatsApp Support Notify Error:', wsErr);
+        }
+
         res.json(newMessage);
     } catch (error) {
         res.status(500).json({ error: error.message });

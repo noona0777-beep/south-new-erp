@@ -62,5 +62,36 @@ if (!isCloudEnvironment) {
 
 const getWhatsappStatus = () => ({ status: whatsappStatus, qrAvailable, qrLastUpdate });
 
-module.exports = { transporter, whatsapp, getWhatsappStatus };
+/**
+ * Send a WhatsApp message to a specific phone number.
+ * @param {string} phone - Target phone number (local or international)
+ * @param {string} message - Content of the message
+ */
+const sendWhatsappMessage = async (phone, message) => {
+    if (whatsappStatus !== 'READY' || !whatsapp) {
+        console.warn('⚠️ Cannot send WhatsApp: Service not ready.');
+        return false;
+    }
+
+    try {
+        // Format number: remove +, spaces, and ensure it ends with @c.us
+        let formatted = phone.replace(/\D/g, '');
+        if (formatted.startsWith('0')) {
+            formatted = '966' + formatted.substring(1); // Default to KSA if domestic
+        }
+        if (!formatted.endsWith('@c.us')) {
+            formatted += '@c.us';
+        }
+
+        await whatsapp.sendMessage(formatted, message);
+        console.log(`📤 WhatsApp Message Sent to ${phone}`);
+        return true;
+    } catch (error) {
+        console.error('❌ WhatsApp Send Error:', error);
+        return false;
+    }
+};
+
+module.exports = { transporter, whatsapp, getWhatsappStatus, sendWhatsappMessage };
+
 
