@@ -1,61 +1,78 @@
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import API_URL from '@/config';
-import { Settings, User, Building2, Save, Plus, Trash2, Eye, EyeOff, Shield, Bell, Database, RefreshCw, Clock, AlertOctagon, MessageSquare, DollarSign, Briefcase, Users, Activity, X, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { 
+    Settings, User, Building2, Save, Plus, Trash2, Eye, EyeOff, Edit,
+    Shield, Bell, Database, RefreshCw, Clock, AlertOctagon, 
+    MessageSquare, DollarSign, Briefcase, Users, Activity, X, 
+    Search, ShieldCheck, Mail, Phone, MapPin, Globe, CreditCard,
+    Cpu, Key, BellRing, Smartphone, ClipboardList, CheckCircle2,
+    Lock, LayoutGrid, ChevronRight, HardDrive, Zap, Info
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AuditLogs from '../Admin/AuditLogs';
-import { useMemo, useState } from 'react';
+import { buttonClick, fadeInUp } from '../Common/MotionComponents';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
-const currentUser = () => {
-    try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
-};
 
-const TabBtn = ({ active, onClick, children, icon }) => (
-    <button onClick={onClick} style={{
-        padding: '12px 20px', border: 'none', cursor: 'pointer', background: active ? '#2563eb' : 'transparent',
-        color: active ? 'white' : '#64748b', fontFamily: 'Cairo', fontWeight: '600', fontSize: '0.9rem',
-        borderRadius: '10px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '8px'
-    }}>
-        {icon}
-        {children}
-    </button>
-);
-
-const InputField = ({ label, value, onChange, type = 'text', placeholder, readOnly }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>{label}</label>
-        <input
-            type={type}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            readOnly={readOnly}
-            style={{
-                padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0',
-                fontFamily: 'Cairo', fontSize: '0.9rem', outline: 'none', direction: 'rtl',
-                background: readOnly ? '#f8fafc' : 'white', color: readOnly ? '#94a3b8' : '#1e293b',
-                transition: 'border-color 0.2s'
-            }}
-            onFocus={e => !readOnly && (e.target.style.borderColor = '#2563eb')}
-            onBlur={e => e.target.style.borderColor = '#e2e8f0'}
-        />
-    </div>
-);
-
-const PermissionItem = ({ label, active, onChange }) => (
-    <div 
-        onClick={() => onChange(!active)}
-        style={{ 
-            display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', 
-            borderRadius: '10px', border: `1px solid ${active ? '#2563eb' : '#e2e8f0'}`,
-            background: active ? '#eff6ff' : '#f8fafc', cursor: 'pointer', transition: 'all 0.2s'
+const TabButton = ({ active, onClick, children, icon: Icon, color = '#6366f1' }) => (
+    <motion.button 
+        whileHover={{ x: 8, background: 'rgba(255,255,255,0.04)' }}
+        whileTap={{ scale: 0.98 }}
+        onClick={onClick} 
+        style={{
+            width: '100%',
+            padding: '18px 24px',
+            border: 'none',
+            cursor: 'pointer',
+            background: active ? `linear-gradient(90deg, ${color}22 0%, transparent 100%)` : 'transparent',
+            color: active ? '#fff' : '#71717a',
+            fontFamily: 'Cairo',
+            fontWeight: '900',
+            fontSize: '1.05rem',
+            borderRadius: '22px',
+            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '18px',
+            position: 'relative',
         }}
     >
-        <div style={{ width: '20px', height: '20px', borderRadius: '4px', border: `2px solid ${active ? '#2563eb' : '#cbd5e1'}`, background: active ? '#2563eb' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {active && <div style={{ width: '6px', height: '6px', background: 'white', borderRadius: '1px' }} />}
+        {active && <motion.div layoutId="tab-glow" style={{ position: 'absolute', right: '-3px', top: '25%', bottom: '25%', width: '3px', background: color, borderRadius: '4px', boxShadow: `0 0 20px ${color}` }} />}
+        <div style={{ 
+            width: '38px', height: '38px', borderRadius: '12px', background: active ? `${color}22` : 'rgba(255,255,255,0.03)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s'
+        }}>
+            <Icon size={20} color={active ? color : '#52525b'} />
         </div>
-        <span style={{ fontSize: '0.85rem', fontWeight: active ? '700' : '600', color: active ? '#1e40af' : '#64748b' }}>{label}</span>
+        {children}
+    </motion.button>
+);
+
+const PremiumInput = ({ label, value, onChange, type = 'text', placeholder, icon: Icon, readOnly }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <label style={{ fontWeight: '900', fontSize: '0.9rem', color: '#a1a1aa', marginRight: '5px' }}>{label}</label>
+        <div style={{ position: 'relative' }}>
+            {Icon && <Icon size={20} style={{ position: 'absolute', right: '18px', top: '50%', transform: 'translateY(-50%)', color: '#52525b' }} />}
+            <input
+                type={type}
+                value={value ?? ''}
+                onChange={onChange}
+
+                placeholder={placeholder}
+                readOnly={readOnly}
+                className="premium-input"
+                style={{
+                    width: '100%',
+                    paddingRight: Icon ? '50px' : '20px',
+                    borderColor: readOnly ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.05)',
+                    background: readOnly ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.02)',
+                    color: readOnly ? '#52525b' : '#fff',
+                    fontSize: '1rem'
+                }}
+            />
+        </div>
     </div>
 );
 
@@ -65,617 +82,352 @@ const CompanyTab = () => {
     const [form, setForm] = useState({});
     const [saved, setSaved] = useState(false);
 
-    const { data: qData, isLoading, error } = useQuery({
+    const { data: qData, isLoading } = useQuery({
         queryKey: ['companyInfo'],
-        queryFn: async () => {
-            const res = await axios.get(`${API_URL}/settings/companyInfo`, { headers: H() });
-            return res.data;
-        }
+        queryFn: async () => (await axios.get(`${API_URL}/settings/companyInfo`, { headers: H() })).data
     });
 
-    useMemo(() => {
-        if (qData) setForm(qData);
-    }, [qData]);
+    useEffect(() => { if (qData) setForm(qData); }, [qData]);
 
     const saveMutation = useMutation({
         mutationFn: async (data) => await axios.post(`${API_URL}/settings/companyInfo`, { value: data }, { headers: H() }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['companyInfo'] });
             setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-        },
-        onError: () => alert('فشل في حفظ البيانات')
+            setTimeout(() => setSaved(false), 3000);
+        }
     });
 
-    const update = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }));
-
-    if (isLoading) return <div style={{ color: '#64748b', fontFamily: 'Cairo' }}>جاري تحميل البيانات...</div>;
-    if (error) return <div style={{ color: '#ef4444', fontFamily: 'Cairo' }}>خطأ في تحميل البيانات</div>;
+    if (isLoading) return <div style={{ color: '#71717a', padding: '100px', textAlign: 'center' }}><RefreshCw className="animate-spin" size={40} /></div>;
 
     return (
-        <div>
-            <h3 style={{ margin: '0 0 24px 0', color: '#1e293b', fontWeight: '700' }}>معلومات المنشأة</h3>
-            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', maxWidth: '700px' }}>
-                <InputField label="اسم المنشأة" value={form.name || ''} onChange={update('name')} placeholder="مؤسسة الجنوب الجديد" />
-                <InputField label="الرقم الضريبي (VAT)" value={form.vatNumber || ''} onChange={update('vatNumber')} placeholder="3XXXXXXXXXXX" />
-                <InputField label="رقم الجوال" value={form.phone || ''} onChange={update('phone')} placeholder="+966 5X XXX XXXX" />
-                <InputField label="البريد الإلكتروني" value={form.email || ''} onChange={update('email')} placeholder="info@company.com" type="email" />
-                <div style={{ gridColumn: '1 / -1' }}>
-                    <InputField label="العنوان" value={form.address || ''} onChange={update('address')} placeholder="أحد المسارحة، جازان" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '40px' }}>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="glass-card" style={{ padding: '45px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(15, 23, 42, 0.4)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '45px' }}>
+                    <div>
+                        <h3 style={{ margin: 0, color: '#fff', fontSize: '2rem', fontWeight: '900' }} className="gradient-text">هوية الكيان التجاري</h3>
+                        <p style={{ margin: '10px 0 0 0', color: '#a1a1aa', fontSize: '1rem', fontWeight: '700' }}>المعلومات الرسمية تظهر تلقائياً في جميع العقود والفواتير الضريبية.</p>
+                    </div>
                 </div>
-                <InputField label="المدينة" value={form.city || ''} onChange={update('city')} placeholder="جازان" />
-                <InputField label="المنطقة" value={form.region || ''} onChange={update('region')} placeholder="المنطقة الجنوبية" />
-                <InputField label="الموقع الإلكتروني" value={form.website || ''} onChange={update('website')} placeholder="www.company.com" />
-                <InputField label="رقم السجل التجاري" value={form.crNumber || ''} onChange={update('crNumber')} placeholder="4XXXXXXXXX" />
-            </div>
-            <button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending} style={{
-                marginTop: '24px', padding: '12px 32px', background: saved ? '#10b981' : '#2563eb',
-                color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer',
-                fontFamily: 'Cairo', fontWeight: '700', fontSize: '0.95rem',
-                display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.3s',
-                opacity: saveMutation.isPending ? 0.7 : 1
-            }}>
-                <Save size={16} />
-                {saveMutation.isPending ? '...جاري الحفظ' : (saved ? '✅ تم الحفظ في قاعدة البيانات!' : 'حفظ البيانات')}
-            </button>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
+                    <PremiumInput label="الاسم التجاري الكامل" value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} icon={Building2} />
+                    <PremiumInput label="الرقم الضريبي الموحد (VAT)" value={form.vatNumber || ''} onChange={e => setForm({...form, vatNumber: e.target.value})} icon={Shield} />
+                    <PremiumInput label="الرقم الموحد للتواصل" value={form.phone || ''} onChange={e => setForm({...form, phone: e.target.value})} icon={Phone} />
+                    <PremiumInput label="البريد المعتمد للمراسلات" value={form.email || ''} onChange={e => setForm({...form, email: e.target.value})} icon={Mail} />
+                    <div style={{ gridColumn: 'span 2' }}>
+                        <PremiumInput label="العنوان الرئيسي والمقر الإداري" value={form.address || ''} onChange={e => setForm({...form, address: e.target.value})} icon={MapPin} />
+                    </div>
+                    <PremiumInput label="المدينة والمقر" value={form.city || ''} onChange={e => setForm({...form, city: e.target.value})} />
+                    <PremiumInput label="رقم السجل التجاري (CR)" value={form.crNumber || ''} onChange={e => setForm({...form, crNumber: e.target.value})} icon={ClipboardList} />
+                    <div style={{ gridColumn: 'span 2' }}>
+                         <PremiumInput label="نطاق الويب الرسمي (Website)" value={form.website || ''} onChange={e => setForm({...form, website: e.target.value})} icon={Globe} />
+                    </div>
+                </div>
+
+                <motion.button 
+                    whileHover={{ scale: 1.02, boxShadow: '0 15px 30px rgba(99, 102, 241, 0.2)' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => saveMutation.mutate(form)} 
+                    style={{ 
+                        marginTop: '45px', width: '100%',
+                        background: saved ? '#10b981' : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', 
+                        color: 'white', border: 'none', padding: '18px 35px', borderRadius: '22px', 
+                        fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                >
+                    {saved ? <CheckCircle2 size={24} /> : <Save size={24} />} 
+                    {saveMutation.isPending ? 'جاري حفظ التغييرات...' : (saved ? 'تم اعتماد البيانات بنجاح' : 'تحديث هوية المنشأة')}
+                </motion.button>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                <div className="glass-card" style={{ padding: '35px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(15, 23, 42, 0.4)' }}>
+                    <h4 style={{ color: '#fff', fontSize: '1.2rem', fontWeight: '900', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Eye size={20} color="#6366f1" /> معاينة الهوية البرمجية
+                    </h4>
+                    <div style={{ 
+                        background: '#fff', borderRadius: '20px', padding: '25px', color: '#000', 
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid #e2e8f0' 
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #6366f1', paddingBottom: '15px', marginBottom: '15px' }}>
+                            <div style={{ fontWeight: '900', fontSize: '1.1rem' }}>{form.name || 'اسم المنشأة يظهر هنا'}</div>
+                            <div style={{ textAlign: 'left', fontSize: '0.7rem', color: '#64748b' }}>
+                                VAT: {form.vatNumber || '0000000000'} <br/>
+                                CR: {form.crNumber || '0000000000'}
+                            </div>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#475569', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div>📞 {form.phone || 'رقم التواصل'}</div>
+                            <div>📍 {form.city || 'المدينة'}</div>
+                            <div style={{ gridColumn: 'span 2' }}>✉️ {form.email || 'البريد الإلكتروني'}</div>
+                        </div>
+                    </div>
+                    <p style={{ color: '#71717a', fontSize: '0.85rem', fontWeight: '700', marginTop: '20px', lineHeight: '1.5' }}>
+                        * هكذا يظهر شعار وبيانات منشأتك في ترويسة التقارير الرسمية والفواتير الضريبية.
+                    </p>
+                </div>
+
+                <div className="glass-card" style={{ padding: '30px', borderRadius: '35px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)' }}>
+                    <div style={{ color: '#fff', fontWeight: '900', fontSize: '1rem', marginBottom: '10px' }}>تكامل الفاتورة الإلكترونية</div>
+                    <p style={{ color: '#a1a1aa', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0' }}>
+                        البيانات المدخلة هنا مرتبطة بمحرك الفوترة الذكي لضمان التوافق مع متطلبات (هيئة الزكاة والضريبة والجمارك).
+                    </p>
+                </div>
+            </motion.div>
         </div>
     );
 };
 
-
-
-// ======= TAB: Users Management (Advanced) =======
+// ======= TAB: Users Management =======
 const UsersTab = () => {
     const queryClient = useQueryClient();
     const [showForm, setShowForm] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
-    const [showPass, setShowPass] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [form, setForm] = useState({
-        name: '', email: '', password: '', role: 'USER',
-        phone: '', status: 'ACTIVE', jobTitle: '', department: '',
-        permissions: {}
-    });
-    const [msg, setMsg] = useState('');
-    const me = currentUser();
-
-    const modules = [
-        { id: 'dashboard', label: 'لوحة القيادة' },
-        { id: 'invoices', label: 'المبيعات والفواتير' },
-        { id: 'quotes', label: 'عروض الأسعار' },
-        { id: 'inventory', label: 'المخزون' },
-        { id: 'clients', label: 'العملاء' },
-        { id: 'projects', label: 'المشاريع والمقاولات' },
-        { id: 'contracts', label: 'عقود المقاولات' },
-        { id: 'accounting', label: 'المحاسبة والمالية' },
-        { id: 'hr', label: 'الموارد البشرية' },
-        { id: 'real_estate', label: 'العقارات' },
-        { id: 'archive', label: 'الأرشيف' },
-        { id: 'reports', label: 'التقارير' },
-        { id: 'field_ops', label: 'الإشراف الميداني' },
-        { id: 'crm', label: 'المبيعات والعملاء (CRM)' },
-        { id: 'zatca', label: 'مراقبة زاتكا' },
-        { id: 'settings', label: 'إعدادات النظام' },
-    ];
+    const [form, setForm] = useState({ name: '', email: '', password: '', role: 'USER', permissions: {} });
 
     const { data: users = [], isLoading } = useQuery({
         queryKey: ['users'],
         queryFn: async () => (await axios.get(`${API_URL}/users`, { headers: H() })).data
     });
 
-    const addMutation = useMutation({
-        mutationFn: async (data) => await axios.post(`${API_URL}/users`, data, { headers: H() }),
+    const mutation = useMutation({
+        mutationFn: async (data) => {
+            if (editingUser) return await axios.put(`${API_URL}/users/${editingUser.id}`, data, { headers: H() });
+            return await axios.post(`${API_URL}/users`, data, { headers: H() });
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
-            setMsg('✅ تم إضافة المستخدم بنجاح');
-            resetForm();
             setShowForm(false);
-        },
-        onError: (err) => setMsg('❌ ' + (err.response?.data?.error || 'فشل في الإضافة'))
-    });
-
-    const updateMutation = useMutation({
-        mutationFn: async (data) => await axios.put(`${API_URL}/users/${data.id}`, data, { headers: H() }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
-            setMsg('✅ تم تحديث بيانات المستخدم');
             setEditingUser(null);
-        },
-        onError: (err) => setMsg('❌ ' + (err.response?.data?.error || 'فشل في التحديث'))
+            setForm({ name: '', email: '', password: '', role: 'USER', permissions: {} });
+        }
     });
 
     const deleteMutation = useMutation({
         mutationFn: async (id) => await axios.delete(`${API_URL}/users/${id}`, { headers: H() }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
-            setMsg('✅ تم حذف المستخدم');
-        },
-        onError: () => setMsg('❌ فشل في الحذف')
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] })
     });
 
-    const resetForm = () => setForm({
-        name: '', email: '', password: '', role: 'USER',
-        phone: '', status: 'ACTIVE', jobTitle: '', department: '',
-        permissions: {}
-    });
+    const filteredUsers = users.filter(u => 
+        u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-    const handleSave = () => {
-        if (!form.name || !form.email || (!editingUser && !form.password)) {
-            setMsg('يرجى تعبئة الحقول الأساسية');
-            return;
-        }
-        if (editingUser) {
-            updateMutation.mutate({ ...form, id: editingUser.id });
-        } else {
-            addMutation.mutate(form);
-        }
-        setTimeout(() => setMsg(''), 3000);
-    };
+    const modules = [
+        { id: 'all', label: 'كافة الصلاحيات (Full Admin Access)' },
+        { id: 'dashboard', label: 'لوحة القيادة' },
+        { id: 'accounting', label: 'المحاسبة والمالية' },
+        { id: 'invoices', label: 'المبيعات والفواتير' },
+        { id: 'quotes', label: 'عروض الأسعار' },
+        { id: 'inventory', label: 'المخزون والمستودعات' },
+        { id: 'hr', label: 'الموارد البشرية' },
+        { id: 'projects', label: 'المشاريع والمقاولات' },
+        { id: 'contracts', label: 'عقود المقاولات' },
+        { id: 'clients', label: 'إدارة العملاء' },
+        { id: 'reports', label: 'التقارير الإحصائية' },
+        { id: 'archive', label: 'الأرشيف الإلكتروني' },
+        { id: 'real_estate', label: 'إدارة العقارات' },
+        { id: 'field_ops', label: 'الإشراف الميداني' },
+        { id: 'crm', label: 'إدارة العملاء (CRM)' },
+        { id: 'ai', label: 'مركز الذكاء الاصطناعي' },
+        { id: 'zatca', label: 'الفاتورة الإلكترونية' },
+        { id: 'support', label: 'الدعم الفني والشكاوي' },
+        { id: 'settings', label: 'إعدادات النظام' }
+    ];
 
-    const startEdit = (user) => {
-        setEditingUser(user);
-        setForm({
-            name: user.name || '',
-            email: user.email || '',
-            password: '', // Hidden for security, only if changed
-            role: user.role || 'USER',
-            phone: user.phone || '',
-            status: user.status || 'ACTIVE',
-            jobTitle: user.jobTitle || '',
-            department: user.department || '',
-            permissions: user.permissions || {}
-        });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const handleDelete = (id) => {
-        if (id === me.id) { setMsg('❌ لا يمكن حذف حسابك الخاص'); setTimeout(() => setMsg(''), 2000); return; }
-        if (!window.confirm('هل أنت متأكد من حذف هذا المستخدم؟ سيتم فقدان صلاحياته نهائياً.')) return;
-        deleteMutation.mutate(id);
-        setTimeout(() => setMsg(''), 2000);
-    };
-
-    const togglePermission = (modId, val) => {
+    const togglePermission = (modId) => {
         setForm(prev => ({
             ...prev,
-            permissions: { ...prev.permissions, [modId]: val }
+            permissions: {
+                ...prev.permissions,
+                [modId]: !prev.permissions[modId]
+            }
         }));
     };
 
-    const filteredUsers = users.filter(u =>
-        u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    if (isLoading) return <div style={{ color: '#71717a', padding: '100px', textAlign: 'center' }}><RefreshCw className="animate-spin" size={40} /></div>;
 
-    const roleMap = {
-        ADMIN: { label: 'مدير النظام', color: '#d97706', bg: '#fef3c7', icon: <Shield size={14} /> },
-        ACCOUNTANT: { label: 'محاسب', color: '#059669', bg: '#ecfdf5', icon: <DollarSign size={14} /> },
-        MANAGER: { label: 'مدير مشاريع', color: '#2563eb', bg: '#eff6ff', icon: <Briefcase size={14} /> },
-        USER: { label: 'مستخدم', color: '#64748b', bg: '#f1f5f9', icon: <User size={14} /> }
+    const getRoleStyle = (role) => {
+        switch(role) {
+            case 'ADMIN': return { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', label: 'مدير نظام' };
+            case 'ACCOUNTANT': return { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981', label: 'مالي ومحاسب' };
+            case 'MANAGER': return { bg: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', label: 'مدير قطاع' };
+            default: return { bg: 'rgba(255, 255, 255, 0.05)', color: '#a1a1aa', label: 'موظف' };
+        }
     };
 
     return (
-        <div>
-            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '15px' }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card" style={{ padding: '45px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(15, 23, 42, 0.4)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                 <div>
-                    <h3 style={{ margin: 0, color: '#1e293b', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Users size={22} className="text-blue-600" /> إدارة المستخدمين والصلاحيات
-                    </h3>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>التحكم الكامل في حسابات الموظفين ومستويات الوصول</p>
+                    <h3 className="gradient-text" style={{ fontSize: '2rem', fontWeight: '900', margin: 0 }}>إدارة الكوادر والمؤهلات</h3>
+                    <p style={{ color: '#a1a1aa', fontWeight: '700', marginTop: '8px' }}>تخصيص مستويات الوصول الدقيقة لكل عضو في فريق العمل مع مراقبة النشاط.</p>
                 </div>
-                {!showForm && !editingUser && (
-                    <button onClick={() => setShowForm(true)} style={{
-                        padding: '12px 24px', background: '#2563eb', color: 'white', border: 'none',
-                        borderRadius: '12px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '700',
-                        display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(37,99,235,0.2)'
-                    }}>
-                        <Plus size={18} /> إضافة عضو جديد
-                    </button>
-                )}
-            </div>
-
-            {msg && (
-                <div style={{ padding: '14px 20px', borderRadius: '12px', marginBottom: '20px', background: msg.includes('✅') ? '#ecfdf5' : '#fef2f2', color: msg.includes('✅') ? '#065f46' : '#991b1b', fontWeight: '600', border: '1px solid currentColor', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Activity size={18} /> {msg}
-                </div>
-            )}
-
-            {(showForm || editingUser) && (
-                <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '28px', marginBottom: '30px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-                        <h4 style={{ margin: 0, color: '#1e293b', fontSize: '1.1rem', fontWeight: '700' }}>{editingUser ? 'تعديل بيانات العضو' : 'إضافة عضو جديد للنظام'}</h4>
-                        <button onClick={() => { setShowForm(false); setEditingUser(null); resetForm(); }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}><X size={20} /></button>
-                    </div>
-
-                    <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-                        <InputField label="الاسم الكامل" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="مثال: محمد علي" />
-                        <InputField label="البريد الإلكتروني (اسم المستخدم)" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="user@company.com" type="email" />
-                        <InputField label="رقم الجوال" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="9665XXXXXXXX" />
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>المسمى الوظيفي</label>
-                            <input value={form.jobTitle} onChange={e => setForm(p => ({ ...p, jobTitle: e.target.value }))} style={{ padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo' }} placeholder="محاسب أول، مهندس موقع..." />
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>الصلاحية الرئيسية</label>
-                            <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))} style={{ padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo', cursor: 'pointer' }}>
-                                <option value="USER">مستخدم (صلاحيات محدودة)</option>
-                                <option value="ACCOUNTANT">محاسب (مالية وتقارير)</option>
-                                <option value="MANAGER">مدير تشغيل (مشاريع وعقود)</option>
-                                <option value="ADMIN">مدير نظام (تحكم كامل)</option>
-                            </select>
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>حالة الحساب</label>
-                            <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))} style={{ padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo', cursor: 'pointer', background: form.status === 'BLOCKED' ? '#fff1f2' : 'white' }}>
-                                <option value="ACTIVE">نشط (يسمح بالدخول)</option>
-                                <option value="BLOCKED">معطل (يمنع من الدخول)</option>
-                            </select>
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>{editingUser ? 'تغيير كلمة المرور (اختياري)' : 'كلمة المرور'}</label>
-                            <div style={{ position: 'relative' }}>
-                                <input
-                                    type={showPass ? 'text' : 'password'}
-                                    value={form.password}
-                                    onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                                    placeholder={editingUser ? "اتركه فارغاً لعدم التغيير" : "كلمة مرور قوية"}
-                                    style={{ padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo', fontSize: '0.9rem', width: '100%', boxSizing: 'border-box' }}
-                                />
-                                <button onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
-                                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
-                        <h5 style={{ margin: '0 0 16px 0', color: '#1e293b', fontWeight: '700', fontSize: '0.95rem' }}>صلاحيات الوصول المخصصة (Modules Permissions)</h5>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '16px' }}>يمكنك تفعيل أو تعطيل الوصول لأقسام معينة بغض النظر عن الصلاحية الرئيسية.</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                            {modules.map(mod => (
-                                <PermissionItem
-                                    key={mod.id}
-                                    label={mod.label}
-                                    active={form.permissions[mod.id] === true}
-                                    onChange={(v) => togglePermission(mod.id, v)}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '12px', marginTop: '30px' }}>
-                        <button onClick={handleSave} disabled={addMutation.isPending || updateMutation.isPending} style={{ padding: '12px 32px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '700', fontSize: '1rem' }}>
-                            {(addMutation.isPending || updateMutation.isPending) ? 'جاري الحفظ...' : (editingUser ? 'تحديث البيانات' : 'إنشاء الحساب الآن')}
-                        </button>
-                        <button onClick={() => { setShowForm(false); setEditingUser(null); resetForm(); }} style={{ padding: '10px 24px', background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', fontFamily: 'Cairo' }}>
-                            إلغاء
-                        </button>
-                    </div>
-                </motion.div>
-            )}
-
-            {!showForm && !editingUser && (
-                <>
-                    <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '400px' }}>
-                        <Search size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                        <input
-                            type="text"
-                            placeholder="ابحث عن اسم، بريد، أو رقم هاتف..."
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', width: '300px' }}>
+                        <Search size={18} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#52525b' }} />
+                        <input 
+                            className="premium-input" 
+                            placeholder="ابحث بالاسم، الحساب، أو المسمى..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ width: '100%', padding: '12px 45px 12px 15px', borderRadius: '12px', border: '1px solid #f1f5f9', background: 'white', outline: 'none', fontFamily: 'Cairo', fontSize: '0.9rem' }}
+                            style={{ width: '100%', paddingRight: '45px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}
                         />
                     </div>
+                    <motion.button 
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                        onClick={() => { setShowForm(true); setEditingUser(null); setForm({ name: '', email: '', password: '', role: 'USER', permissions: {} }); }}
+                        style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: 'white', border: 'none', padding: '14px 30px', borderRadius: '18px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 10px 20px rgba(99,102,241,0.2)' }}
+                    >
+                        <Plus size={20} /> إضافة عضو جديد
+                    </motion.button>
+                </div>
+            </div>
 
-                    <div className="table-responsive" style={{ background: 'white', borderRadius: '18px', border: '1px solid #f1f5f9', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Cairo' }}>
-                            <thead>
-                                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-                                    {['المستخدم', 'بيانات الاتصال', 'المسمى الوظيفي', 'الصلاحية', 'الحالة', 'آخر دخول', 'إجراء'].map(h => (
-                                        <th key={h} style={{ padding: '16px', textAlign: 'right', fontWeight: '700', fontSize: '0.85rem', color: '#64748b' }}>{h}</th>
+            <AnimatePresence>
+                {showForm && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '35px', borderRadius: '30px', marginBottom: '45px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '25px', marginBottom: '35px' }}>
+                                <PremiumInput label="اسم الموظف" value={form.name} onChange={e => setForm({...form, name: e.target.value})} icon={User} />
+                                <PremiumInput label="البريد المهني" value={form.email} onChange={e => setForm({...form, email: e.target.value})} icon={Mail} />
+                                <PremiumInput label="مفتاح الدخول" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} placeholder={editingUser ? 'اترك فارغاً لعدم التغيير' : 'حدد كلمة مرور قوية...'} icon={Lock} />
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <label style={{ fontWeight: '900', fontSize: '0.9rem', color: '#a1a1aa' }}>المستوى الإداري (Role)</label>
+                                    <select value={form.role} onChange={e => setForm({...form, role: e.target.value})} className="premium-input-select">
+                                        <option value="ADMIN">مدير نظام (أعلى صلاحية)</option>
+                                        <option value="ACCOUNTANT">محاسب مالي (قيود وفواتير)</option>
+                                        <option value="MANAGER">مدير قطاع / مهندس مسؤول</option>
+                                        <option value="USER">موظف عام / إدخال بيانات</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '25px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                                    <h4 style={{ color: '#fff', margin: 0, fontSize: '1.2rem', fontWeight: '900' }}>مصفوفة الصلاحيات الدقيقة (Modular Permissions)</h4>
+                                    <motion.button onClick={() => {
+                                        const allPerms = {};
+                                        modules.forEach(m => allPerms[m.id] = true);
+                                        setForm({...form, permissions: allPerms});
+                                    }} style={{ background: 'transparent', color: '#6366f1', border: 'none', fontWeight: '900', cursor: 'pointer', fontSize: '0.85rem' }}>منح كافة الصلاحيات</motion.button>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px' }}>
+                                    {modules.map(mod => (
+                                        <motion.div 
+                                            key={mod.id}
+                                            whileHover={{ background: 'rgba(255,255,255,0.04)', scale: 1.01 }}
+                                            onClick={() => togglePermission(mod.id)}
+                                            style={{
+                                                padding: '14px 20px', borderRadius: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '15px',
+                                                background: form.permissions?.[mod.id] ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.01)',
+                                                border: `1px solid ${form.permissions?.[mod.id] ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255,255,255,0.05)'}`,
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        >
+                                            <div style={{ 
+                                                width: '22px', height: '22px', borderRadius: '6px', 
+                                                background: form.permissions?.[mod.id] ? '#6366f1' : 'transparent',
+                                                border: `2px solid ${form.permissions?.[mod.id] ? '#6366f1' : '#3f3f46'}`,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'
+                                            }}>
+                                                {form.permissions?.[mod.id] && <CheckCircle2 size={15} />}
+                                            </div>
+                                            <span style={{ color: form.permissions?.[mod.id] ? '#fff' : '#a1a1aa', fontWeight: '800', fontSize: '0.95rem' }}>{mod.label}</span>
+                                        </motion.div>
                                     ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {isLoading ? (
-                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '50px' }}><Clock className="animate-spin" style={{ margin: 'auto' }} /></td></tr>
-                                ) : filteredUsers.length === 0 ? (
-                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '50px', color: '#94a3b8' }}>لا توجد نتائج مطابقة لبحثك</td></tr>
-                                ) : filteredUsers.map(u => (
-                                    <tr key={u.id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.2s' }} className="hover:bg-slate-50">
-                                        <td style={{ padding: '16px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                                <div style={{
-                                                    width: '56px', height: '56px', borderRadius: '14px',
-                                                    background: u.role === 'ADMIN' ? '#eff6ff' : '#f1f5f9',
-                                                    overflow: 'hidden', border: '1px solid #e2e8f0',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                }}>
-                                                    {u.email === 'admin@south.com' || u.name === 'Naif' ? (
-                                                        <img src="/naif.png" alt="Naif" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                    ) : (
-                                                        <span style={{ fontWeight: 'bold', fontSize: '1.4rem', color: u.role === 'ADMIN' ? '#2563eb' : '#64748b' }}>
-                                                            {u.name?.charAt(0)}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <div style={{ fontWeight: '800', color: '#1e293b', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        {u.name}
-                                                        {u.id === me.id && <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1d4ed8', padding: '3px 10px', borderRadius: '20px', fontWeight: '900' }}>أنت</span>}
-                                                    </div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#3b82f6', fontWeight: '600' }}>{u.email}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '16px', color: '#64748b', fontSize: '0.85rem' }}>{u.phone || '—'}</td>
-                                        <td style={{ padding: '16px', color: '#1e293b', fontSize: '0.85rem', fontWeight: '500' }}>{u.jobTitle || 'عضو نظام'}</td>
-                                        <td style={{ padding: '16px' }}>
-                                            <div style={{
-                                                display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '10px',
-                                                fontSize: '0.8rem', fontWeight: '700', width: 'fit-content',
-                                                background: roleMap[u.role]?.bg || '#f1f5f9', color: roleMap[u.role]?.color || '#64748b'
-                                            }}>
-                                                {roleMap[u.role]?.icon}
-                                                {roleMap[u.role]?.label || u.role}
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '16px' }}>
-                                            <span style={{
-                                                padding: '4px 10px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold',
-                                                background: u.status === 'BLOCKED' ? '#fef2f2' : '#f0fdf4',
-                                                color: u.status === 'BLOCKED' ? '#ef4444' : '#22c55e',
-                                                border: `1px solid ${u.status === 'BLOCKED' ? '#fee2e2' : '#dcfce7'}`
-                                            }}>
-                                                {u.status === 'BLOCKED' ? '🚫 معطل' : '✅ نشط'}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '16px', color: '#94a3b8', fontSize: '0.8rem' }}>
-                                            {u.lastLogin ? new Date(u.lastLogin).toLocaleString('ar-SA', { dateStyle: 'short', timeStyle: 'short' }) : 'لم يدخل بعد'}
-                                        </td>
-                                        <td style={{ padding: '16px' }}>
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button
-                                                    onClick={() => startEdit(u)}
-                                                    style={{ padding: '8px', background: '#f8fafc', color: '#2563eb', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }}
-                                                    title="تعديل الصلاحيات"
-                                                >
-                                                    <Shield size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(u.id)}
-                                                    disabled={deleteMutation.isPending}
-                                                    style={{ padding: '8px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2', borderRadius: '8px', cursor: 'pointer' }}
-                                                    title="حذف الحساب"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </>
-            )}
-        </div>
-    );
-};
+                                </div>
+                            </div>
 
-// ======= TAB: System Preferences =======
-const SystemTab = () => {
-    const queryClient = useQueryClient();
-    const [prefs, setPrefs] = useState({});
-    const [saved, setSaved] = useState(false);
-
-    const { data: qData, isLoading } = useQuery({
-        queryKey: ['systemPrefs'],
-        queryFn: async () => {
-            const res = await axios.get(`${API_URL}/settings/systemPrefs`, { headers: H() });
-            return res.data;
-        }
-    });
-
-    useMemo(() => {
-        if (qData) setPrefs(qData);
-    }, [qData]);
-
-    const saveMutation = useMutation({
-        mutationFn: async (data) => await axios.post(`${API_URL}/settings/systemPrefs`, { value: data }, { headers: H() }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['systemPrefs'] });
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-        },
-        onError: () => alert('فشل في حفظ التفضيلات')
-    });
-
-    const toggle = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }));
-    const update = (key) => (e) => setPrefs(p => ({ ...p, [key]: e.target.value }));
-
-    if (isLoading) return <div style={{ color: '#64748b', fontFamily: 'Cairo' }}>جاري التحميل...</div>;
-
-    return (
-        <div>
-            <h3 style={{ margin: '0 0 24px 0', color: '#1e293b', fontWeight: '700' }}>تفضيلات النظام</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px' }}>
-
-                {/* Currency */}
-                <div style={{ background: 'white', padding: '20px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
-                    <h4 style={{ margin: '0 0 16px 0', color: '#374151', fontSize: '0.95rem' }}>💰 العملة والضريبة</h4>
-                    <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>العملة</label>
-                            <select value={prefs.currency || 'SAR'} onChange={update('currency')} style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo' }}>
-                                <option value="SAR">ريال سعودي (ر.س)</option>
-                                <option value="USD">دولار أمريكي ($)</option>
-                                <option value="AED">درهم إماراتي (د.إ)</option>
-                            </select>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.85rem', color: '#374151' }}>نسبة ضريبة القيمة المضافة</label>
-                            <select value={prefs.vatRate || '15'} onChange={update('vatRate')} style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid #e2e8f0', fontFamily: 'Cairo' }}>
-                                <option value="15">15%</option>
-                                <option value="5">5%</option>
-                                <option value="0">معفى</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Notifications */}
-                <div style={{ background: 'white', padding: '20px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
-                    <h4 style={{ margin: '0 0 16px 0', color: '#374151', fontSize: '0.95rem' }}>🔔 التنبيهات</h4>
-                    {[
-                        ['lowStock', 'تنبيه عند نقص المخزون'],
-                        ['expiredQuotes', 'تنبيه انتهاء صلاحية عروض الأسعار'],
-                        ['draftInvoices', 'تنبيه الفواتير المعلقة'],
-                    ].map(([key, label]) => (
-                        <div key={key} onClick={() => toggle(key)} style={{
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '12px 0', borderBottom: '1px solid #f8fafc', cursor: 'pointer'
-                        }}>
-                            <span style={{ fontWeight: '500', color: '#374151', fontSize: '0.9rem' }}>{label}</span>
-                            <div style={{
-                                width: '44px', height: '24px', borderRadius: '12px', position: 'relative',
-                                background: prefs[key] ? '#2563eb' : '#e2e8f0', transition: 'background 0.2s'
-                            }}>
-                                <div style={{
-                                    width: '18px', height: '18px', borderRadius: '50%', background: 'white',
-                                    position: 'absolute', top: '3px', left: prefs[key] ? '23px' : '3px', transition: 'left 0.2s',
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
-                                }} />
+                            <div style={{ display: 'flex', gap: '20px', justifyContent: 'flex-end', marginTop: '45px' }}>
+                                <button onClick={() => setShowForm(false)} style={{ background: 'transparent', color: '#71717a', border: 'none', fontWeight: '900', cursor: 'pointer', padding: '0 20px' }}>إلغاء الإجراء</button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => mutation.mutate(form)} style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff', border: 'none', padding: '16px 50px', borderRadius: '20px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 10px 30px rgba(99,102,241,0.2)' }}>
+                                    {mutation.isPending ? 'جاري المزامنة...' : 'اعتماد بيانات الموظف'}
+                                </motion.button>
                             </div>
                         </div>
-                    ))}
-                </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                {/* System Info */}
-                <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-                    <h4 style={{ margin: '0 0 12px 0', color: '#374151', fontSize: '0.95rem' }}>ℹ️ معلومات النظام</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.85rem' }}>
-                        {[
-                            ['اسم النظام', 'مؤسسة الجنوب الجديد - ERP'],
-                            ['الإصدار', 'v2.0.0'],
-                            ['قاعدة البيانات', 'PostgreSQL (Cloud)'],
-                            ['بيئة التشغيل', 'Production'],
-                        ].map(([label, value]) => (
-                            <div key={label}>
-                                <span style={{ color: '#94a3b8' }}>{label}: </span>
-                                <span style={{ fontWeight: '600', color: '#374151' }}>{value}</span>
-                            </div>
+            <div className="table-responsive">
+                <table className="table-glass" style={{ borderCollapse: 'separate', borderSpacing: '0 12px' }}>
+                    <thead>
+                        <tr>
+                            <th style={{ textAlign: 'right', padding: '15px 25px', background: 'transparent', color: '#52525b', fontSize: '0.75rem', textTransform: 'uppercase' }}>المستخدم</th>
+                            <th style={{ textAlign: 'center', background: 'transparent', color: '#52525b', fontSize: '0.75rem' }}>المسؤولية</th>
+                            <th style={{ textAlign: 'center', background: 'transparent', color: '#52525b', fontSize: '0.75rem' }}>الحالة التشغيلية</th>
+                            <th style={{ textAlign: 'center', background: 'transparent', color: '#52525b', fontSize: '0.75rem' }}>التحكم</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredUsers.length === 0 ? (
+                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '80px', color: '#52525b', fontWeight: '800' }}>لا توجد سجلات مطابقة لمعايير البحث.</td></tr>
+                        ) : filteredUsers.map((u, idx) => (
+                            <motion.tr 
+                                key={u.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                style={{ background: 'rgba(255,255,255,0.01)', borderRadius: '20px' }}
+                            >
+                                <td style={{ padding: '20px 25px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                        <div style={{ width: '45px', height: '45px', borderRadius: '14px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '900', fontSize: '1.2rem', boxShadow: '0 8px 15px rgba(99,102,241,0.2)' }}>{u.name.charAt(0)}</div>
+                                        <div>
+                                            <div style={{ fontWeight: '900', color: '#fff', fontSize: '1.05rem' }}>{u.name}</div>
+                                            <div style={{ fontSize: '0.85rem', color: '#71717a', fontWeight: '700' }}>{u.email}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                    <span style={{ 
+                                        fontSize: '0.8rem', fontWeight: '900', letterSpacing: '0.5px',
+                                        color: getRoleStyle(u.role).color, background: getRoleStyle(u.role).bg, 
+                                        padding: '6px 16px', borderRadius: '12px', border: `1px solid ${getRoleStyle(u.role).color}22` 
+                                    }}>
+                                        {getRoleStyle(u.role).label}
+                                    </span>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
+                                        <span style={{ color: '#10b981', fontSize: '0.85rem', fontWeight: '900' }}>نشط</span>
+                                    </div>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+                                        <motion.button whileHover={{ scale: 1.1, background: 'rgba(99,102,241,0.2)' }} onClick={() => { setEditingUser(u); setForm({...u, password: ''}); setShowForm(true); }} style={{ background: 'rgba(255,255,255,0.03)', color: '#6366f1', border: 'none', padding: '10px', borderRadius: '12px', cursor: 'pointer' }}><Edit size={18} /></motion.button>
+                                        {u.email !== 'admin@southnew.com' && <motion.button whileHover={{ scale: 1.1, background: 'rgba(239, 68, 68, 0.2)' }} onClick={() => { if(confirm('هل أنت متأكد من حذف هذا المستخدم نهائياً؟')) deleteMutation.mutate(u.id); }} style={{ background: 'rgba(255,255,255,0.03)', color: '#ef4444', border: 'none', padding: '10px', borderRadius: '12px', cursor: 'pointer' }}><Trash2 size={18} /></motion.button>}
+                                    </div>
+                                </td>
+                            </motion.tr>
                         ))}
-                    </div>
-                </div>
-
-                <button onClick={() => saveMutation.mutate(prefs)} disabled={saveMutation.isPending} style={{
-                    padding: '12px 32px', background: saved ? '#10b981' : '#2563eb',
-                    color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer',
-                    fontFamily: 'Cairo', fontWeight: '700', fontSize: '0.95rem',
-                    display: 'flex', alignItems: 'center', gap: '8px', width: 'fit-content', transition: 'background 0.3s'
-                }}>
-                    <Save size={16} />
-                    {saveMutation.isPending ? '...جاري الحفظ' : (saved ? '✅ تم الحفظ في السحابة!' : 'حفظ الإعدادات')}
-                </button>
+                    </tbody>
+                </table>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
-// ======= TAB: WhatsApp Integration =======
-const WhatsAppTab = () => {
-    const { data } = useQuery({
-        queryKey: ['whatsappStatus'],
-        queryFn: async () => {
-            const res = await axios.get(`${API_URL}/whatsapp/status`, { headers: H() });
-            return res.data;
-        },
-        refetchInterval: 5000
-    });
-
-    return (
-        <div style={{ maxWidth: '600px' }}>
-            <h3 style={{ margin: '0 0 16px 0', color: '#1e293b', fontWeight: '700' }}>ارتباط واتساب (مجاني)</h3>
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '24px' }}>
-                اربط جوالك الخاص بالنظام لإرسال رسائل استعادة كلمة المرور والتنبيهات مجاناً دون الحاجة لمزود خدمة خارجي.
-            </p>
-
-            <div style={{
-                background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', textAlign: 'center'
-            }}>
-                <div style={{
-                    padding: '8px 16px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: '700',
-                    background: (data?.status === 'READY' || data?.status === 'AUTHENTICATED') ? '#ecfdf5' : '#fef2f2',
-                    color: (data?.status === 'READY' || data?.status === 'AUTHENTICATED') ? '#10b981' : '#ef4444',
-                    border: '1px solid currentColor'
-                }}>
-                    حالة الاتصال: {data?.status === 'READY' ? 'متصل وجاهز ✅' : (data?.status || 'جاري تهيئة العميل...')}
-                </div>
-
-                {data?.status === 'DISCONNECTED' && data?.qrAvailable && (
-                    <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.08)' }}>
-                        <p style={{ fontWeight: '700', marginBottom: '15px', fontSize: '0.95rem', color: '#1e293b' }}>امسح الكود التالي عبر واتساب جوالك:</p>
-                        <img
-                            src={`${API_URL}/whatsapp/qr?t=${data?.qrLastUpdate || Date.now()}`}
-                            alt="WhatsApp QR"
-                            style={{ width: '220px', height: '220px', border: '4px solid #f8fafc', borderRadius: '8px' }}
-                        />
-                        <div style={{ marginTop: '15px', fontSize: '0.85rem', color: '#64748b', textAlign: 'right' }}>
-                            1. افتح تطبيق واتساب على جوالك.<br />
-                            2. اضغط على القائمة (أو الإعدادات) &gt; الأجهزة المرتبطة.<br />
-                            3. اضغط على "ربط جهاز" ووجه الكاميرا لهذا الكود.
-                        </div>
-                    </div>
-                )}
-
-                {data?.status === 'READY' && (
-                    <div style={{ color: '#10b981', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px', padding: '20px' }}>
-                        <MessageSquare size={60} />
-                        <p style={{ fontWeight: '700', fontSize: '1.1rem' }}>النظام مربوط حالياً برقمك بنجاح!</p>
-                        <p style={{ fontSize: '0.9rem', color: '#64748b' }}>يمكنك الآن اختبار استعادة كلمة المرور عبر الجوال.</p>
-                    </div>
-                )}
-
-                {data?.status === 'CLOUD_MODE' && (
-                    <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', padding: '20px', borderRadius: '12px', textAlign: 'right', direction: 'rtl' }}>
-                        <p style={{ fontWeight: '700', color: '#92400e', marginBottom: '10px', fontSize: '1rem' }}>☁️ وضع السحابة - الواتساب غير متاح</p>
-                        <p style={{ color: '#78350f', fontSize: '0.9rem', lineHeight: '1.8' }}>
-                            ميزة ربط الواتساب تعمل فقط عند تشغيل النظام <strong>محلياً على جهازك</strong>.<br />
-                            السبب: متصفح Chrome الذي يحتاجه الواتساب غير متاح على خوادم الاستضافة المجانية.<br /><br />
-                            <strong>للاستخدام:</strong> شغّل السيرفر على جهازك (npm run server) وسيظهر باركود الربط تلقائياً.
-                        </p>
-                    </div>
-                )}
-
-                {!data?.qrAvailable && data?.status === 'DISCONNECTED' && (
-                    <p style={{ color: '#64748b', fontSize: '0.9rem' }}>جاري توليد كود الـ QR... يرجى الانتظار ثوانٍ.</p>
-                )}
-            </div>
-        </div>
-    );
-};
-
-// ======= TAB: Client Portal Management =======
+// ======= TAB: Client Portal Control =======
 const ClientPortalTab = () => {
     const queryClient = useQueryClient();
-    const [searchTerm, setSearchTerm] = useState('');
     const [editingClient, setEditingClient] = useState(null);
     const [form, setForm] = useState({ email: '', password: '', portalPermissions: {} });
     const [msg, setMsg] = useState('');
 
     const portalModules = [
-        { id: 'viewFinancials', label: 'عرض الفواتير والمالية' },
-        { id: 'trackProjects', label: 'متابعة تطور المشاريع' },
+        { id: 'viewFinancials', label: 'عرض الفواتير والحسابات المالية' },
+        { id: 'trackProjects', label: 'متابعة الجدول الزمني للمشاريع' },
         { id: 'viewVisits', label: 'الاطلاع على التقارير الميدانية' },
-        { id: 'canRate', label: 'السماح بالتقييم والتعليق' },
-        { id: 'viewArchive', label: 'الوصول للأرشيف والوثائق' },
-        { id: 'viewAI', label: 'تحليلات الذكاء الاصطناعي' },
+        { id: 'canRate', label: 'حق التقييم والتعليق على المهام' },
+        { id: 'viewArchive', label: 'الوصول للأرشيف والمستندات' },
+        { id: 'viewAI', label: 'الاطلاع على تحليلات الذكاء الاصطناعي' },
     ];
 
     const { data: clients = [], isLoading } = useQuery({
@@ -687,85 +439,81 @@ const ClientPortalTab = () => {
         mutationFn: async (data) => await axios.put(`${API_URL}/partners/${data.id}`, data, { headers: H() }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['portalClients'] });
-            setMsg('✅ تم تحديث بيانات الدخول للعميل بنجاح');
+            setMsg('✅ تم تحديث بيانات بوابة العميل بنجاح');
             setEditingClient(null);
             setTimeout(() => setMsg(''), 3000);
         },
-        onError: () => setMsg('❌ فشل في تحديث البيانات')
+        onError: () => setMsg('❌ فشل في تحديث بيانات العميل')
     });
 
     const handleSave = () => {
-        if (!form.email) return setMsg('❌ البريد الإلكتروني مطلوب');
+        if (!form.email) return setMsg('❌ البريد الإلكتروني للبوابة مطلوب');
         updateMutation.mutate({ ...editingClient, ...form });
     };
 
-    const togglePortalPermission = (id, val) => {
+    const togglePermission = (modId) => {
         setForm(prev => ({
             ...prev,
-            portalPermissions: { ...prev.portalPermissions, [id]: val }
+            portalPermissions: {
+                ...prev.portalPermissions,
+                [modId]: !prev.portalPermissions?.[modId]
+            }
         }));
     };
 
-    const filtered = clients.filter(c => 
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        c.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    if (isLoading) return <div style={{ color: '#71717a', padding: '100px', textAlign: 'center' }}><RefreshCw className="animate-spin" size={40} /></div>;
 
-    if (isLoading) return <div style={{ padding: '20px', textAlign: 'center' }}><Activity className="animate-spin" /></div>;
+    const portalClients = clients.filter(c => c.type === 'CUSTOMER');
 
     return (
-        <div className="fade-in">
-            <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ margin: 0, color: '#1e293b', fontWeight: '800' }}>إدارة حسابات بوابة العملاء</h3>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>هنا يمكنك منح العملاء صلاحية الدخول لمتابعة مشاريعهم وفواتيرهم</p>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card" style={{ padding: '40px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ marginBottom: '35px' }}>
+                <h3 className="gradient-text" style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0 }}>بوابة العملاء (Customer Portal)</h3>
+                <p style={{ color: '#a1a1aa', fontWeight: '600', margin: '5px 0 0 0' }}>إدارة صلاحيات وصول العملاء الخارجيين لمتابعة استثماراتهم ومشاريعهم.</p>
             </div>
 
-            {msg && <div style={{ padding: '12px', background: msg.includes('✅') ? '#f0fdf4' : '#fef2f2', color: msg.includes('✅') ? '#166534' : '#991b1b', borderRadius: '10px', marginBottom: '20px', fontWeight: 'bold' }}>{msg}</div>}
+            {msg && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ padding: '15px 25px', borderRadius: '15px', background: msg.includes('✅') ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: msg.includes('✅') ? '#10b981' : '#ef4444', marginBottom: '25px', fontWeight: '800', border: '1px solid currentColor' }}>{msg}</motion.div>}
 
-            <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '400px' }}>
-                <Search size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input 
-                    placeholder="بحث عن عميل..." 
-                    value={searchTerm} 
-                    onChange={e => setSearchTerm(e.target.value)}
-                    style={{ width: '100%', padding: '12px 45px 12px 15px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'Cairo' }}
-                />
-            </div>
-
-            <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead style={{ background: '#f8fafc' }}>
+            <div className="table-responsive">
+                <table className="table-glass">
+                    <thead>
                         <tr>
-                            <th style={{ padding: '15px', textAlign: 'right', fontSize: '0.85rem', color: '#64748b' }}>العميل</th>
-                            <th style={{ padding: '15px', textAlign: 'right', fontSize: '0.85rem', color: '#64748b' }}>بريد البوابة</th>
-                            <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>حالة الدخول</th>
-                            <th style={{ padding: '15px', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>الإجراء</th>
+                            <th style={{ textAlign: 'right', padding: '15px' }}>اسم العميل</th>
+                            <th style={{ textAlign: 'center' }}>الحساب المشترك</th>
+                            <th style={{ textAlign: 'center' }}>حالة البوابة</th>
+                            <th style={{ textAlign: 'center' }}>إجراءات التحصيل</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filtered.map(c => (
-                            <tr key={c.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                                <td style={{ padding: '15px', fontWeight: 'bold', color: '#1e293b' }}>{c.name}</td>
-                                <td style={{ padding: '15px', color: '#3b82f6' }}>{c.email || '—'}</td>
-                                <td style={{ padding: '15px', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '20px', background: c.email && c.password ? '#f0fdf4' : '#f1f5f9', color: c.email && c.password ? '#22c55e' : '#94a3b8', fontWeight: 'bold' }}>
-                                        {c.email && c.password ? 'مفعّل' : 'غير مفعّل'}
+                        {portalClients.length === 0 ? (
+                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '50px', color: '#52525b' }}>لا يوجد عملاء مضافين حالياً في النظام</td></tr>
+                        ) : portalClients.map(c => (
+                            <tr key={c.id}>
+                                <td style={{ padding: '15px', fontWeight: '800', color: '#fff' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ width: '35px', height: '35px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#06b6d4' }}><Building2 size={18} /></div>
+                                        {c.name}
+                                    </div>
+                                </td>
+                                <td style={{ textAlign: 'center', color: '#a1a1aa' }}>{c.email || '—'}</td>
+                                <td style={{ textAlign: 'center' }}>
+                                    <span style={{ 
+                                        color: c.email && c.password ? '#10b981' : '#71717a', 
+                                        background: c.email && c.password ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)', 
+                                        padding: '4px 15px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900',
+                                        border: `1px solid ${c.email && c.password ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.05)'}`
+                                    }}>
+                                        {c.email && c.password ? 'مفعلة' : 'معطلة'}
                                     </span>
                                 </td>
-                                <td style={{ padding: '15px', textAlign: 'center' }}>
-                                    <button 
-                                        onClick={() => { 
-                                            setEditingClient(c); 
-                                            setForm({ 
-                                                email: c.email || '', 
-                                                password: '', 
-                                                portalPermissions: c.portalPermissions || {} 
-                                            }); 
-                                        }}
-                                        style={{ background: '#eff6ff', border: 'none', color: '#2563eb', padding: '6px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                <td style={{ textAlign: 'center' }}>
+                                    <motion.button 
+                                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                        onClick={() => { setEditingClient(c); setForm({ email: c.email || '', password: '', portalPermissions: c.portalPermissions || {} }); }}
+                                        style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: 'none', padding: '10px 25px', borderRadius: '14px', fontWeight: '900', cursor: 'pointer' }}
                                     >
-                                        إدارة الحساب
-                                    </button>
+                                        إدارة الصلاحيات
+                                    </motion.button>
                                 </td>
                             </tr>
                         ))}
@@ -773,78 +521,295 @@ const ClientPortalTab = () => {
                 </table>
             </div>
 
-            {editingClient && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ background: 'white', padding: '30px', borderRadius: '20px', width: '100%', maxWidth: '450px' }}>
-                        <h4 style={{ margin: '0 0 20px 0' }}>إدارة بوابة العميل: {editingClient.name}</h4>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            <InputField label="البريد الإلكتروني للدخول" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                            <InputField label="كلمة المرور الجديدة" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="اتركها فارغة لعدم التغيير" />
+            <AnimatePresence>
+                {editingClient && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="glass-card" style={{ width: '100%', maxWidth: '700px', padding: '40px', borderRadius: '40px', position: 'relative' }}>
+                            <button onClick={() => setEditingClient(null)} style={{ position: 'absolute', top: '25px', left: '25px', background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer' }}><X size={24} /></button>
                             
-                            <div style={{ marginTop: '10px' }}>
-                                <label style={{ fontWeight: '700', fontSize: '0.85rem', color: '#1e293b', display: 'block', marginBottom: '10px' }}>صلاحيات البواية المخصصة:</label>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                    {portalModules.map(m => (
-                                        <PermissionItem 
-                                            key={m.id} 
-                                            label={m.label} 
-                                            active={form.portalPermissions[m.id] === true}
-                                            onChange={(v) => togglePortalPermission(m.id, v)}
-                                        />
+                            <h3 className="gradient-text" style={{ fontSize: '1.8rem', fontWeight: '900', marginBottom: '10px' }}>إعدادات بوابة العميل: {editingClient.name}</h3>
+                            <p style={{ color: '#a1a1aa', marginBottom: '30px', fontWeight: '600' }}>قم بتعيين مفاتيح الدخول وتحديد الأقسام التي يحق للعميل رؤيتها.</p>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+                                <PremiumInput label="بريد الدخول الإلكتروني" value={form.email} onChange={e => setForm({...form, email: e.target.value})} icon={Mail} />
+                                <PremiumInput label="كلمة السر للمشترك" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} placeholder="اترك فارغاً لعدم التغيير" icon={Lock} />
+                            </div>
+
+                            <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
+                                <h4 style={{ color: '#fff', marginBottom: '20px', fontSize: '1.1rem', fontWeight: '900' }}>أذونات الوصول الممنوحة</h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px' }}>
+                                    {portalModules.map(mod => (
+                                        <motion.div 
+                                            key={mod.id}
+                                            whileHover={{ background: 'rgba(255,255,255,0.05)' }}
+                                            onClick={() => togglePermission(mod.id)}
+                                            style={{
+                                                padding: '12px 20px', borderRadius: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
+                                                background: form.portalPermissions?.[mod.id] ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255,255,255,0.01)',
+                                                border: `1px solid ${form.portalPermissions?.[mod.id] ? 'rgba(6, 182, 212, 0.3)' : 'rgba(255,255,255,0.05)'}`,
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        >
+                                            <div style={{ 
+                                                width: '24px', height: '24px', borderRadius: '6px', 
+                                                background: form.portalPermissions?.[mod.id] ? '#06b6d4' : 'transparent', border: '2px solid #06b6d4',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'
+                                            }}>
+                                                {form.portalPermissions?.[mod.id] && <CheckCircle2 size={16} />}
+                                            </div>
+                                            <span style={{ color: form.portalPermissions?.[mod.id] ? '#fff' : '#a1a1aa', fontWeight: '700', fontSize: '0.9rem' }}>{mod.label}</span>
+                                        </motion.div>
                                     ))}
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                                <button onClick={handleSave} style={{ flex: 1, padding: '12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>حفظ التعديلات</button>
-                                <button onClick={() => setEditingClient(null)} style={{ flex: 1, padding: '12px', background: '#f1f5f9', border: 'none', color: '#64748b', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>إلغاء</button>
+
+                            <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end', marginTop: '40px' }}>
+                                <button onClick={() => setEditingClient(null)} style={{ background: 'transparent', color: '#71717a', border: 'none', fontWeight: '800', cursor: 'pointer' }}>إلغاء</button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleSave} style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: '#fff', border: 'none', padding: '14px 40px', borderRadius: '18px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 10px 20px rgba(6,182,212,0.2)' }}>
+                                    {updateMutation.isPending ? 'جاري الحفظ...' : 'تحديث صلاحيات العميل'}
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+};
+
+// ======= TAB: WhatsApp Integration =======
+
+const WhatsAppTab = () => {
+    const [qrUrl, setQrUrl] = useState(`${API_URL}/whatsapp/qr?t=${Date.now()}`);
+    const [status, setStatus] = useState({ connected: false });
+
+    useEffect(() => {
+        const fetchStatus = async () => {
+            try {
+                const res = await axios.get(`${API_URL}/whatsapp/status`);
+                setStatus(res.data);
+            } catch (e) {}
+        };
+        fetchStatus();
+        const interval = setInterval(fetchStatus, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card" style={{ padding: '60px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.06)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', background: status.connected ? 'rgba(16, 185, 129, 0.05)' : 'rgba(99, 102, 241, 0.05)', borderRadius: '50%', filter: 'blur(80px)' }} />
+            
+            <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+                <h3 style={{ margin: '0 0 12px 0', color: '#fff', fontSize: '2.2rem', fontWeight: '900' }} className="gradient-text">ربط الاتصالات الذكية (WhatsApp)</h3>
+                <p style={{ margin: '0 0 35px 0', color: '#a1a1aa', fontSize: '1.2rem', fontWeight: '600', maxWidth: '700px', margin: '0 auto' }}>مسح كود الربط يمنح النظام القدرة على إرسال الإشعارات، كود التحقق، والتقارير الميدانية للعملاء والموظفين لحظياً.</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '60px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                    <div className="glass-card" style={{ padding: '30px', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.04)', background: 'rgba(255,255,255,0.01)' }}>
+                        <div style={{ marginBottom: '25px' }}>
+                             <div style={{ fontSize: '0.9rem', color: '#71717a', fontWeight: '800', marginBottom: '10px' }}>حالة الارتباط الرقمي</div>
+                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <div style={{ 
+                                    width: '12px', height: '12px', borderRadius: '50%', 
+                                    background: status.connected ? '#10b981' : '#ef4444',
+                                    boxShadow: `0 0 15px ${status.connected ? '#10b981' : '#ef4444'}`
+                                }} />
+                                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: status.connected ? '#10b981' : '#ef4444' }}>
+                                    {status.connected ? 'متصل وحصل على الموثوقية' : 'بانتظار مسح كود الربط...'}
+                                </span>
+                             </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                            {[
+                                { text: 'إرسال العقود والفواتير الموثقة آلياً.', icon: <CheckCircle2 size={18} /> },
+                                { text: 'تنبيهات المهندسين والفرق الميدانية بالمهام.', icon: <CheckCircle2 size={18} /> },
+                                { text: 'تفعيل تسجيل الدخول الذكي بأكواد OTP.', icon: <CheckCircle2 size={18} /> }
+                            ].map((item, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#a1a1aa', fontWeight: '700', fontSize: '1rem' }}>
+                                    <div style={{ color: '#6366f1' }}>{item.icon}</div>
+                                    {item.text}
+                                </div>
+                            ))}
+                        </div>
+                        <motion.button 
+                            {...buttonClick} 
+                            onClick={() => setQrUrl(`${API_URL}/whatsapp/qr?t=${Date.now()}`)} 
+                            style={{ 
+                                marginTop: '35px', width: '100%', padding: '15px', borderRadius: '18px', 
+                                background: 'rgba(255,255,255,0.03)', color: '#fff', border: '1px solid rgba(255,255,255,0.06)', 
+                                fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' 
+                            }}
+                        >
+                            <RefreshCw size={20} /> عرض كود تحديث الربط
+                        </motion.button>
+                    </div>
+                </div>
+
+                <div style={{ padding: '20px', borderRadius: '35px', background: '#fff', boxShadow: '0 30px 60px rgba(0,0,0,0.5)', border: '10px solid #18181b', position: 'relative' }}>
+                     {!status.connected ? (
+                         <div style={{ borderRadius: '20px', overflow: 'hidden' }}>
+                            <img src={qrUrl} alt="WhatsApp QR" style={{ width: '100%', display: 'block' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(rgba(255,255,255,0), rgba(255,255,255,0.1))', pointerEvents: 'none' }} />
+                         </div>
+                     ) : (
+                         <div style={{ height: '350px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#09090b', gap: '20px' }}>
+                             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ repeat: Infinity, duration: 2, repeatType: 'reverse' }}>
+                                <ShieldCheck size={100} color="#10b981" />
+                             </motion.div>
+                             <div style={{ fontSize: '1.8rem', fontWeight: '900', textAlign: 'center' }}>المنصة متصلة <br/><span style={{ fontSize: '1.2rem', opacity: 0.6 }}>جاهز لمعالجة الطلبات</span></div>
+                         </div>
+                     )}
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+const SettingsPage = () => {
+    const [tab, setTab] = useState('company');
+
+    // System Health Status Indicators (Simulated or fetched)
+    const systemStatus = [
+        { label: 'اتصال السيرفر', value: 'مثالي', color: '#10b981', icon: <Cpu size={14} /> },
+        { label: 'تشفير البيانات', value: 'AES-256', color: '#6366f1', icon: <ShieldCheck size={14} /> },
+        { label: 'النسخ السحابي', value: 'مؤمن', color: '#06b6d4', icon: <Database size={14} /> },
+    ];
+
+    return (
+        <div style={{ direction: 'rtl', padding: '10px' }} className="fade-in">
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '50px' }}>
+                <div>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#fff', fontSize: '3.2rem', fontWeight: '900', letterSpacing: '-1.5px' }} className="gradient-text">مركز القيادة والإعدادات</h2>
+                    <p style={{ margin: 0, color: '#a1a1aa', fontSize: '1.2rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Zap size={18} color="#f59e0b" fill="#f59e0b" /> تحكم كامل في هوية النظام، الأمان، وتكامل الذكاء الاصطناعي.
+                    </p>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '15px' }}>
+                    {systemStatus.map((s, idx) => (
+                        <div key={idx} className="glass-card" style={{ padding: '10px 20px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(15, 23, 42, 0.3)' }}>
+                            <div style={{ color: s.color }}>{s.icon}</div>
+                            <div>
+                                <div style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: '800' }}>{s.label}</div>
+                                <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: '900' }}>{s.value}</div>
                             </div>
                         </div>
-                    </motion.div>
+                    ))}
                 </div>
-            )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '40px', alignItems: 'start' }}>
+                <div className="glass-card" style={{ padding: '25px', borderRadius: '40px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(15, 23, 42, 0.4)' }}>
+                    <div style={{ padding: '0 15px 15px 15px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '10px' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#52525b', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>القوائم الإدارية</div>
+                    </div>
+                    <TabButton active={tab === 'company'} onClick={() => setTab('company')} icon={Building2} color="#6366f1">هوية المنشأة والبراند</TabButton>
+                    <TabButton active={tab === 'users'} onClick={() => setTab('users')} icon={Users} color="#8b5cf6">فريق العمل والصلاحيات</TabButton>
+                    <TabButton active={tab === 'portal'} onClick={() => setTab('portal')} icon={LayoutGrid} color="#06b6d4">بوابة العملاء (Portal)</TabButton>
+                    <TabButton active={tab === 'audit'} onClick={() => setTab('audit')} icon={Activity} color="#f43f5e">سجل العمليات (Audit)</TabButton>
+                    <TabButton active={tab === 'whatsapp'} onClick={() => setTab('whatsapp')} icon={MessageSquare} color="#10b981">تكامل WhatsApp</TabButton>
+                    <TabButton active={tab === 'security'} onClick={() => setTab('security')} icon={Shield} color="#f59e0b">الأمان والخصوصية</TabButton>
+                </div>
+
+                <div style={{ minHeight: '750px' }}>
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={tab}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ duration: 0.3, cubicBezier: [0.4, 0, 0.2, 1] }}
+                        >
+                            {tab === 'company' && <CompanyTab />}
+                            {tab === 'users' && <UsersTab />}
+                            {tab === 'portal' && <ClientPortalTab />}
+                            {tab === 'whatsapp' && <WhatsAppTab />}
+                            {tab === 'audit' && (
+                                <div className="glass-card" style={{ padding: '45px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(15, 23, 42, 0.4)' }}>
+                                    <div style={{ marginBottom: '35px' }}>
+                                        <h3 className="gradient-text" style={{ fontSize: '2rem', fontWeight: '900', margin: 0 }}>الرقابة والعمليات</h3>
+                                        <p style={{ color: '#a1a1aa', fontWeight: '700', marginTop: '8px' }}>تتبع جميع التغييرات والحركات المالية والتقنية في النظام لضمان الشفافية الكاملة.</p>
+                                    </div>
+                                    <AuditLogs />
+                                </div>
+                            )}
+                            {tab === 'security' && (
+                                <div className="glass-card" style={{ padding: '50px', borderRadius: '45px', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(15, 23, 42, 0.4)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '50px' }}>
+                                        <div>
+                                            <h3 className="gradient-text" style={{ fontSize: '2.2rem', fontWeight: '900', margin: 0 }}>بروتوكولات الأمان الرقمي</h3>
+                                            <p style={{ color: '#a1a1aa', fontWeight: '700', marginTop: '10px' }}>إدارة معايير التشفير، النسخ الاحتياطي، وحماية البيانات السيادية للمنشأة.</p>
+                                        </div>
+                                        <div style={{ padding: '15px 25px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b98133', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <ShieldCheck color="#10b981" size={24} />
+                                            <span style={{ color: '#10b981', fontWeight: '900' }}>مستوى الأمان: مرتفع جداً</span>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
+                                        {[
+                                            { label: 'تشفير قاعدة البيانات (AES-256)', desc: 'يتم تشفير كافة البيانات الحساسة قبل تخزينها سحابياً.', status: 'نشط', icon: <Lock color="#10b981" />, color: '#10b981' },
+                                            { label: 'حماية تسجيل الدخول المتعدد', desc: 'منع الدخول من أجهزة غير موثوقة دون تصريح إداري.', status: 'نشط', icon: <Smartphone color="#6366f1" />, color: '#6366f1' },
+                                            { label: 'الأرشفة السحابية التلقائية', desc: 'يتم أخذ نسخة احتياطية من كافة المستندات والملفات يومياً.', status: 'مؤمن', icon: <HardDrive color="#06b6d4" />, color: '#06b6d4' },
+                                            { label: 'مراقبة التهديدات اللحظية', desc: 'نظام حماية ذكي يكتشف محاولات الولوج غير المصرح بها.', status: 'يراقب', icon: <Activity color="#f43f5e" />, color: '#f43f5e' }
+                                        ].map((item, i) => (
+                                            <motion.div 
+                                                key={i}
+                                                whileHover={{ y: -5, background: 'rgba(255,255,255,0.03)' }}
+                                                style={{ 
+                                                    padding: '30px', borderRadius: '28px', background: 'rgba(255,255,255,0.01)', 
+                                                    border: '1px solid rgba(255,255,255,0.04)', display: 'flex', flexDirection: 'column', gap: '15px' 
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: `${item.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        {item.icon}
+                                                    </div>
+                                                    <span style={{ color: item.color, fontSize: '0.8rem', fontWeight: '900', background: `${item.color}10`, padding: '4px 15px', borderRadius: '10px', border: `1px solid ${item.color}22` }}>{item.status}</span>
+                                                </div>
+                                                <h4 style={{ margin: 0, color: '#fff', fontSize: '1.2rem', fontWeight: '900' }}>{item.label}</h4>
+                                                <p style={{ margin: 0, color: '#71717a', fontSize: '0.9rem', lineHeight: '1.6', fontWeight: '600' }}>{item.desc}</p>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+
+                                    <div style={{ marginTop: '50px', padding: '30px', borderRadius: '30px', background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.1)', display: 'flex', gap: '20px', alignItems: 'center' }}>
+                                        <AlertOctagon color="#f59e0b" size={35} />
+                                        <div>
+                                            <div style={{ color: '#fff', fontWeight: '900', fontSize: '1.1rem' }}>تنبيه بخصوص صلاحيات الإدارة العليا</div>
+                                            <div style={{ color: '#a1a1aa', fontWeight: '600', fontSize: '0.9rem', marginTop: '5px' }}>تغيير إعدادات الأمان أو الصلاحيات الجوهرية يتطلب توثيقاً ثنائياً ويتم تسجيله في سجل الرقابة بصفة "حساس جداً".</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+            </div>
+            
+            <style dangerouslySetInnerHTML={{__html: `
+                .premium-input-select {
+                    padding: 14px 20px;
+                    border-radius: 12px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                    font-family: 'Cairo';
+                    outline: none;
+                    background: rgba(15, 23, 42, 0.4);
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                }
+                .premium-input-select:hover {
+                    border-color: #6366f1;
+                }
+                .premium-input-select option {
+                    background: #0f172a;
+                    color: white;
+                }
+            `}} />
         </div>
     );
 };
 
-// ======= Main Settings Page =======
-export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState('company');
-
-    const tabs = [
-        { key: 'company', label: 'معلومات المنشأة', icon: <Building2 /> },
-        { key: 'whatsapp', label: 'التواصل الذكي', icon: <MessageSquare /> },
-        { key: 'portal', label: 'بوابة العملاء', icon: <Briefcase /> },
-        { key: 'users', label: 'المستخدمون', icon: <User /> },
-        { key: 'logs', label: 'سجل العمليات', icon: <Shield /> },
-        { key: 'system', label: 'إعدادات النظام', icon: <Settings /> },
-    ];
-
-    return (
-        <div style={{ fontFamily: 'Cairo, sans-serif', direction: 'rtl' }}>
-            <div style={{ marginBottom: '28px' }}>
-                <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 'bold', color: '#0f172a' }}>
-                    <Settings size={24} style={{ marginLeft: '10px', verticalAlign: 'middle', color: '#2563eb' }} />
-                    الإعدادات
-                </h1>
-                <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>إدارة إعدادات النظام والمنشأة</p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '28px', background: '#f8fafc', padding: '6px', borderRadius: '14px', width: 'fit-content', flexWrap: 'wrap' }}>
-                {tabs.map(t => (
-                    <TabBtn key={t.key} active={activeTab === t.key} onClick={() => setActiveTab(t.key)} icon={t.icon}>
-                        {t.label}
-                    </TabBtn>
-                ))}
-            </div>
-
-            <div style={{ background: 'white', borderRadius: '16px', padding: window.innerWidth < 600 ? '20px' : '28px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', minHeight: '400px' }}>
-                {activeTab === 'company' && <CompanyTab />}
-                {activeTab === 'whatsapp' && <WhatsAppTab />}
-                {activeTab === 'portal' && <ClientPortalTab />}
-                {activeTab === 'users' && <UsersTab />}
-                {activeTab === 'logs' && <AuditLogs />}
-                {activeTab === 'system' && <SystemTab />}
-            </div>
-        </div>
-    );
-}
+export default SettingsPage;

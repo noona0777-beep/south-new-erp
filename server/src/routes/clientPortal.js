@@ -302,11 +302,15 @@ const router = express.Router();
         }
     });
 
-    // 10. Create Support Ticket
+    // 10. Create Support Ticket + Automation
     router.post('/support-tickets', async (req, res) => {
         try {
             const { subject, description, category, projectId, priority } = req.body;
             
+            const year = new Date().getFullYear();
+            const dateStr = Date.now().toString().slice(-4);
+            const ticketNo = `TKT-${year}-${dateStr}`;
+
             const ticket = await prisma.supportTicket.create({
                 data: {
                     clientId: req.client.id,
@@ -316,11 +320,11 @@ const router = express.Router();
                     category: category || 'GENERAL',
                     priority: priority || 'MEDIUM',
                     status: 'OPEN',
-                    ticketNo: `TK-${Date.now().toString().slice(-6)}`
+                    ticketNo: ticketNo
                 }
             });
 
-            // Add the initial message
+            // Add initial message
             await prisma.ticketMessage.create({
                 data: {
                     ticketId: ticket.id,
@@ -331,9 +335,21 @@ const router = express.Router();
                 }
             });
 
+            // Automation: Notify Admin/Engineer via WhatsApp (Example: notifying a fixed management number or checking project manager)
+            try {
+                const { sendWhatsappMessage } = require('../lib/services');
+                const adminNotifyMsg = `🚨 *تذكرة دعم جديدة*\n\nالعميل: ${req.client.name}\nالموضوع: ${subject}\nرقم التذكرة: ${ticketNo}\nالتصنيف: ${category}\n\nيرجى المراجعة والرد عبر لوحة التحكم. 💻`;
+                // Example: send to a management number if defined in env
+                if (process.env.MANAGEMENT_WHATSAPP) {
+                    await sendWhatsappMessage(process.env.MANAGEMENT_WHATSAPP, adminNotifyMsg);
+                }
+            } catch (notifyErr) {
+                console.error('Admin Notify Error:', notifyErr);
+            }
+
             res.status(201).json(ticket);
         } catch (error) {
-            console.error(error);
+            console.error('Ticket Creation Error:', error);
             res.status(500).json({ error: 'فشل إنشاء التذكرة' });
         }
     });

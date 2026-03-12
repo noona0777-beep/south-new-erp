@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, FileText, LogOut, Menu, X, HardHat, Building2, Phone, Mail, MessageCircle } from 'lucide-react';
+import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { 
+    LayoutDashboard, Briefcase, FileText, LogOut, Menu, X, 
+    HardHat, Building2, Phone, Mail, MessageCircle, 
+    Bell, Search, User, ChevronLeft, ShieldCheck, 
+    Settings, Globe, Zap, ArrowLeft, Inbox, HelpCircle
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import API_URL from '@/config';
@@ -9,20 +14,21 @@ import ClientProjects from './ClientProjects';
 import ClientInvoices from './ClientInvoices';
 import ClientDocuments from './ClientDocuments';
 import ClientSupport from './ClientSupport';
+import { buttonClick, fadeInUp } from '../Common/MotionComponents';
 
 const ClientLayout = ({ user, onLogout }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [companyInfo, setCompanyInfo] = useState({ name: 'بوابة العملاء' });
+    const [companyInfo, setCompanyInfo] = useState({ name: 'بوابة جنوب العقارية والإنشائية' });
     const [permissions, setPermissions] = useState({});
     const location = useLocation();
+    const navigate = useNavigate();
 
     useEffect(() => {
-        axios.get(`${API_URL}/settings/companyInfo`)
+        const token = localStorage.getItem('token');
+        axios.get(`${API_URL}/settings/companyInfo`, { headers: { Authorization: `Bearer ${token}` } })
             .then(res => setCompanyInfo(res.data))
             .catch(() => {});
 
-        // Fetch permissions from dashboard endpoint
-        const token = localStorage.getItem('token');
         axios.get(`${API_URL}/client-portal/dashboard`, {
             headers: { Authorization: `Bearer ${token}` }
         }).then(res => {
@@ -32,92 +38,178 @@ const ClientLayout = ({ user, onLogout }) => {
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const closeSidebar = () => setIsSidebarOpen(false);
-
     const isActive = (path) => location.pathname === path;
 
-    const NavLink = ({ to, icon, label }) => (
-        <Link to={to} onClick={closeSidebar} style={{
-            display: 'flex', alignItems: 'center', gap: '12px',
-            padding: '14px 18px',
-            color: isActive(to) ? '#fff' : '#94a3b8',
-            background: isActive(to) ? '#2563eb' : 'transparent',
-            textDecoration: 'none',
-            borderRadius: '10px',
-            marginBottom: '6px',
-            transition: 'all 0.3s ease',
-            fontSize: '1rem',
-            fontWeight: isActive(to) ? '600' : '400',
-        }}>
-            {React.cloneElement(icon, { size: 20 })}
-            <span>{label}</span>
-        </Link>
-    );
+    const NavLink = ({ to, icon: Icon, label, disabled }) => {
+        if (disabled) return null;
+        const active = isActive(to);
+        return (
+            <Link to={to} onClick={closeSidebar} style={{ textDecoration: 'none' }}>
+                <motion.div 
+                    whileHover={{ x: 5, background: 'rgba(255,255,255,0.03)' }}
+                    whileTap={{ scale: 0.98 }}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: '15px',
+                        padding: '14px 20px',
+                        color: active ? '#818cf8' : '#71717a',
+                        background: active ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                        borderRadius: '16px',
+                        marginBottom: '8px',
+                        transition: 'all 0.3s ease',
+                        fontSize: '1rem',
+                        fontWeight: active ? '800' : '600',
+                        position: 'relative',
+                        fontFamily: 'Cairo'
+                    }}
+                >
+                    {active && <motion.div layoutId="client-nav-active" style={{ position: 'absolute', left: 0, top: '25%', bottom: '25%', width: '3px', background: '#6366f1', borderRadius: '0 4px 4px 0' }} />}
+                    <Icon size={20} />
+                    <span>{label}</span>
+                </motion.div>
+            </Link>
+        );
+    };
 
     return (
-        <div style={{ display: 'flex', height: '100vh', direction: 'rtl', fontFamily: 'Tajawal, Cairo, sans-serif', background: '#f8fafc' }}>
-            {/* Mobile Sidebar Overlay */}
-            {isSidebarOpen && <div onClick={closeSidebar} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40 }} />}
+        <div style={{ display: 'flex', height: '100vh', direction: 'rtl', fontFamily: 'Cairo, sans-serif', background: '#09090b', color: '#fff', overflow: 'hidden' }}>
+            {/* Mesh Background for Portal */}
+            <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', opacity: 0.4 }}>
+                <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '50%', height: '50%', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)' }}></div>
+                <div style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: '50%', height: '50%', background: 'radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%)' }}></div>
+            </div>
 
-            {/* Client Sidebar */}
-            <div style={{
-                width: '280px', background: '#0A1A2F', color: 'white', padding: '24px',
-                display: 'flex', flexDirection: 'column', overflowY: 'auto',
-                boxShadow: '4px 0 20px rgba(0,0,0,0.05)',
-                zIndex: 50,
-                position: window.innerWidth > 768 ? 'sticky' : 'fixed',
-                top: 0, bottom: 0, right: 0, height: '100vh',
-                transform: window.innerWidth <= 768 && !isSidebarOpen ? 'translateX(100%)' : 'translateX(0)',
-                transition: 'transform 0.3s ease'
-            }}>
-                <div style={{ marginBottom: '30px', textAlign: 'center', paddingBottom: '24px', borderBottom: '1px solid #1e293b' }}>
-                    <img src="/logo.png" alt="Logo" style={{ width: '120px', height: 'auto', margin: '0 auto 16px' }} onError={(e) => e.target.style.display = 'none'} />
-                    <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>{companyInfo.name || 'بوابة العملاء'}</h2>
-                    {companyInfo.phone && <p style={{ margin: '5px 0 0 0', fontSize: '0.85rem', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}><Phone size={14}/> {companyInfo.phone}</p>}
+            {/* Mobile Overlay */}
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }} 
+                        onClick={closeSidebar} 
+                        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', zIndex: 1000 }} 
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Sidebar */}
+            <motion.aside
+                initial={false}
+                animate={{ x: isSidebarOpen ? 0 : (window.innerWidth <= 768 ? '100%' : 0) }}
+                style={{
+                    width: '300px',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    backdropFilter: 'blur(30px)',
+                    WebkitBackdropFilter: 'blur(30px)',
+                    borderLeft: '1px solid rgba(255, 255, 255, 0.05)',
+                    padding: '30px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    zIndex: 1001,
+                    position: window.innerWidth <= 768 ? 'fixed' : 'relative',
+                    top: 0, bottom: 0, right: 0, height: '100vh',
+                }}
+            >
+                <div style={{ marginBottom: '40px', textAlign: 'center' }}>
+                    <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '20px' }}>
+                        <img 
+                            src="/logo.png" 
+                            alt="Logo" 
+                            style={{ width: '130px', height: 'auto' }} 
+                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150x50/312e81/ffffff?text=South+New'; }} 
+                        />
+                    </div>
+                    <div className="status-pill" style={{ display: 'inline-flex', padding: '6px 16px', borderRadius: '30px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '0.75rem', fontWeight: '900', gap: '6px', alignItems: 'center' }}>
+                        <ShieldCheck size={14} /> بـوابـة العـملاء الـذكـية
+                    </div>
                 </div>
 
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <NavLink to="/client-portal" icon={<LayoutDashboard />} label="ملخص معلوماتي" />
-                    {permissions.trackProjects !== false && <NavLink to="/client-portal/projects" icon={<Briefcase />} label="مشاريعي" />}
-                    {permissions.viewFinancials === true && <NavLink to="/client-portal/invoices" icon={<FileText />} label="الفواتير والمالية" />}
-                    <NavLink to="/client-portal/documents" icon={<FileText />} label="الأرشيف والمستندات" />
-                    <NavLink to="/client-portal/support" icon={<MessageCircle size={20} />} label="الدعم الفني" />
+                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <NavLink to="/client-portal" icon={LayoutDashboard} label="لوحة التحكم" />
+                    <NavLink disabled={permissions.trackProjects === false} to="/client-portal/projects" icon={Briefcase} label="مشاريعي الجارية" />
+                    <NavLink disabled={permissions.viewFinancials !== true} to="/client-portal/invoices" icon={FileText} label="سجل الفواتير والمالية" />
+                    <NavLink to="/client-portal/documents" icon={Inbox} label="خزانة المستندات" />
+                    <NavLink to="/client-portal/support" icon={HelpCircle} label="مركز الدعم الفني" />
                 </nav>
 
-                <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #1e293b' }}>
-                    <div style={{ background: '#1e293b', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', marginTop: '30px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
+                        <div style={{ 
+                            width: '45px', height: '45px', borderRadius: '15px', 
+                            background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                            fontWeight: '900', color: 'white', fontSize: '1.1rem',
+                            boxShadow: '0 8px 16px rgba(99,102,241,0.2)'
+                        }}>
                             {user?.name?.charAt(0) || 'ع'}
                         </div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
-                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{user?.name || 'عميل'}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>عميل</div>
+                            <div style={{ fontSize: '1rem', fontWeight: '900', color: '#fff', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{user?.name || 'عميل'}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#71717a', fontWeight: '800' }}>عميل موثق</div>
                         </div>
-                        <button onClick={onLogout} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '8px' }}>
-                            <LogOut size={20} />
-                        </button>
                     </div>
+                    <motion.button 
+                        whileHover={{ background: 'rgba(239, 68, 68, 0.2)' }}
+                        onClick={onLogout} 
+                        style={{ width: '100%', padding: '10px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                    >
+                        <LogOut size={16} /> تسجيل الخروج
+                    </motion.button>
                 </div>
-            </div>
+            </motion.aside>
 
             {/* Main Content */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <header style={{ background: '#fff', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', zIndex: 30 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1, overflow: 'hidden' }}>
+                <header style={{ 
+                    padding: '20px 40px', 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    background: 'rgba(9, 9, 11, 0.6)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         {window.innerWidth <= 768 && (
-                            <button onClick={toggleSidebar} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                                <Menu size={24} color="#1e293b" />
-                            </button>
+                            <motion.button whileTap={{ scale: 0.95 }} onClick={toggleSidebar} style={{ background: 'rgba(255,255,255,0.03)', border: 'none', width: '45px', height: '45px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a1a1aa' }}>
+                                <Menu size={24} />
+                            </motion.button>
                         )}
                         <div>
-                            <h1 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold', color: '#1e293b' }}>أهلاً بك، {user?.name}</h1>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>تابع تحديثات مشاريعك لحظة بلحظة</p>
+                            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#fff' }}>أهلاً بك، {user?.name}</h2>
+                            <p style={{ margin: '2px 0 0 0', fontSize: '0.9rem', color: '#71717a', fontWeight: '600' }}>نحن نهتم بأدق تفاصيل مشاريعك.</p>
                         </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '15px' }}>
+                         <div style={{ position: 'relative', width: '250px', display: window.innerWidth > 1024 ? 'block' : 'none' }}>
+                            <Search size={18} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#52525b' }} />
+                            <input 
+                                placeholder="ابحث في سجلاتك..." 
+                                className="premium-input" 
+                                onChange={(e) => {
+                                    /* تنفيذ منطق البحث السريع هنا إذا لزم الأمر */
+                                    console.log('Searching for:', e.target.value);
+                                }}
+                                style={{ width: '100%', paddingRight: '45px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }} 
+                            />
+                        </div>
+                        <motion.button {...buttonClick} style={{ background: 'rgba(255,255,255,0.02)', color: '#71717a', border: '1px solid rgba(255,255,255,0.05)', width: '45px', height: '45px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Bell size={20} />
+                        </motion.button>
+                        <motion.button 
+                            {...buttonClick} 
+                            onClick={() => navigate('/client-portal/support')}
+                            style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: 'white', border: 'none', padding: '0 25px', borderRadius: '14px', fontWeight: '800', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: '10px' }}
+                        >
+                            تواصل معنا
+                        </motion.button>
                     </div>
                 </header>
 
-                <main style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+                <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
                     <AnimatePresence mode="wait">
-                        <motion.div key={location.pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                        <motion.div key={location.pathname} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }}>
                             <Routes>
                                 <Route path="/client-portal" element={<ClientDashboard user={user} />} />
                                 <Route path="/client-portal/projects" element={<ClientProjects />} />

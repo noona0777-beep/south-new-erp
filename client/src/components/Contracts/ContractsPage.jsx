@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import API_URL from '@/config';
-import {
-    Plus, Search, FileText, Calendar, User,
-    Briefcase, MoreVertical, Edit, Trash2, Printer,
-    CheckCircle, XCircle, Clock, Archive, ShieldCheck
+import { 
+    Plus, Search, FileText, Calendar, User, 
+    Briefcase, MoreVertical, Edit, Trash2, Printer, 
+    CheckCircle, XCircle, Clock, Archive, ShieldCheck,
+    Download, LayoutGrid, ArrowRight, Eye, Send,
+    FileMinus, AlertOctagon, ChevronLeft, ChevronRight,
+    MapPin, Wallet, CreditCard, Building2, Layers, RefreshCw
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import API_URL from '@/config';
+import { buttonClick, fadeInUp } from '../Common/MotionComponents';
 
 const SCA_STANDARD_CLAUSES = [
     { id: 1, title: 'الغرض من العقد', content: 'يلتزم الطرف الثاني بتنفيذ كافة أعمال المشروع الموضحة في الملحقات الفنية وجدول الكميات طبقاً للأصول الفنية.' },
@@ -47,79 +52,38 @@ const ContractsPage = () => {
     const [error, setError] = useState(null);
 
     // Document Form State
-    const [docFormData, setDocFormData] = useState({
-        title: '',
-        category: 'CONTRACT',
-        fileUrl: '',
-        fileName: ''
-    });
+    const [docFormData, setDocFormData] = useState({ title: '', category: 'CONTRACT', fileUrl: '', fileName: '' });
 
     // Form State
     const [formData, setFormData] = useState({
-        partnerId: '',
-        projectId: '',
-        title: '',
-        type: 'MAIN', // MAIN, RENOVATION, DESIGN, LABOR, SUPPLY
-        startDate: '',
-        endDate: '',
-        advancePayment: 0,
-        retentionPercent: 5,
-        location: '',
-        signatureName: '',
+        partnerId: '', projectId: '', title: '', type: 'MAIN', startDate: '', endDate: '',
+        advancePayment: 0, retentionPercent: 5, location: '', signatureName: '',
         items: [{ description: '', unit: 'متر', quantity: 0, unitPrice: 0 }],
         clauses: SCA_STANDARD_CLAUSES
     });
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    useEffect(() => { fetchData(); }, []);
 
     const fetchData = async () => {
         setLoading(true);
-        setError(null);
         try {
             const token = localStorage.getItem('token');
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-            // Fetch concurrently but handle individually if needed
-            const results = await Promise.allSettled([
+            const [contractsRes, partnersRes, projectsRes] = await Promise.all([
                 axios.get(`${API_URL}/construction-contracts`, { headers }),
                 axios.get(`${API_URL}/partners`, { headers }),
                 axios.get(`${API_URL}/projects`, { headers })
             ]);
-
-            if (results[0].status === 'fulfilled') setContracts(results[0].value.data);
-            else console.error('Contracts Fetch Error:', results[0].reason);
-
-            if (results[1].status === 'fulfilled') setPartners(results[1].value.data);
-            else {
-                console.error('Partners Fetch Error:', results[1].reason);
-                setError('فشل تحميل قائمة العملاء');
-            }
-
-            if (results[2].status === 'fulfilled') setProjects(results[2].value.data);
-            else console.error('Projects Fetch Error:', results[2].reason);
-
+            setContracts(contractsRes.data);
+            setPartners(partnersRes.data);
+            setProjects(projectsRes.data);
         } catch (error) {
-            console.error('Fetch error:', error);
-            setError('حدث خطأ أثناء جلب البيانات');
-        } finally {
-            setLoading(false);
-        }
+            setError('فشل في استرداد بيانات العقود');
+        } finally { setLoading(false); }
     };
 
-    const handleAddItem = () => {
-        setFormData({
-            ...formData,
-            items: [...formData.items, { description: '', unit: 'متر', quantity: 0, unitPrice: 0 }]
-        });
-    };
-
-    const handleRemoveItem = (index) => {
-        const newItems = formData.items.filter((_, i) => i !== index);
-        setFormData({ ...formData, items: newItems });
-    };
-
+    const handleAddItem = () => setFormData({ ...formData, items: [...formData.items, { description: '', unit: 'متر', quantity: 0, unitPrice: 0 }] });
+    const handleRemoveItem = (index) => setFormData({ ...formData, items: formData.items.filter((_, i) => i !== index) });
     const handleItemChange = (index, field, value) => {
         const newItems = [...formData.items];
         newItems[index][field] = value;
@@ -130,510 +94,288 @@ const ContractsPage = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await axios.post(`${API_URL}/construction-contracts`, formData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await axios.post(`${API_URL}/construction-contracts`, formData, { headers: { Authorization: `Bearer ${token}` } });
             setShowModal(false);
             fetchData();
-            setFormData({
-                partnerId: '', projectId: '', title: '', type: 'MAIN',
-                startDate: '', endDate: '', advancePayment: 0, retentionPercent: 5,
-                location: '', signatureName: '',
-                items: [{ description: '', unit: 'متر', quantity: 0, unitPrice: 0 }],
-                clauses: SCA_STANDARD_CLAUSES
-            });
-        } catch (error) {
-            alert('خطأ في حفظ العقد: ' + error.message);
-        }
+        } catch (error) { alert('خطأ في حفظ العقد'); }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('هل أنت متأكد من حذف هذا العقد؟')) return;
-        try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_URL}/construction-contracts/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            fetchData();
-        } catch (error) {
-            alert('خطأ في الحذف');
-        }
-    };
-
-    const handleArchive = async (id) => {
-        if (!window.confirm('هل تريد أرشفة هذا العقد؟ سيتم تغيير حالته ونقله للأرشيف.')) return;
-        try {
-            const token = localStorage.getItem('token');
-            await axios.post(`${API_URL}/construction-contracts/${id}/archive`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            alert('✅ تم أرشفة العقد بنجاح');
-            fetchData();
-        } catch (error) {
-            alert('❌ فشل أرشفة العقد');
-        }
-    };
-
-    const fetchContractDocuments = async (contractId) => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await axios.get(`${API_URL}/documents?constructionContractId=${contractId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setContractDocuments(res.data);
-        } catch (err) {
-            console.error('Error fetching contract docs', err);
-        }
-    };
-
-    const handleOpenDocs = (contract) => {
-        setSelectedContract(contract);
-        fetchContractDocuments(contract.id);
-        setShowDocsModal(true);
-    };
-
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-            alert('الملف كبير جداً (ماكس 5MB)');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setDocFormData({
-                ...docFormData,
-                fileUrl: reader.result,
-                fileName: file.name,
-                title: docFormData.title || file.name.split('.')[0]
-            });
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const handleUploadDoc = async (e) => {
-        e.preventDefault();
-        if (!docFormData.fileUrl) return;
-
-        setUploadingDoc(true);
-        try {
-            const token = localStorage.getItem('token');
-            await axios.post(`${API_URL}/documents`, {
-                ...docFormData,
-                constructionContractId: selectedContract.id,
-                partnerId: selectedContract.partnerId
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setDocFormData({ title: '', category: 'CONTRACT', fileUrl: '', fileName: '' });
-            fetchContractDocuments(selectedContract.id);
-            alert('✅ تم رفع المستند');
-        } catch (err) {
-            alert('❌ فشل الرفع');
-        } finally {
-            setUploadingDoc(false);
-        }
-    };
-
-    const handleDeleteDoc = async (id) => {
-        if (!window.confirm('حذف المستند؟')) return;
-        try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_URL}/documents/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            fetchContractDocuments(selectedContract.id);
-        } catch (err) {
-            alert('فشل الحذف');
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'DRAFT': return { class: 'status-pending', label: 'مسودة قيد المراجعة', icon: <Clock size={14} /> };
+            case 'ACTIVE': return { class: 'status-paid', label: 'عقد سارٍ ومفعل', icon: <CheckCircle size={14} /> };
+            case 'COMPLETED': return { class: 'status-paid', label: 'عقد منتهي بالكامل', icon: <ShieldCheck size={14} /> };
+            case 'CANCELLED': return { class: 'status-cancelled', label: 'عقد ملغى', icon: <XCircle size={14} /> };
+            default: return { class: 'status-pending', label: status, icon: <Clock size={14} /> };
         }
     };
 
     const filteredContracts = contracts.filter(c =>
-        c.contractNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.partner?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.title.toLowerCase().includes(searchTerm.toLowerCase())
+        (c.contractNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.partner?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.title || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case 'DRAFT': return { bg: '#f1f5f9', color: '#64748b', icon: <Clock size={14} /> };
-            case 'ACTIVE': return { bg: '#ecfdf5', color: '#10b981', icon: <CheckCircle size={14} /> };
-            case 'COMPLETED': return { bg: '#eff6ff', color: '#2563eb', icon: <CheckCircle size={14} /> };
-            case 'CANCELLED': return { bg: '#fef2f2', color: '#ef4444', icon: <XCircle size={14} /> };
-            case 'ARCHIVED': return { bg: '#f8fafc', color: '#94a3b8', icon: <Archive size={14} /> };
-            default: return { bg: '#f1f5f9', color: '#64748b', icon: <Clock size={14} /> };
-        }
-    };
-
     return (
-        <div style={{ padding: '20px', fontFamily: 'Cairo' }}>
+        <div style={{ direction: 'rtl' }}>
             {/* Header Area */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
                 <div>
-                    <h2 style={{ margin: 0, color: '#0f172a', fontSize: '1.8rem', fontWeight: '800' }}>إدارة عقود المقاولات</h2>
-                    {error && (
-                        <div style={{ background: '#fef2f2', color: '#ef4444', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <XCircle size={16} /> {error}
-                        </div>
-                    )}
-                    <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>إصدار ومتابعة عقود الإنشاءات والصيانة حسب معايير SCA</p>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#fff', fontSize: '2.2rem', fontWeight: '900' }} className="gradient-text">إدارة العقود الإنشائية</h2>
+                    <p style={{ margin: 0, color: '#a1a1aa', fontSize: '1rem', fontWeight: '500' }}>توثيق العقود، بنود SCA الموحدة، ومتابعة التزامات التنفيذ.</p>
                 </div>
-                <button
+                <motion.button 
+                    whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(99,102,241,0.4)' }} 
+                    whileTap={{ scale: 0.95 }} 
                     onClick={() => setShowModal(true)}
-                    style={{
-                        background: '#2563eb', color: 'white', border: 'none', padding: '12px 24px',
-                        borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-                        fontWeight: 'bold', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
-                    }}
+                    style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: 'white', border: 'none', padding: '12px 28px', borderRadius: '18px', cursor: 'pointer', fontWeight: '800', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: '10px' }}
                 >
-                    <Plus size={20} /> إنشاء عقد جديد
-                </button>
+                    <Plus size={22} /> تحرير عقد جديد
+                </motion.button>
             </div>
 
             {/* Filters */}
-            <div style={{ background: 'white', padding: '15px', borderRadius: '16px', marginBottom: '20px', display: 'flex', gap: '15px', border: '1px solid #f1f5f9' }}>
+            <div className="glass-card" style={{ padding: '24px', borderRadius: '28px', marginBottom: '30px', display: 'flex', gap: '20px', alignItems: 'center' }}>
                 <div style={{ position: 'relative', flex: 1 }}>
-                    <Search size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                    <input
-                        type="text"
-                        placeholder="بحث برقم العقد، اسم العميل، أو العنوان..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ width: '100%', padding: '10px 40px 10px 15px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none' }}
-                    />
+                    <Search size={20} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#52525b' }} />
+                    <input placeholder="البحث برقم العقد، اسم العميل، أو موضوع العقد..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="premium-input" style={{ width: '100%', paddingRight: '45px', border: 'none' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="status-pill" style={{ background: 'rgba(255,255,255,0.03)', color: '#a1a1aa', border: 'none', cursor: 'pointer' }}>تصفية العقود الجارية</button>
+                    <button className="status-pill" style={{ background: 'rgba(255,255,255,0.03)', color: '#a1a1aa', border: 'none', cursor: 'pointer' }}>الأرشيف التاريخي</button>
                 </div>
             </div>
 
             {/* Contracts List */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px' }}>
                 {loading ? (
-                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '50px' }}>جاري التحميل...</div>
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px', color: '#71717a' }}>
+                        <RefreshCw className="animate-spin" size={48} style={{ margin: '0 auto 20px', display: 'block', color: '#6366f1' }} />
+                        <h3 style={{ color: '#fff', fontWeight: '800' }}>جاري استرداد سجلات العقود...</h3>
+                    </div>
                 ) : filteredContracts.length === 0 ? (
-                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '50px', background: 'white', borderRadius: '16px' }}>لا توجد عقود حالياً</div>
-                ) : filteredContracts.map(contract => {
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px', color: '#52525b' }}>لا توجد عقود مسجلة تطابق معايير البحث.</div>
+                ) : filteredContracts.map((contract, idx) => {
                     const status = getStatusStyle(contract.status);
                     return (
-                        <div key={contract.id} className="card-hover" style={{ background: 'white', borderRadius: '20px', border: '1px solid #f1f5f9', overflow: 'hidden', transition: 'all 0.3s' }}>
-                            <div style={{ padding: '20px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>{contract.contractNumber}</span>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', background: status.bg, color: status.color, fontSize: '0.75rem', fontWeight: 'bold' }}>
-                                        {status.icon} {contract.status}
-                                    </div>
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            transition={{ delay: idx * 0.05 }}
+                            key={contract.id} 
+                            className="glass-card" 
+                            style={{ padding: '30px', borderRadius: '32px', position: 'relative', overflow: 'hidden' }}
+                        >
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, #6366f1, #06b6d4)' }} />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '25px', alignItems: 'flex-start' }}>
+                                <div>
+                                    <div style={{ fontSize: '0.8rem', color: '#6366f1', fontWeight: '900', letterSpacing: '1px', marginBottom: '4px' }}>{contract.contractNumber}</div>
+                                    <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: '900' }}>{contract.title}</h3>
                                 </div>
-                                <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#1e293b' }}>{contract.title}</h3>
+                                <span className={`status-pill ${status.class}`} style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px' }}>
+                                    {status.icon} {status.label}
+                                </span>
+                            </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b' }}>
-                                        <User size={14} /> {contract.partner?.name}
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b' }}>
-                                        <Calendar size={14} /> {new Date(contract.startDate).toLocaleDateString('ar-SA')} - {new Date(contract.endDate).toLocaleDateString('ar-SA')}
-                                    </div>
-                                    {contract.project && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#2563eb', fontWeight: 'bold' }}>
-                                            <Briefcase size={14} /> {contract.project.name}
-                                        </div>
-                                    )}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '25px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#a1a1aa' }}>
+                                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '10px' }}><User size={16} /></div>
+                                    <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>الطرف الثاني: {contract.partner?.name}</span>
                                 </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#a1a1aa' }}>
+                                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '10px' }}><Calendar size={16} /></div>
+                                    <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{new Date(contract.startDate).toLocaleDateString('ar-SA')} – {new Date(contract.endDate).toLocaleDateString('ar-SA')}</span>
+                                </div>
+                                {contract.project && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#6366f1' }}>
+                                        <div style={{ background: 'rgba(99,102,241,0.1)', padding: '8px', borderRadius: '10px' }}><Briefcase size={16} /></div>
+                                        <span style={{ fontWeight: '800', fontSize: '0.9rem' }}>مشروع: {contract.project.name}</span>
+                                    </div>
+                                )}
+                            </div>
 
-                                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div>
-                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>قيمة العقد</div>
-                                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#0f172a' }}>{contract.totalValue.toLocaleString()} <span style={{ fontSize: '0.8rem' }}>ر.س</span></div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button onClick={() => handleOpenDocs(contract)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e0f2fe', background: '#f0f9ff', color: '#0284c7', cursor: 'pointer' }} title="المستندات">
-                                            <FileText size={18} />
-                                        </button>
-                                        <button onClick={() => window.open(`/contracts/${contract.id}/print`, '_blank')} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer' }} title="طباعة">
-                                            <Printer size={18} />
-                                        </button>
-                                        {contract.status !== 'ARCHIVED' && (
-                                            <button onClick={() => handleArchive(contract.id)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #f1f5f9', background: 'white', color: '#64748b', cursor: 'pointer' }} title="أرشفة">
-                                                <Archive size={18} />
-                                            </button>
-                                        )}
-                                        <button onClick={() => handleDelete(contract.id)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #fee2e2', background: 'white', color: '#ef4444', cursor: 'pointer' }} title="حذف">
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
+                            <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', color: '#71717a', fontWeight: '700', marginBottom: '4px' }}>إجمالي مبلغ التعاقد (صافي)</div>
+                                    <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#fff' }}>{contract.totalValue.toLocaleString()} <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>ر.س</span></div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <motion.button {...buttonClick} onClick={() => window.open(`/contracts/${contract.id}/print`, '_blank')} style={{ background: 'rgba(255,255,255,0.03)', color: '#a1a1aa', border: 'none', width: '40px', height: '40px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="طباعة العقد">
+                                        <Printer size={18} />
+                                    </motion.button>
+                                    <motion.button {...buttonClick} onClick={() => { setSelectedContract(contract); setShowDocsModal(true); }} style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: 'none', width: '40px', height: '40px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="المستندات والملاحق">
+                                        <FileText size={18} />
+                                    </motion.button>
+                                    <motion.button 
+                                        {...buttonClick} 
+                                        onClick={async () => { 
+                                            if (confirm('حذف العقد نهائياً؟')) {
+                                                try {
+                                                    const token = localStorage.getItem('token');
+                                                    await axios.delete(`${API_URL}/construction-contracts/${contract.id}`, { headers: { Authorization: `Bearer ${token}` } });
+                                                    fetchData();
+                                                } catch (err) {
+                                                    alert('فشل في حذف العقد');
+                                                }
+                                            } 
+                                        }} 
+                                        style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', width: '40px', height: '40px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                        title="حذف"
+                                    >
+                                        <Trash2 size={18} />
+                                    </motion.button>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 })}
             </div>
 
-            {/* Modal for Creating Contract */}
-            {showModal && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
-                    <div style={{ background: 'white', width: '90%', maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '24px', padding: '30px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '25px' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.5rem' }}>إنشاء عقد مقاولات جديد</h3>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>إغلاق</button>
-                        </div>
-
-                        <form onSubmit={handleSubmit}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '25px' }}>
+            {/* Creation Modal */}
+            <AnimatePresence>
+                {showModal && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="glass-card" style={{ width: '100%', maxWidth: '1000px', maxHeight: '95vh', overflowY: 'auto', padding: '40px', borderRadius: '40px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>العميل (الطرف الأول)</label>
-                                    <select
-                                        required
-                                        value={formData.partnerId}
-                                        onChange={(e) => setFormData({ ...formData, partnerId: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-                                    >
-                                        <option value="">اختر العميل...</option>
-                                        {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                    </select>
+                                    <h3 style={{ margin: 0, color: '#fff', fontSize: '1.8rem', fontWeight: '900' }}>إصدار عقد مقاولات إنشائي</h3>
+                                    <p style={{ margin: '5px 0 0 0', color: '#71717a', fontSize: '0.9rem' }}>تعبئة البيانات والبنود القانونية وجدول الكميات (BOQ)</p>
                                 </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>المشروع المرتبط</label>
-                                    <select
-                                        value={formData.projectId}
-                                        onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-                                    >
-                                        <option value="">بدون مشروع حالياً...</option>
-                                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                    </select>
-                                </div>
-                                <div style={{ gridColumn: '1/-1' }}>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>عنوان العقد / اسم العمل</label>
-                                    <input
-                                        required
-                                        type="text"
-                                        value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        placeholder="مثال: تنفيذ أعمال لياسة ومباني لفيلا سكنية"
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>نوع العقد</label>
-                                    <select
-                                        value={formData.type}
-                                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-                                    >
-                                        <option value="MAIN">عقد توريد وتنفيذ (رئيسي)</option>
-                                        <option value="LABOR">عقد مصنعيات (عمالة)</option>
-                                        <option value="DESIGN">عقد تصميم وإشراف</option>
-                                        <option value="RENOVATION">عقد ترميم وصيانة</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>موقع التنفيذ</label>
-                                    <input
-                                        type="text"
-                                        value={formData.location}
-                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                        placeholder="الحي، المدينة، الموقع..."
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>تاريخ البداية</label>
-                                    <input
-                                        required
-                                        type="date"
-                                        value={formData.startDate}
-                                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>تاريخ التسليم المتوقع</label>
-                                    <input
-                                        required
-                                        type="date"
-                                        value={formData.endDate}
-                                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-                                    />
-                                </div>
+                                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', width: '45px', height: '45px', borderRadius: '50%', color: '#a1a1aa', cursor: 'pointer' }}><XCircle size={24} /></button>
                             </div>
 
-                            {/* BOQ Editor */}
-                            <div style={{ marginBottom: '30px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                                    <h4 style={{ margin: 0, color: '#1e3a8a' }}>جدول الكميات والمواصفات (BOQ)</h4>
-                                    <button type="button" onClick={handleAddItem} style={{ color: '#2563eb', background: '#eff6ff', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                                        + إضافة بند أعمال
-                                    </button>
-                                </div>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                                    <thead>
-                                        <tr style={{ textAlign: 'right', borderBottom: '2px solid #f1f5f9', color: '#64748b' }}>
-                                            <th style={{ padding: '10px' }}>الوصف والبيان</th>
-                                            <th style={{ padding: '10px', width: '100px' }}>الوحدة</th>
-                                            <th style={{ padding: '10px', width: '100px' }}>الكمية</th>
-                                            <th style={{ padding: '10px', width: '120px' }}>سعر الوحدة</th>
-                                            <th style={{ padding: '10px', width: '50px' }}></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {formData.items.map((item, idx) => (
-                                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                                <td style={{ padding: '10px' }}>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="وصف العمل..."
-                                                        value={item.description}
-                                                        onChange={(e) => handleItemChange(idx, 'description', e.target.value)}
-                                                        style={{ width: '100%', border: 'none', outline: 'none', padding: '5px' }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: '10px' }}>
-                                                    <input
-                                                        type="text"
-                                                        value={item.unit}
-                                                        onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}
-                                                        style={{ width: '100%', border: 'none', outline: 'none', padding: '5px' }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: '10px' }}>
-                                                    <input
-                                                        type="number"
-                                                        value={item.quantity}
-                                                        onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
-                                                        style={{ width: '100%', border: 'none', outline: 'none', padding: '5px' }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: '10px' }}>
-                                                    <input
-                                                        type="number"
-                                                        value={item.unitPrice}
-                                                        onChange={(e) => handleItemChange(idx, 'unitPrice', e.target.value)}
-                                                        style={{ width: '100%', border: 'none', outline: 'none', padding: '5px' }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: '10px' }}>
-                                                    <button type="button" onClick={() => handleRemoveItem(idx)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Legal Clauses Section */}
-                            <div style={{ marginBottom: '30px', padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                                    <h4 style={{ margin: 0, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <ShieldCheck size={20} /> بنود العقد المعتمدة (SCA)
-                                    </h4>
-                                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>تم إدراج 21 بنداً قياسياً</span>
-                                </div>
-                                <div style={{ maxHeight: '200px', overflowY: 'auto', padding: '10px', background: 'white', borderRadius: '10px', border: '1px solid #f1f5f9' }}>
-                                    {formData.clauses.map((clause, idx) => (
-                                        <div key={idx} style={{ marginBottom: '15px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-                                            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#1e3a8a', marginBottom: '5px' }}>مادة ({clause.id}): {clause.title}</div>
-                                            <textarea
-                                                value={clause.content}
-                                                onChange={(e) => {
-                                                    const newClauses = [...formData.clauses];
-                                                    newClauses[idx].content = e.target.value;
-                                                    setFormData({ ...formData, clauses: newClauses });
-                                                }}
-                                                style={{ width: '100%', border: 'none', background: '#f8fafc', padding: '8px', borderRadius: '5px', fontSize: '0.8rem', resize: 'vertical', fontFamily: 'Cairo' }}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end' }}>
-                                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '10px 25px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white' }}>إلغاء</button>
-                                <button type="submit" style={{ padding: '10px 40px', borderRadius: '10px', border: 'none', background: '#2563eb', color: 'white', fontWeight: 'bold' }}>حفظ العقد وإصدار رقم</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Documents Modal */}
-            {showDocsModal && selectedContract && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2005, padding: '20px' }}>
-                    <div style={{ background: 'white', width: '100%', maxWidth: '600px', borderRadius: '24px', padding: '30px', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h3 style={{ margin: 0 }}>مستندات العقد: {selectedContract.contractNumber}</h3>
-                            <button onClick={() => setShowDocsModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
-                        </div>
-
-                        {/* Upload Section */}
-                        <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', marginBottom: '20px', border: '1px dashed #cbd5e1' }}>
-                            <form onSubmit={handleUploadDoc}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    <input
-                                        type="text"
-                                        placeholder="عنوان المستند (مثال: صورة الموقع، الدفعة الأولى...)"
-                                        required
-                                        value={docFormData.title}
-                                        onChange={e => setDocFormData({ ...docFormData, title: e.target.value })}
-                                        style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                                    />
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <input
-                                            type="file"
-                                            onChange={handleFileChange}
-                                            style={{ flex: 1, fontSize: '0.8rem' }}
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={uploadingDoc || !docFormData.fileUrl}
-                                            style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}
-                                        >
-                                            {uploadingDoc ? 'جاري الرفع...' : 'رفع الملف'}
-                                        </button>
+                            <form onSubmit={handleSubmit}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '25px', marginBottom: '35px' }}>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>الطرف الثاني (المقاول/العميل)</label>
+                                        <select required value={formData.partnerId} onChange={e => setFormData({ ...formData, partnerId: e.target.value })} className="premium-input" style={{ width: '100%' }}>
+                                            <option value="">اختر من سجل الشركاء...</option>
+                                            {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        </select>
                                     </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>الموقع والمشروع</label>
+                                        <select value={formData.projectId} onChange={e => setFormData({ ...formData, projectId: e.target.value })} className="premium-input" style={{ width: '100%' }}>
+                                            <option value="">-- عقد مستقل (بدون مشروع) --</option>
+                                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>تصنيف العقد</label>
+                                        <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="premium-input" style={{ width: '100%' }}>
+                                            <option value="MAIN">عقد توريد وتنفيذ وشامل</option>
+                                            <option value="LABOR">عقد عمالة ومصنعيات فقط</option>
+                                            <option value="DESIGN">عقد هندسي / تصميم</option>
+                                            <option value="RENOVATION">عقد ترميم وبناء</option>
+                                        </select>
+                                    </div>
+                                    <div style={{ gridColumn: 'span 3' }}>
+                                        <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>عنوان العقد الرسمي</label>
+                                        <input required type="text" placeholder="مثال: تنفيذ أعمال الهيكل الإنشائي لمشروع فيلا الكوثر" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="premium-input" style={{ width: '100%' }} />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>تاريخ النفاذ (البدء)</label>
+                                        <input required type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} className="premium-input" style={{ width: '100%' }} />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>تاريخ الاستحقاق (الانتهاء)</label>
+                                        <input required type="date" value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} className="premium-input" style={{ width: '100%' }} />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>موقع العمل (تفصيلي)</label>
+                                        <input type="text" placeholder="المنطقة، الحي، رقم القطعة" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} className="premium-input" style={{ width: '100%' }} />
+                                    </div>
+                                </div>
+
+                                <div className="glass-card" style={{ padding: '30px', borderRadius: '28px', marginBottom: '35px', background: 'rgba(255,255,255,0.02)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                                        <h4 style={{ margin: 0, color: '#fff', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px' }}><Layers size={20} color="#6366f1" /> جدول تحليل الأعمال والكميات (BOQ)</h4>
+                                        <motion.button {...buttonClick} type="button" onClick={handleAddItem} style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: 'none', padding: '8px 20px', borderRadius: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'Cairo', fontSize: '0.85rem' }}>+ إضافة بند عمل</motion.button>
+                                    </div>
+                                    <table className="table-glass" style={{ margin: 0 }}>
+                                        <thead>
+                                            <tr>
+                                                <th style={{ textAlign: 'right' }}>بيان الأعمال والمواصفات</th>
+                                                <th style={{ textAlign: 'center', width: '100px' }}>الوحدة</th>
+                                                <th style={{ textAlign: 'center', width: '100px' }}>الكمية</th>
+                                                <th style={{ textAlign: 'center', width: '140px' }}>سعر الوحدة</th>
+                                                <th style={{ width: '50px' }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {formData.items.map((item, idx) => (
+                                                <tr key={idx}>
+                                                    <td style={{ padding: '10px' }}><input type="text" placeholder="شرح مبسط للبند..." value={item.description} onChange={e => handleItemChange(idx, 'description', e.target.value)} className="premium-input" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: 'none' }} /></td>
+                                                    <td style={{ padding: '10px' }}><input type="text" value={item.unit} onChange={e => handleItemChange(idx, 'unit', e.target.value)} className="premium-input" style={{ width: '100%', textAlign: 'center', background: 'rgba(255,255,255,0.03)', border: 'none' }} /></td>
+                                                    <td style={{ padding: '10px' }}><input type="number" value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} className="premium-input" style={{ width: '100%', textAlign: 'center', background: 'rgba(255,255,255,0.03)', border: 'none' }} /></td>
+                                                    <td style={{ padding: '10px' }}><input type="number" value={item.unitPrice} onChange={e => handleItemChange(idx, 'unitPrice', e.target.value)} className="premium-input" style={{ width: '100%', textAlign: 'center', background: 'rgba(74,222,128,0.03)', border: 'none', color: '#4ade80', fontWeight: '800' }} /></td>
+                                                    <td style={{ textAlign: 'center' }}>{formData.items.length > 1 && <button type="button" onClick={() => handleRemoveItem(idx)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16} /></button>}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div className="glass-card" style={{ padding: '30px', borderRadius: '28px', marginBottom: '35px', background: 'rgba(255,255,255,0.01)' }}>
+                                    <h4 style={{ margin: '0 0 20px 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '900' }}><ShieldCheck size={20} color="#10b981" /> بنود العقد الموحدة (SCA)</h4>
+                                    <div style={{ maxHeight: '300px', overflowY: 'auto', padding: '15px' }}>
+                                        {formData.clauses.map((clause, idx) => (
+                                            <div key={idx} style={{ marginBottom: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '20px' }}>
+                                                <div style={{ fontWeight: '900', color: '#6366f1', marginBottom: '10px', fontSize: '0.95rem' }}>المادة ({clause.id}): {clause.title}</div>
+                                                <textarea 
+                                                    value={clause.content} 
+                                                    onChange={e => {
+                                                        const newClauses = [...formData.clauses];
+                                                        newClauses[idx].content = e.target.value;
+                                                        setFormData({ ...formData, clauses: newClauses });
+                                                    }} 
+                                                    style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: 'none', padding: '15px', borderRadius: '15px', color: '#a1a1aa', fontSize: '0.9rem', lineHeight: '1.6', fontFamily: 'Cairo', resize: 'vertical' }}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end' }}>
+                                    <button type="button" onClick={() => setShowModal(false)} style={{ padding: '14px 40px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a1a1aa', fontWeight: '700', cursor: 'pointer', fontFamily: 'Cairo' }}>إلغاء الأمر</button>
+                                    <motion.button {...buttonClick} type="submit" style={{ padding: '14px 60px', borderRadius: '15px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: 'white', border: 'none', fontWeight: '900', cursor: 'pointer', fontFamily: 'Cairo' }}>إصدار العقد واعتماده</motion.button>
                                 </div>
                             </form>
-                        </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                        {/* Docs List */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {contractDocuments.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>لا توجد مستندات مرفوعة لهذا العقد</div>
-                            ) : contractDocuments.map(doc => (
-                                <div key={doc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: '#fff', border: '1px solid #f1f5f9', borderRadius: '12px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <FileText size={20} color="#64748b" />
-                                        <div>
-                                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{doc.title}</div>
-                                            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{new Date(doc.createdAt).toLocaleDateString('ar-SA')}</div>
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button
-                                            onClick={() => {
-                                                if (doc.fileUrl.startsWith('data:')) {
-                                                    const link = document.createElement('a');
-                                                    link.href = doc.fileUrl;
-                                                    link.download = doc.title;
-                                                    link.click();
-                                                } else {
-                                                    window.open(doc.fileUrl, '_blank');
-                                                }
-                                            }}
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb' }}
-                                        >
-                                            <Download size={18} />
-                                        </button>
-                                        <button onClick={() => handleDeleteDoc(doc.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}>
-                                            <Trash2 size={18} />
-                                        </button>
+            {/* Documents Modal */}
+            <AnimatePresence>
+                {showDocsModal && selectedContract && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="glass-card" style={{ width: '100%', maxWidth: '650px', padding: '40px', borderRadius: '32px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                <div>
+                                    <h3 style={{ margin: 0, color: '#fff', fontSize: '1.5rem', fontWeight: '900' }}>ملاحق ومستندات العقد</h3>
+                                    <p style={{ margin: '4px 0 0 0', color: '#71717a' }}>أرشفة الصور، المخططات، والوثائق الملحقة بالعقد {selectedContract.contractNumber}</p>
+                                </div>
+                                <button onClick={() => setShowDocsModal(false)} style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer' }}><XCircle size={24} /></button>
+                            </div>
+
+                            <div className="glass-card" style={{ padding: '25px', borderRadius: '24px', background: 'rgba(99,102,241,0.05)', border: '1px dashed rgba(99,102,241,0.2)', marginBottom: '30px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <input placeholder="إسم المستحق أو المستند..." className="premium-input" style={{ width: '100%' }} />
+                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                        <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', color: '#71717a', fontSize: '0.9rem', textAlign: 'center', cursor: 'pointer' }}>اسحب الملف هنا أو اضغط للاختيار</div>
+                                        <motion.button {...buttonClick} style={{ background: '#6366f1', color: '#fff', border: 'none', padding: '12px 30px', borderRadius: '12px', fontWeight: '800' }}>رفع الآن</motion.button>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ textAlign: 'center', padding: '40px', color: '#52525b' }}>لا توجد ملفات مرفقة حالياً لهذا العقد.</div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

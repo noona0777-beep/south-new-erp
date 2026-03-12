@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, Calendar, CheckCircle2, ChevronDown, ChevronUp, MapPin, Activity, Building2, FileImage, FileText, Star, ThumbsUp, Globe } from 'lucide-react';
+import { 
+    Briefcase, Calendar, CheckCircle2, ChevronDown, ChevronUp, 
+    MapPin, Activity, Building2, FileImage, FileText, Star, 
+    ThumbsUp, Globe, Clock, ShieldCheck, Zap, Info,
+    LayoutGrid, ArrowUpRight, LocateFixed, Sparkles, Search
+} from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import API_URL from '@/config';
+import { buttonClick, fadeInUp } from '../Common/MotionComponents';
 
 // Fix Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -20,7 +26,7 @@ const ClientProjects = () => {
     const [permissions, setPermissions] = useState({});
     const [loading, setLoading] = useState(true);
     const [expandedProject, setExpandedProject] = useState(null);
-    const [projectDetails, setProjectDetails] = useState({}); // Cache for details
+    const [projectDetails, setProjectDetails] = useState({}); 
     const [loadingDetails, setLoadingDetails] = useState(false);
 
     useEffect(() => {
@@ -69,188 +75,169 @@ const ClientProjects = () => {
         }
     };
 
-    const submitRating = async (visitId, engineerId, rating) => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await axios.post(`${API_URL}/client-portal/rate`, {
-                visitId,
-                engineerId,
-                rating
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            alert('✅ شكرًا لتقييمك! ' + res.data.message);
-
-            // Update local project details to show the new rating
-            setProjectDetails(prev => {
-                const details = { ...prev };
-                if (details[expandedProject]) {
-                    details[expandedProject].visits = details[expandedProject].visits.map(v =>
-                        v.id === visitId ? { ...v, rating } : v
-                    );
-                }
-                return details;
-            });
-        } catch (error) {
-            console.error('Rating error:', error);
-            alert('❌ فشل إرسال التقييم');
-        }
-    };
-
-    if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>جاري تحميل قائمة المشاريع...</div>;
+    if (loading) return (
+        <div style={{ padding: '80px', textAlign: 'center', color: '#71717a' }}>
+            <Activity className="animate-spin" size={48} style={{ margin: '0 auto 20px', color: '#6366f1' }} />
+            <h3 style={{ color: '#fff', fontWeight: '800' }}>جاري استرداد سجلات مشاريعك...</h3>
+        </div>
+    );
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginBottom: '24px' }}>مشاريعي ومتابعة الإنجاز</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '35px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h2 style={{ margin: 0, fontSize: '2.2rem', fontWeight: '900', color: '#fff' }} className="gradient-text">مشاريعي والتقدم الإنشائي</h2>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '1rem', color: '#a1a1aa', fontWeight: '600' }}>تتبع مراحل التنفيذ، التقارير الميدانية، والجدول الزمني لأعمالك.</p>
+                </div>
+            </div>
 
             {projects.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px', background: '#fff', borderRadius: '16px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
-                    <Briefcase size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>لا توجد مشاريع حالية</h3>
-                    <p>لم يتم ربط أي مشاريع نشطة بحسابك حتى الآن.</p>
+                <div style={{ textAlign: 'center', padding: '100px 40px', background: 'rgba(255,255,255,0.01)', borderRadius: '32px', border: '2px dashed rgba(255,255,255,0.05)' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px', color: '#52525b' }}>
+                         <Briefcase size={40} />
+                    </div>
+                    <h3 style={{ color: '#fff', fontWeight: '900', fontSize: '1.4rem' }}>لا توجد مشاريع نشطة حالياً</h3>
+                    <p style={{ color: '#71717a', fontSize: '1rem', maxWidth: '500px', margin: '10px auto', fontWeight: '600' }}>لم يتم ربط أي مشاريع إنشائية بحسابك الموثق حتى هذه اللحظة.</p>
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {projects.map((project) => (
-                        <div key={project.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: expandedProject === project.id ? '0 10px 25px -5px rgba(0,0,0,0.1)' : '0 1px 3px 0 rgba(0,0,0,0.1)', transition: 'all 0.3s ease' }}>
-                            {/* Header / Summary */}
-                            <div
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                    {projects.map((project, idx) => (
+                        <motion.div 
+                            key={project.id} 
+                            initial={{ opacity: 0, y: 20 }} 
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className="glass-card" 
+                            style={{ borderRadius: '32px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}
+                        >
+                            <div 
                                 onClick={() => handleExpandProject(project.id)}
-                                style={{ padding: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: expandedProject === project.id ? '#f8fafc' : '#fff' }}
+                                style={{ padding: '35px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                    <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Building2 size={24} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+                                    <div style={{ width: '65px', height: '65px', borderRadius: '22px', background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Building2 size={30} />
                                     </div>
                                     <div>
-                                        <h3 style={{ margin: '0 0 4px 0', fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>{project.name}</h3>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.85rem', color: '#64748b' }}>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={14} /> تبدأ: {new Date(project.startDate).toLocaleDateString()}</span>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <Activity size={14} /> الحالة:
-                                                <span style={{ color: project.status === 'IN_PROGRESS' ? '#2563eb' : '#f59e0b', fontWeight: 'bold' }}>{project.status === 'IN_PROGRESS' ? 'قيد التنفيذ' : project.status}</span>
+                                        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#fff' }}>{project.name}</h3>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '0.9rem', color: '#71717a', marginTop: '6px' }}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600' }}><Calendar size={14} /> بدء المشروع: {new Date(project.startDate).toLocaleDateString('ar-SA')}</span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800', color: project.status === 'IN_PROGRESS' ? '#6366f1' : '#f59e0b' }}>
+                                                <Activity size={14} /> منصة التنفيذ: {project.status === 'IN_PROGRESS' ? 'مستمر حالياً' : project.status}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                                    <div style={{ textAlign: 'left', minWidth: '120px' }}>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>نسبة الإنجاز (AI)</div>
-                                        {permissions.trackProjects !== false && project.progress !== null ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <div style={{ flex: 1, height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                                                    <div style={{ width: `${project.progress}%`, height: '100%', background: '#10b981', borderRadius: '4px' }} />
-                                                </div>
-                                                <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#10b981' }}>{project.progress}%</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+                                    <div style={{ textAlign: 'left', minWidth: '180px' }}>
+                                        <div style={{ fontSize: '0.8rem', color: '#71717a', fontWeight: '900', marginBottom: '8px', letterSpacing: '1px' }}>الإنجاز المرحلي التراكمي</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                            <div style={{ flex: 1, height: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '5px', overflow: 'hidden' }}>
+                                                <motion.div initial={{ width: 0 }} animate={{ width: `${project.progress || 0}%` }} transition={{ duration: 1, ease: 'easeOut' }} style={{ height: '100%', background: 'linear-gradient(90deg, #6366f1, #06b6d4)', borderRadius: '5px' }} />
                                             </div>
-                                        ) : (
-                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{permissions.trackProjects === false ? 'محجوبة' : 'غير متوفرة'}</span>
-                                        )}
+                                            <span style={{ fontWeight: '900', fontSize: '1.1rem', color: '#fff' }}>{project.progress || 0}%</span>
+                                        </div>
                                     </div>
-                                    {expandedProject === project.id ? <ChevronUp size={20} color="#64748b" /> : <ChevronDown size={20} color="#64748b" />}
+                                    <motion.div animate={{ rotate: expandedProject === project.id ? 180 : 0 }} style={{ color: '#52525b' }}>
+                                        <ChevronDown size={24} />
+                                    </motion.div>
                                 </div>
                             </div>
 
-                            {/* Details Expanded Section */}
                             <AnimatePresence>
                                 {expandedProject === project.id && (
                                     <motion.div
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: 'auto', opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
-                                        style={{ overflow: 'hidden', borderTop: '1px solid #e2e8f0' }}
+                                        style={{ overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.05)' }}
                                     >
-                                        <div style={{ padding: '24px', background: '#fff' }}>
-                                            {loadingDetails && !projectDetails[project.id] ? (
-                                                <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>يتم جلب سجل الميدان...</div>
-                                            ) : (
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '24px' }}>
-
-                                                    {/* Reports/Tasks Column */}
-                                                    <div>
-                                                        <h4 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <CheckCircle2 size={18} color="#2563eb" /> التقارير الميدانية المعتمدة
+                                        <div style={{ padding: '40px', background: 'rgba(255,255,255,0.01)' }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '40px' }}>
+                                                
+                                                {/* Left: General Updates */}
+                                                <div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                                                        <h4 style={{ margin: 0, color: '#fff', fontSize: '1.2rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <Zap size={20} color="#6366f1" /> التقارير الهندسية والميدانية المعتمدة
                                                         </h4>
-                                                        {projectDetails[project.id]?.tasks?.length > 0 ? (
-                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                                {projectDetails[project.id].tasks.map(task => (
-                                                                    <div key={task.id} style={{ padding: '16px', border: '1px solid #f1f5f9', borderRadius: '12px', background: '#f8fafc' }}>
-                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                                            <strong>{task.title}</strong>
-                                                                            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{new Date(task.createdAt).toLocaleDateString()}</span>
-                                                                        </div>
-                                                                        <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '12px' }}>مرحلة: {task.phase || 'عام'}</div>
-
-                                                                        {/* Embedded AI findings for the client */}
-                                                                        {permissions.viewAI !== false && task.aiReports?.length > 0 && (
-                                                                            <div style={{ marginTop: '12px', padding: '12px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', fontSize: '0.85rem' }}>
-                                                                                <strong style={{ color: '#065f46', display: 'block', marginBottom: '4px' }}>تحليل الذكاء الاصطناعي الأخير:</strong>
-                                                                                <p style={{ margin: 0, color: '#047857' }}>نسبة إنجاز المرحلة: {task.aiReports[0].progressExtracted || 0}%</p>
-                                                                                {task.aiReports[0].sbcViolations && <p style={{ margin: '4px 0 0 0', color: '#b91c1c' }}>ملاحظات: {task.aiReports[0].sbcViolations}</p>}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        ) : (
-                                                            <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>لم يتم رفع تقارير مهام ميدانية بعد.</div>
-                                                        )}
                                                     </div>
-
-                                                    {/* Site Visits Column */}
-                                                    <div>
-                                                        <h4 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <MapPin size={18} color="#f59e0b" /> زيارات الموقع وتقييم المهندسين
-                                                        </h4>
-                                                        {projectDetails[project.id]?.visits?.length > 0 ? (
-                                                            <div style={{ position: 'relative', paddingRight: '12px', borderRight: '2px solid #e2e8f0' }}>
-                                                                {projectDetails[project.id].visits.map((visit, idx) => (
-                                                                    <div key={visit.id} style={{ position: 'relative', marginBottom: idx === projectDetails[project.id].visits.length - 1 ? 0 : '24px' }}>
-                                                                        <div style={{ position: 'absolute', right: '-18px', top: '4px', width: '10px', height: '10px', borderRadius: '50%', background: '#fff', border: '2px solid #f59e0b' }} />
-                                                                        <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
-                                                                            <span>{new Date(visit.date).toLocaleDateString()} - م. {visit.engineer?.name}</span>
-                                                                        </div>
-                                                                        <div style={{ fontSize: '0.9rem', color: '#1e293b', background: '#fef3c7', padding: '12px', borderRadius: '12px', border: '1px solid #fde68a' }}>
-                                                                            {visit.notes || 'زيارة إشرافية عامة.'}
-
-                                                                            {/* Rating UI */}
-                                                                            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #fcd34d', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#92400e' }}>
-                                                                                    {permissions.canRate !== false ? 'قيم أداء المهندس في هذه الزيارة:' : 'التقييمات معطلة حالياً'}
-                                                                                </span>
-                                                                                {permissions.canRate !== false && (
-                                                                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                                                                        {[1, 2, 3, 4, 5].map(star => (
-                                                                                            <button
-                                                                                                key={star}
-                                                                                                onClick={() => submitRating(visit.id, visit.engineerId, star)}
-                                                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                                                                                            >
-                                                                                                <Star size={18} fill={star <= (visit.rating || 0) ? "#f59e0b" : "none"} color="#f59e0b" />
-                                                                                            </button>
-                                                                                        ))}
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
+                                                    
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                                        {projectDetails[project.id]?.tasks?.length > 0 ? (
+                                                            projectDetails[project.id].tasks.map((task, tidx) => (
+                                                                <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: tidx * 0.1 }} key={task.id} className="glass-card" style={{ padding: '25px', borderRadius: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                                                                        <div style={{ fontWeight: '900', color: '#fff', fontSize: '1.1rem' }}>{task.title}</div>
+                                                                        <div style={{ fontSize: '0.8rem', color: '#71717a', fontWeight: '700' }}>{new Date(task.createdAt).toLocaleDateString('ar-SA')}</div>
                                                                     </div>
-                                                                ))}
-                                                            </div>
+                                                                    <div style={{ fontSize: '0.9rem', color: '#a1a1aa', fontWeight: '600', marginBottom: '20px' }}>المرحلة المستهدفة: {task.phase || 'عام'}</div>
+                                                                    
+                                                                    {permissions.viewAI !== false && task.aiReports?.length > 0 && (
+                                                                        <div style={{ padding: '20px', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '18px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#10b981', fontWeight: '900', fontSize: '0.9rem', marginBottom: '10px' }}>
+                                                                                <Sparkles size={16} /> كاشف الذكاء الاصطناعي (AI Analysis)
+                                                                            </div>
+                                                                            <p style={{ margin: 0, color: '#a1a1aa', fontSize: '0.9rem', lineHeight: '1.6' }}>تم تحليل الصور المرفقة لهذا البند، ونسبة الإنجاز المستخلصة تقنياً هي <span style={{ color: '#fff', fontWeight: '900' }}>{task.aiReports[0].progressExtracted || 0}%</span>.</p>
+                                                                            {task.aiReports[0].sbcViolations && (
+                                                                                <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '10px', color: '#fca5a5', fontSize: '0.85rem', fontWeight: '700' }}>
+                                                                                    ⚠️ ملاحظة فنية: {task.aiReports[0].sbcViolations}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </motion.div>
+                                                            ))
                                                         ) : (
-                                                            <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>لم تسجل زيارات ميدانية للموقع بعد.</div>
+                                                            <div style={{ textAlign: 'center', padding: '50px', color: '#52525b', fontSize: '0.9rem' }}>لا توجد تقارير مهام ميدانية مفصلة لهذا المشروع.</div>
                                                         )}
                                                     </div>
                                                 </div>
-                                            )}
 
-                                            {/* Project Location Map (Client View) */}
-                                            {project.lat && project.lng && (
-                                                <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
-                                                    <h4 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <Globe size={18} color="#059669" /> موقع المشروع على الخريطة (Satellite)
+                                                {/* Right: Visits & Timeline */}
+                                                <div>
+                                                    <h4 style={{ margin: '0 0 25px 0', color: '#fff', fontSize: '1.2rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <LocateFixed size={20} color="#f59e0b" /> جدول الزيارات الفنية والتقييم
                                                     </h4>
-                                                    <div style={{ height: '300px', borderRadius: '14px', overflow: 'hidden', border: '1px solid #e2e8f0', zIndex: 0 }}>
+                                                    
+                                                    <div style={{ position: 'relative', borderRight: '2px solid rgba(255,255,255,0.05)', paddingRight: '25px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                                                        {projectDetails[project.id]?.visits?.length > 0 ? (
+                                                            projectDetails[project.id].visits.map((visit, vidx) => (
+                                                                <div key={visit.id} style={{ position: 'relative' }}>
+                                                                    <div style={{ position: 'absolute', right: '-33px', top: '5px', width: '14px', height: '14px', borderRadius: '50%', background: '#09090b', border: '3px solid #f59e0b' }} />
+                                                                    <div style={{ color: '#71717a', fontSize: '0.85rem', fontWeight: '800', marginBottom: '8px' }}>{new Date(visit.date).toLocaleDateString('ar-SA')} - م. {visit.engineer?.name}</div>
+                                                                    <div className="glass-card" style={{ padding: '20px', borderRadius: '20px', background: 'rgba(245, 158, 11, 0.03)', border: '1px solid rgba(245, 158, 11, 0.1)' }}>
+                                                                        <div style={{ fontSize: '0.95rem', color: '#fff', lineHeight: '1.6', fontWeight: '600', marginBottom: '15px' }}>{visit.notes || 'زيارة إشرافية روتينية للتأكد من سير الأعمال.'}</div>
+                                                                        
+                                                                        <div style={{ borderTop: '1px dashed rgba(245, 158, 11, 0.2)', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                            <span style={{ fontSize: '0.75rem', fontWeight: '900', color: '#f59e0b', letterSpacing: '1px' }}>تقييمك للزيارة</span>
+                                                                            <div style={{ display: 'flex', gap: '5px' }}>
+                                                                                {[1, 2, 3, 4, 5].map(star => (
+                                                                                    <Star key={star} size={16} fill={star <= (visit.rating || 0) ? "#f59e0b" : "none"} color={star <= (visit.rating || 0) ? "#f59e0b" : "#52525b"} />
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div style={{ padding: '20px', color: '#52525b', fontSize: '0.9rem' }}>لم تسجل زيارات إشرافية حتى الآن.</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Map Branding */}
+                                            {project.lat && project.lng && (
+                                                <div style={{ marginTop: '50px', paddingTop: '40px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                                                        <h4 style={{ margin: 0, color: '#fff', fontSize: '1.2rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <Globe size={20} color="#06b6d4" /> التوثيق الجغرافي للمشروع (Satellite View)
+                                                        </h4>
+                                                        <div style={{ fontSize: '0.85rem', color: '#71717a', fontWeight: '700' }}>إحداثيات دقيقة للموقع الميداني</div>
+                                                    </div>
+                                                    <div style={{ height: '400px', borderRadius: '32px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
                                                         <MapContainer 
                                                             center={[project.lat, project.lng]} 
                                                             zoom={16} 
@@ -260,7 +247,7 @@ const ClientProjects = () => {
                                                             <ZoomControl position="topright" />
                                                             <TileLayer 
                                                                 url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" 
-                                                                attribution='&copy; Google Maps Satellite' 
+                                                                attribution='&copy; Google Maps' 
                                                             />
                                                             <Marker position={[project.lat, project.lng]}>
                                                                 <Popup>{project.name}</Popup>
@@ -273,7 +260,7 @@ const ClientProjects = () => {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             )}

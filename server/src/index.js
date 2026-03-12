@@ -57,7 +57,8 @@ const routes = {
     logs: require('./routes/logs'),
     ai: require('./routes/ai'),
     attendance: require('./routes/attendance'),
-    support: require('./routes/support')
+    support: require('./routes/support'),
+    zatca: require('./routes/zatca')
 };
 
 // --- Basic APIs ---
@@ -93,6 +94,7 @@ app.use('/api/material-requests', authenticate, routes.materialRequests);
 app.use('/api/ai', authenticate, routes.ai);
 app.use('/api/attendance', authenticate, routes.attendance);
 app.use('/api/support', authenticate, routes.support);
+app.use('/api/zatca', authenticate, routes.zatca);
 
 // Category 2: Generic /API Mount (For routers that define their own top-level paths like /products, /accounts, /employees)
 app.use('/api', routes.auth);

@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { HardHat, ClipboardList, AlertTriangle, BrainCircuit, Users, MapPin, Building2 } from 'lucide-react';
+import { 
+    HardHat, ClipboardList, AlertTriangle, BrainCircuit, Users, 
+    MapPin, Building2, Search, Filter, RefreshCw, 
+    CheckCircle2, XCircle, Clock, ShieldAlert, Zap,
+    ChevronDown, ArrowRight
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import API_URL from '@/config';
 
@@ -11,6 +16,7 @@ import SiteVisits from './SiteVisits';
 import TicketsRisks from './TicketsRisks';
 import AIReports from './AIReports';
 import EngineerEvaluation from './EngineerEvaluation';
+import { buttonClick, fadeInUp } from '../Common/MotionComponents';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
@@ -28,88 +34,113 @@ const FieldOpsPage = () => {
     });
 
     const tabs = [
-        { id: 'tasks', label: 'المهام وكانبان', icon: <ClipboardList size={18} /> },
-        { id: 'visits', label: 'الزيارات', icon: <MapPin size={18} /> },
-        { id: 'tickets', label: 'الملاحظات والمخاطر', icon: <AlertTriangle size={18} /> },
-        { id: 'ai', label: 'التحليل بالذكاء الاصطناعي', icon: <BrainCircuit size={18} /> },
-        { id: 'eval', label: 'تقييم المهندسين', icon: <Users size={18} /> },
+        { id: 'tasks', label: 'المهام وكانبان', icon: <ClipboardList size={22} /> },
+        { id: 'visits', label: 'الزيارات الميدانية', icon: <MapPin size={22} /> },
+        { id: 'tickets', label: 'الملاحظات والمخاطر', icon: <AlertTriangle size={22} /> },
+        { id: 'ai', label: 'تحليل الذكاء الاصطناعي', icon: <BrainCircuit size={22} /> },
+        { id: 'eval', label: 'تقييم المهندسين', icon: <Users size={22} /> },
+    ];
+
+    const stats = [
+        { label: 'مهام قيد التنفيذ', value: 12, icon: <Clock size={24} />, color: '#6366f1' },
+        { label: 'زيارات مكتملة', value: 45, icon: <CheckCircle2 size={24} />, color: '#10b981' },
+        { label: 'مخاطر حرجة', value: 3, icon: <ShieldAlert size={24} />, color: '#ef4444' },
+        { label: 'توصيات AI', value: 8, icon: <Zap size={24} />, color: '#f59e0b' },
     ];
 
     return (
-        <div style={{ padding: '24px' }}>
-            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div className="fade-in" style={{ direction: 'rtl' }}>
+             {/* Header */}
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '45px', flexWrap: 'wrap', gap: '30px' }}>
                 <div>
-                    <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#1e293b', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <HardHat size={28} color="#2563eb" /> إدارة العمليات الميدانية
-                    </h1>
-                    <p style={{ color: '#64748b', margin: 0 }}>متابعة المشاريع الميدانية والإشراف بالذكاء الاصطناعي</p>
+                    <h2 style={{ margin: '0 0 12px 0', fontSize: '2.8rem', fontWeight: '900', color: '#fff' }} className="gradient-text">إدارة العمليات الميدانية</h2>
+                    <p style={{ margin: 0, color: '#a1a1aa', fontSize: '1.1rem', fontWeight: '600' }}>متابعة المشاريع الميدانية، الرقابة الذكية، وتقييم أداء الفرق الهندسية.</p>
                 </div>
-
-                {/* Project Selector */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'white', padding: '10px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                    <Building2 size={20} color="#64748b" />
+                
+                {/* Project Selector (Enhanced) */}
+                <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 30px', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)', boxShadow: '0 15px 35px rgba(0,0,0,0.2)' }}>
+                    <div style={{ background: 'rgba(99,102,241,0.1)', padding: '10px', borderRadius: '15px', color: '#6366f1' }}>
+                        <Building2 size={24} />
+                    </div>
                     <select
                         value={selectedProjectId}
                         onChange={(e) => setSelectedProjectId(e.target.value)}
-                        style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '0.95rem', fontWeight: '600', color: '#1e293b', fontFamily: 'Cairo', minWidth: '200px' }}
+                        className="premium-input"
+                        style={{ border: 'none', background: 'transparent', fontSize: '1.1rem', fontWeight: '900', color: '#fff', minWidth: '250px', cursor: 'pointer' }}
                     >
-                        <option value="">-- اختر المشروع --</option>
+                        <option value="" style={{ background: '#09090b', color: '#52525b' }}>-- اختر المشروع العقاري --</option>
                         {projects.map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
+                            <option key={p.id} value={p.id} style={{ background: '#09090b', color: '#fff' }}>{p.name}</option>
                         ))}
                     </select>
                 </div>
             </div>
 
-            {/* Sub-navigation Tabs */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '8px' }}>
+            {/* Field Stats Dashboard */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '25px', marginBottom: '45px' }}>
+                {stats.map((s, i) => (
+                    <motion.div key={i} whileHover={{ y: -5 }} className="glass-card card-hover" style={{ padding: '25px 30px', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                         <div style={{ background: `${s.color}15`, padding: '12px', borderRadius: '15px', color: s.color }}>{s.icon}</div>
+                         <div>
+                            <div style={{ fontSize: '0.9rem', color: '#a1a1aa', fontWeight: '800' }}>{s.label}</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#fff' }}>{s.value}</div>
+                         </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* Sub-navigation Tabs (Vertical or Horizontal) */}
+            <div className="glass-card" style={{ display: 'flex', gap: '12px', marginBottom: '45px', padding: '8px', borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.06)' }}>
                 {tabs.map(tab => (
-                    <button
+                    <motion.button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
+                        whileHover={{ scale: 1.02 }}
                         style={{
-                            padding: '10px 18px',
+                            padding: '16px 30px',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '8px',
-                            background: activeTab === tab.id ? '#2563eb' : 'white',
-                            color: activeTab === tab.id ? 'white' : '#64748b',
-                            border: activeTab === tab.id ? 'none' : '1px solid #e2e8f0',
-                            borderRadius: '12px',
-                            fontWeight: '600',
+                            gap: '12px',
+                            background: activeTab === tab.id ? 'rgba(99,102,241,0.15)' : 'transparent',
+                            color: activeTab === tab.id ? '#fff' : '#71717a',
+                            border: 'none',
+                            borderRadius: '18px',
+                            fontWeight: '900',
                             cursor: 'pointer',
                             whiteSpace: 'nowrap',
-                            transition: 'all 0.2s',
-                            boxShadow: activeTab === tab.id ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none'
+                            transition: 'all 0.3s',
+                            fontFamily: 'Cairo'
                         }}
                     >
                         {tab.icon} {tab.label}
-                    </button>
+                        {activeTab === tab.id && <motion.div layoutId="activeTabField" style={{ width: '6px', height: '6px', background: '#fff', borderRadius: '50%', marginLeft: '5px', boxShadow: '0 0 10px #fff' }} />}
+                    </motion.button>
                 ))}
             </div>
 
             <AnimatePresence mode="wait">
                 <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
+                    key={activeTab + selectedProjectId}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.3 }}
                 >
                     {!selectedProjectId && activeTab !== 'eval' ? (
-                        <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
-                            <Building2 size={48} style={{ margin: '0 auto 16px auto', opacity: 0.5 }} />
-                            <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>يرجى اختيار المشروع أولاً</h3>
-                            <p>يجب تحديد المشروع من القائمة العلوية للبدء في إدارة العمليات الميدانية الخاصة به.</p>
+                        <div className="glass-card" style={{ textAlign: 'center', padding: '120px 40px', borderRadius: '40px', border: '1px dashed rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.01)' }}>
+                            <Building2 size={80} style={{ margin: '0 auto 30px auto', opacity: 0.1, color: '#6366f1' }} />
+                            <h3 style={{ fontSize: '2rem', marginBottom: '15px', color: '#fff', fontWeight: '900' }}>نحن بانتظار اختيار المشروع</h3>
+                            <p style={{ color: '#a1a1aa', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto', lineHeight: '1.8' }}>يرجى تحديد المشروع من القائمة العلوية للبدء في تتبع العمليات الميدانية والمهام وكانبان لهذا المشروع تحديداً.</p>
+                            <motion.button {...buttonClick} style={{ marginTop: '40px', padding: '14px 40px', borderRadius: '18px', background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid #6366f133', fontWeight: '900', cursor: 'pointer' }}>تصفح قائمة المشاريع النشطة</motion.button>
                         </div>
                     ) : (
-                        <>
+                        <div className="glass-card" style={{ padding: '40px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.06)', minHeight: '600px' }}>
                             {activeTab === 'tasks' && <TasksBoard projectId={selectedProjectId} />}
                             {activeTab === 'visits' && <SiteVisits projectId={selectedProjectId} />}
                             {activeTab === 'tickets' && <TicketsRisks projectId={selectedProjectId} />}
                             {activeTab === 'ai' && <AIReports projectId={selectedProjectId} />}
                             {activeTab === 'eval' && <EngineerEvaluation projectId={selectedProjectId} />}
-                        </>
+                        </div>
                     )}
                 </motion.div>
             </AnimatePresence>

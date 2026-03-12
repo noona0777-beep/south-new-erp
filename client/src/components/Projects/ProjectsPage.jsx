@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import API_URL from '@/config';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Briefcase, Calendar, MapPin, User, CheckSquare, Clock, AlertCircle, Folder, AlertOctagon, Map as MapIcon, Globe } from 'lucide-react';
+import { 
+    Plus, Briefcase, Calendar, MapPin, User, CheckSquare, Clock, 
+    AlertCircle, Folder, AlertOctagon, Map as MapIcon, Globe, 
+    ChevronLeft, LayoutGrid, Search, Download, Trash2, Edit3, 
+    CheckCircle2, TrendingUp, BarChart3, ArrowRight
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { buttonClick, fadeInUp } from '../Common/MotionComponents';
 
-// إصلاح مشكلة ظهور أيقونة الدبوس الافتراضية في Leaflet داخل React
+// Fix Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -73,7 +80,7 @@ const ProjectsPage = () => {
         mutationFn: async (data) => await axios.post(`${API_URL}/tasks`, { ...data, projectId: selectedProject.id }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tasks', selectedProject?.id] });
-            queryClient.invalidateQueries({ queryKey: ['projects'] }); // To update task count
+            queryClient.invalidateQueries({ queryKey: ['projects'] });
             setShowTaskForm(false);
             setTaskData({ title: '', description: '', status: 'TODO', priority: 'MEDIUM', assignedTo: '', dueDate: '' });
         }
@@ -86,88 +93,73 @@ const ProjectsPage = () => {
         }
     });
 
-    const archiveProjectMutation = useMutation({
-        mutationFn: async (project) => {
-            await axios.post(`${API_URL}/documents`, {
-                title: `سجل بيانات المشروع: ${project.name}`,
-                category: 'OTHER',
-                fileUrl: `INTERNAL:PROJECT:${project.id}`,
-                partnerId: project.partnerId,
-                projectId: project.id
-            });
-        },
-        onSuccess: () => alert('✅ تم أرشفة بيانات المشروع في الوثائق')
-    });
-
-    const handleCreateProject = (e) => {
-        e.preventDefault();
-        const payload = {
-            ...projectData,
-            lat: projectData.lat ? parseFloat(projectData.lat) : null,
-            lng: projectData.lng ? parseFloat(projectData.lng) : null
-        };
-        createProjectMutation.mutate(payload);
-    };
-
-    const handleCreateTask = (e) => {
-        e.preventDefault();
-        createTaskMutation.mutate(taskData);
-    };
-
-    const updateTaskStatus = (taskId, status) => {
-        updateTaskStatusMutation.mutate({ taskId, status });
-    };
-
     const getStatusLabel = (status) => {
         switch (status) {
-            case 'PLANNED': return { label: 'مخطط له', color: '#64748b' };
-            case 'ACTIVE': return { label: 'نشط', color: '#3b82f6' };
-            case 'COMPLETED': return { label: 'مكتمل', color: '#10b981' };
-            case 'ON_HOLD': return { label: 'متوقف', color: '#f59e0b' };
-            default: return { label: status, color: '#64748b' };
+            case 'PLANNED': return { label: 'مخطط له', class: 'status-pending' };
+            case 'ACTIVE': return { label: 'نشط حالياً', class: 'status-paid' };
+            case 'COMPLETED': return { label: 'منتهي', class: 'status-paid' };
+            case 'ON_HOLD': return { label: 'متوقف', class: 'status-cancelled' };
+            default: return { label: status, class: 'status-pending' };
         }
     };
 
     if (selectedProject) {
         return (
-            <div className="fade-in">
-                <button onClick={() => setSelectedProject(null)} style={{ background: 'transparent', border: 'none', color: '#2563eb', cursor: 'pointer', marginBottom: '20px', fontWeight: 'bold' }}>← العودة للمشاريع</button>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                <motion.button 
+                    {...buttonClick}
+                    onClick={() => setSelectedProject(null)} 
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '10px 20px', borderRadius: '15px', cursor: 'pointer', marginBottom: '30px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Cairo' }}
+                >
+                    <ArrowRight size={18} /> العودة للوحة المشاريع والبحث
+                </motion.button>
 
-                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
+                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '30px', alignItems: 'start' }}>
                     {/* Project Details Sidebar */}
-                    <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', height: 'fit-content' }}>
-                        <h2 style={{ margin: '0 0 10px 0', color: '#1e293b' }}>{selectedProject.name}</h2>
-                        <span style={{ background: '#eff6ff', color: '#3b82f6', padding: '4px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                    <div className="glass-card" style={{ padding: '35px', borderRadius: '32px' }}>
+                        <div style={{ background: 'rgba(99,102,241,0.1)', width: '60px', height: '60px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1', marginBottom: '25px' }}>
+                            <Briefcase size={32} />
+                        </div>
+                        <h2 style={{ margin: '0 0 10px 0', color: '#fff', fontSize: '1.8rem', fontWeight: '900' }}>{selectedProject.name}</h2>
+                        <span className={`status-pill ${getStatusLabel(selectedProject.status).class}`} style={{ fontSize: '0.85rem', padding: '6px 16px', borderRadius: '12px' }}>
                             {getStatusLabel(selectedProject.status).label}
                         </span>
 
-                        <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b' }}>
-                                <User size={18} />
-                                <span>العميل: {selectedProject.partner?.name || 'غير محدد'}</span>
+                        <div style={{ marginTop: '35px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#a1a1aa' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '12px' }}><User size={18} /></div>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#71717a' }}>العميل المتعاقد</div>
+                                    <div style={{ color: '#fff', fontWeight: '700' }}>{selectedProject.partner?.name || 'غير محدد'}</div>
+                                </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b' }}>
-                                <MapPin size={18} />
-                                <span>الموقع: {selectedProject.location || 'غير محدد'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#a1a1aa' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '12px' }}><MapPin size={18} /></div>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#71717a' }}>موقع التنفيذ</div>
+                                    <div style={{ color: '#fff', fontWeight: '700' }}>{selectedProject.location || 'غير محدد'}</div>
+                                </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b' }}>
-                                <Calendar size={18} />
-                                <span>البداية: {new Date(selectedProject.startDate).toLocaleDateString('ar-SA')}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#a1a1aa' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '12px' }}><Calendar size={18} /></div>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#71717a' }}>تاريخ البدء المعتمد</div>
+                                    <div style={{ color: '#fff', fontWeight: '700' }}>{new Date(selectedProject.startDate).toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                                </div>
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
-                            <h4 style={{ margin: '0 0 10px 0', color: '#1e293b' }}>الوصف</h4>
-                            <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: '1.6' }}>{selectedProject.description || 'لا يوجد وصف للعرض'}</p>
+                        <div style={{ marginTop: '35px', paddingTop: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                            <h4 style={{ margin: '0 0 15px 0', color: '#fff', fontWeight: '900' }}>نظرة عامة على المشروع</h4>
+                            <p style={{ color: '#a1a1aa', fontSize: '0.95rem', lineHeight: '1.8', fontWeight: '500' }}>{selectedProject.description || 'لا يوجد وصف تفصيلي مسجل لهذا المشروع حالياً.'}</p>
                         </div>
 
-                        {/* Interactive Project Map (Geographical Integration) */}
                         {selectedProject.lat && selectedProject.lng && (
-                            <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
-                                <h4 style={{ margin: '0 0 14px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <MapIcon size={18} color="#3b82f6" /> نقطة المشروع (GPS)
+                            <div style={{ marginTop: '35px', paddingTop: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                <h4 style={{ margin: '0 0 20px 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '900' }}>
+                                    <MapIcon size={20} color="#6366f1" /> الموقع الجغرافي (Satellite)
                                 </h4>
-                                <div style={{ height: '220px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', zIndex: 0 }}>
+                                <div style={{ height: '300px', borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', zIndex: 0 }}>
                                     <MapContainer 
                                         center={[selectedProject.lat, selectedProject.lng]} 
                                         zoom={16} 
@@ -180,7 +172,7 @@ const ProjectsPage = () => {
                                             attribution='&copy; Google Maps Satellite' 
                                         />
                                         <Marker position={[selectedProject.lat, selectedProject.lng]}>
-                                            <Popup>{selectedProject.name}</Popup>
+                                            <Popup><b>{selectedProject.name}</b></Popup>
                                         </Marker>
                                     </MapContainer>
                                 </div>
@@ -188,142 +180,182 @@ const ProjectsPage = () => {
                         )}
                     </div>
 
-                    {/* Tasks List */}
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h3 style={{ margin: 0 }}>المهام والمتابعة</h3>
-                            <button onClick={() => setShowTaskForm(true)} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Plus size={18} /> إضافة مهمة
-                            </button>
-                        </div>
-
-                        {showTaskForm && (
-                            <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
-                                <h4 style={{ margin: '0 0 15px 0', color: '#1e293b' }}>إضافة مهمة جديدة</h4>
-                                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                    <input type="text" placeholder="عنوان المهمة" value={taskData.title} onChange={(e) => setTaskData({ ...taskData, title: e.target.value })} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-                                    <input type="text" placeholder="المسؤول" value={taskData.assignedTo} onChange={(e) => setTaskData({ ...taskData, assignedTo: e.target.value })} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    {/* Tasks & Management */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        <div className="glass-card" style={{ padding: '30px', borderRadius: '32px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                <div>
+                                    <h3 style={{ margin: 0, color: '#fff', fontSize: '1.5rem', fontWeight: '900' }}>جدول المهام والمتابعة</h3>
+                                    <p style={{ margin: '5px 0 0 0', color: '#71717a', fontSize: '0.9rem' }}>إدارة العمليات اليومية والمهام التنفيذية للمشروع</p>
                                 </div>
-                                <textarea placeholder="وصف المهمة" value={taskData.description} onChange={(e) => setTaskData({ ...taskData, description: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', marginTop: '10px', height: '60px', resize: 'none' }} />
-                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '15px' }}>
-                                    <button onClick={() => setShowTaskForm(false)} style={{ background: 'white', border: '1px solid #cbd5e1', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer' }}>إلغاء</button>
-                                    <button onClick={handleCreateTask} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '8px 25px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>حفظ المهمة</button>
-                                </div>
+                                <motion.button 
+                                    {...buttonClick} 
+                                    onClick={() => setShowTaskForm(true)} 
+                                    style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: 'white', border: 'none', padding: '12px 25px', borderRadius: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '800', fontFamily: 'Cairo' }}
+                                >
+                                    <Plus size={20} /> إضافة مهمة
+                                </motion.button>
                             </div>
-                        )}
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {tasksLoading ? (
-                                <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
-                                    <Clock className="animate-spin" size={20} style={{ margin: '0 auto 8px', display: 'block' }} />
-                                    جاري تحميل المهام...
-                                </div>
-                            ) : tasks.length === 0 ? (
-                                <div style={{ background: 'white', padding: '40px', textAlign: 'center', borderRadius: '16px', color: '#94a3b8' }}>لا توجد مهام حالياً</div>
-                            ) : (
-                                tasks.map(task => (
-                                    <div key={task.id} className="mobile-grid-1" style={{ background: 'white', padding: '16px', borderRadius: '12px', boxShadow: '0 2px 4px rgb(0 0 0 / 0.02)', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                            <div onClick={() => updateTaskStatus(task.id, task.status === 'DONE' ? 'TODO' : 'DONE')} style={{ cursor: 'pointer', color: task.status === 'DONE' ? '#10b981' : '#cbd5e1' }}>
-                                                {updateTaskStatusMutation.isPending && updateTaskStatusMutation.variables?.taskId === task.id ? <Clock className="animate-spin" size={24} /> : <CheckSquare size={24} />}
+                            <AnimatePresence>
+                                {showTaskForm && (
+                                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} style={{ background: 'rgba(255,255,255,0.02)', padding: '25px', borderRadius: '24px', border: '1px solid rgba(99,102,241,0.2)', marginBottom: '30px' }}>
+                                        <h4 style={{ margin: '0 0 20px 0', color: '#fff', fontWeight: '900' }}>تفاصيل المهمة الجديدة</h4>
+                                        <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                            <div>
+                                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: '#a1a1aa', fontWeight: '700' }}>عنوان المهمة</label>
+                                                <input type="text" placeholder="مثال: توريد حديد التسليح" value={taskData.title} onChange={(e) => setTaskData({ ...taskData, title: e.target.value })} className="premium-input" style={{ width: '100%' }} />
                                             </div>
                                             <div>
-                                                <div style={{ fontWeight: '600', textDecoration: task.status === 'DONE' ? 'line-through' : 'none', color: task.status === 'DONE' ? '#94a3b8' : '#1e293b' }}>{task.title}</div>
-                                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>أسندت إلى: {task.assignedTo || 'غير محدد'}</div>
+                                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: '#a1a1aa', fontWeight: '700' }}>المسؤول التنفيذي</label>
+                                                <input type="text" placeholder="اسم المهندس أو الفني" value={taskData.assignedTo} onChange={(e) => setTaskData({ ...taskData, assignedTo: e.target.value })} className="premium-input" style={{ width: '100%' }} />
                                             </div>
                                         </div>
-                                        <div style={{ display: 'flex', gap: '10px' }}>
-                                            {task.priority === 'HIGH' && <span style={{ color: '#ef4444', background: '#fef2f2', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>مهم جداً</span>}
-                                            <span style={{ color: task.status === 'DONE' ? '#10b981' : '#3b82f6', fontSize: '0.8rem' }}>{task.status}</span>
+                                        <div style={{ marginTop: '20px' }}>
+                                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: '#a1a1aa', fontWeight: '700' }}>وصف تفصيلي</label>
+                                            <textarea placeholder="شرح ما يجب القيام به بدقة..." value={taskData.description} onChange={(e) => setTaskData({ ...taskData, description: e.target.value })} className="premium-input" style={{ width: '100%', height: '80px', resize: 'none' }} />
                                         </div>
+                                        <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end', marginTop: '25px' }}>
+                                            <button onClick={() => setShowTaskForm(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 25px', borderRadius: '12px', cursor: 'pointer', color: '#a1a1aa', fontWeight: '700' }}>إلغاء</button>
+                                            <motion.button {...buttonClick} onClick={(e) => { e.preventDefault(); createTaskMutation.mutate(taskData); }} style={{ background: '#4ade80', color: '#09090b', border: 'none', padding: '10px 35px', borderRadius: '12px', cursor: 'pointer', fontWeight: '900' }}>تأكيد وإضافة</motion.button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                {tasksLoading ? (
+                                    <div style={{ textAlign: 'center', padding: '50px', color: '#71717a' }}>
+                                        <RefreshCw className="animate-spin" size={32} style={{ margin: '0 auto 15px', display: 'block', color: '#6366f1' }} />
+                                        جاري جرد المهام المسجلة...
                                     </div>
-                                ))
-                            )}
+                                ) : tasks.length === 0 ? (
+                                    <div style={{ background: 'rgba(255,255,255,0.01)', padding: '60px', textAlign: 'center', borderRadius: '24px', color: '#52525b', border: '1px dashed rgba(255,255,255,0.05)' }}>لا توجد مهام نشطة حالياً لهذا المشروع.</div>
+                                ) : (
+                                    tasks.map((task, idx) => (
+                                        <motion.div 
+                                            key={task.id} 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            style={{ 
+                                                background: task.status === 'DONE' ? 'rgba(74,222,128,0.03)' : 'rgba(255,255,255,0.02)', 
+                                                padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', 
+                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' 
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                                                <motion.button 
+                                                    whileHover={{ scale: 1.1 }}
+                                                    onClick={() => updateTaskStatusMutation.mutate({ taskId: task.id, status: task.status === 'DONE' ? 'TODO' : 'DONE' })} 
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: task.status === 'DONE' ? '#4ade80' : '#52525b', display: 'flex' }}
+                                                >
+                                                    {updateTaskStatusMutation.isPending && updateTaskStatusMutation.variables?.taskId === task.id ? <RefreshCw className="animate-spin" size={24} /> : <CheckCircle2 size={26} fill={task.status === 'DONE' ? 'rgba(74,222,128,0.1)' : 'none'} />}
+                                                </motion.button>
+                                                <div>
+                                                    <div style={{ fontWeight: '800', fontSize: '1.05rem', color: task.status === 'DONE' ? '#71717a' : '#fff', textDecoration: task.status === 'DONE' ? 'line-through' : 'none' }}>{task.title}</div>
+                                                    <div style={{ fontSize: '0.85rem', color: '#52525b', marginTop: '4px', fontWeight: '600' }}>المكلف: {task.assignedTo || 'غير محدد'}</div>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                                {task.priority === 'HIGH' && <span style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '5px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900' }}>أولوية قصوى</span>}
+                                                <span className={`status-pill ${task.status === 'DONE' ? 'status-paid' : 'status-pending'}`} style={{ fontSize: '0.75rem' }}>{task.status === 'DONE' ? 'مكتمل' : 'قيد العمل'}</span>
+                                            </div>
+                                        </motion.div>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
         );
     }
 
     return (
-        <div className="fade-in">
-            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
+        <div style={{ direction: 'rtl' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
                 <div>
-                    <h2 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>المشاريع والمقاولات</h2>
-                    <p style={{ margin: 0, color: '#64748b' }}>إدارة المشاريع الإنشائية ومهام العمل</p>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#fff', fontSize: '2.2rem', fontWeight: '900' }} className="gradient-text">المشاريع والمقاولات</h2>
+                    <p style={{ margin: 0, color: '#a1a1aa', fontSize: '1rem', fontWeight: '500' }}>إدارة المشاريع الإنشائية، مراقبة المواقع، ومتابعة المهام التنفيذية.</p>
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{ background: '#f1f5f9', padding: '4px', borderRadius: '10px', display: 'flex', gap: '4px' }}>
-                        <button onClick={() => setViewMode('grid')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'grid' ? 'white' : 'transparent', color: viewMode === 'grid' ? '#2563eb' : '#64748b', boxShadow: viewMode === 'grid' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Briefcase size={16} /> الشبكة
+                <div style={{ display: 'flex', gap: '15px' }}>
+                    <div className="glass-card" style={{ padding: '6px', borderRadius: '16px', display: 'flex', gap: '4px' }}>
+                        <button onClick={() => setViewMode('grid')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: viewMode === 'grid' ? 'rgba(99,102,241,0.2)' : 'transparent', color: viewMode === 'grid' ? '#fff' : '#71717a', cursor: 'pointer', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Cairo' }}>
+                            <LayoutGrid size={18} /> العرض الشبكي
                         </button>
-                        <button onClick={() => setViewMode('map')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'map' ? 'white' : 'transparent', color: viewMode === 'map' ? '#2563eb' : '#64748b', boxShadow: viewMode === 'map' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Globe size={16} /> الخريطة العالمية
+                        <button onClick={() => setViewMode('map')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: viewMode === 'map' ? 'rgba(99,102,241,0.2)' : 'transparent', color: viewMode === 'map' ? '#fff' : '#71717a', cursor: 'pointer', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Cairo' }}>
+                            <Globe size={18} /> خريطة المواقع
                         </button>
                     </div>
-                    <button
+                    <motion.button 
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(99,102,241,0.4)' }} 
+                        whileTap={{ scale: 0.95 }} 
                         onClick={() => setShowForm(true)}
-                        style={{
-                            background: '#2563eb', color: 'white', border: 'none', padding: '12px 24px',
-                            borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold',
-                            display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgb(37 99 235 / 0.3)', width: 'fit-content'
-                        }}
+                        style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: 'white', border: 'none', padding: '12px 28px', borderRadius: '18px', cursor: 'pointer', fontWeight: '800', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: '10px' }}
                     >
-                        <Plus size={20} /> مشروع جديد
-                    </button>
+                        <Plus size={22} /> إنشاء مشروع
+                    </motion.button>
                 </div>
             </div>
 
-            {showForm && (
-                <div style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', marginBottom: '30px' }}>
-                    <h3 style={{ margin: '0 0 20px 0' }}>إضافة مشروع جديد</h3>
-                    <form onSubmit={handleCreateProject} className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>اسم المشروع</label>
-                            <input type="text" required value={projectData.name} onChange={(e) => setProjectData({ ...projectData, name: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>العميل</label>
-                            <select value={projectData.partnerId} onChange={(e) => setProjectData({ ...projectData, partnerId: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                                <option value="">اختر العميل...</option>
-                                {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>خط العرض (Latitude) - اختياري للخرائط</label>
-                            <input type="number" step="any" placeholder="مثال: 24.7136" value={projectData.lat} onChange={(e) => setProjectData({ ...projectData, lat: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>خط الطول (Longitude) - اختياري للخرائط</label>
-                            <input type="number" step="any" placeholder="مثال: 46.6753" value={projectData.lng} onChange={(e) => setProjectData({ ...projectData, lng: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-                        </div>
-                        <div style={{ gridColumn: 'span 2' }}>
-                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>الوصف</label>
-                            <textarea value={projectData.description} onChange={(e) => setProjectData({ ...projectData, description: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', height: '80px', resize: 'none' }} />
-                        </div>
-                        <div style={{ display: 'flex', gap: '10px', gridColumn: 'span 2', justifyContent: 'flex-end', marginTop: '10px' }}>
-                            <button type="button" onClick={() => setShowForm(false)} style={{ background: 'white', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '8px' }}>إلغاء</button>
-                            <button type="submit" disabled={createProjectMutation.isPending} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 30px', borderRadius: '8px', fontWeight: 'bold' }}>
-                                {createProjectMutation.isPending ? 'جاري الحفظ...' : 'حفظ المشروع'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
+            {/* Creation Form Modal */}
+            <AnimatePresence>
+                {showForm && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="glass-card" style={{ width: '100%', maxWidth: '800px', padding: '40px', borderRadius: '32px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                <h3 style={{ margin: 0, color: '#fff', fontSize: '1.8rem', fontWeight: '900' }}>إطلاق مشروع جديد</h3>
+                                <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer' }}><X size={24} /></button>
+                            </div>
+                            <form onSubmit={(e) => { e.preventDefault(); createProjectMutation.mutate({ ...projectData, lat: projectData.lat ? parseFloat(projectData.lat) : null, lng: projectData.lng ? parseFloat(projectData.lng) : null }); }} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>إسم المشروع</label>
+                                    <input type="text" required placeholder="مثال: تطوير مجمع الأعمال بتبوك" value={projectData.name} onChange={(e) => setProjectData({ ...projectData, name: e.target.value })} className="premium-input" style={{ width: '100%' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>العميل المرتبط</label>
+                                    <select value={projectData.partnerId} onChange={(e) => setProjectData({ ...projectData, partnerId: e.target.value })} className="premium-input" style={{ width: '100%', background: 'rgba(255,255,255,0.03)' }}>
+                                        <option value="">اختر العميل من السجل الحالي...</option>
+                                        {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>الموقع (النصي)</label>
+                                    <input type="text" placeholder="مثال: الرياض، حي المورد" value={projectData.location} onChange={(e) => setProjectData({ ...projectData, location: e.target.value })} className="premium-input" style={{ width: '100%' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>خط العرض (Latitude)</label>
+                                    <input type="number" step="any" placeholder="GPS Lat" value={projectData.lat} onChange={(e) => setProjectData({ ...projectData, lat: e.target.value })} className="premium-input" style={{ width: '100%' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>خط الطول (Longitude)</label>
+                                    <input type="number" step="any" placeholder="GPS Long" value={projectData.lng} onChange={(e) => setProjectData({ ...projectData, lng: e.target.value })} className="premium-input" style={{ width: '100%' }} />
+                                </div>
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <label style={{ display: 'block', marginBottom: '10px', color: '#a1a1aa', fontWeight: '700' }}>وصف ورؤية المشروع</label>
+                                    <textarea placeholder="شرح موجز لأهداف المشروع ونطاق العمل..." value={projectData.description} onChange={(e) => setProjectData({ ...projectData, description: e.target.value })} className="premium-input" style={{ width: '100%', height: '100px', resize: 'none' }} />
+                                </div>
+                                <div style={{ display: 'flex', gap: '15px', gridColumn: 'span 2', justifyContent: 'flex-end', marginTop: '20px' }}>
+                                    <button type="button" onClick={() => setShowForm(false)} style={{ padding: '14px 30px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a1a1aa', fontWeight: '700', cursor: 'pointer' }}>إلغاء</button>
+                                    <motion.button {...buttonClick} type="submit" disabled={createProjectMutation.isPending} style={{ padding: '14px 50px', borderRadius: '15px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer' }}>
+                                        {createProjectMutation.isPending ? 'جاري الحفظ...' : 'تأكيد إطلاق المشروع'}
+                                    </motion.button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {projectsLoading ? (
-                <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
-                    <Clock className="animate-spin" size={32} style={{ margin: '0 auto 16px', display: 'block' }} />
-                    جاري تحميل المشاريع...
-                </div>
-            ) : projectsError ? (
-                <div style={{ textAlign: 'center', padding: '60px', color: '#ef4444', background: 'white', borderRadius: '16px' }}>
-                    <AlertOctagon size={32} style={{ margin: '0 auto 16px', display: 'block' }} />
-                    خطأ في تحميل المشاريع. يرجى المحاولة مرة أخرى.
+                <div style={{ textAlign: 'center', padding: '100px', color: '#71717a' }}>
+                    <RefreshCw className="animate-spin" size={48} style={{ margin: '0 auto 20px', display: 'block', color: '#6366f1' }} />
+                    <h3 style={{ color: '#fff' }}>جاري استرجاع سجلات المشاريع...</h3>
                 </div>
             ) : viewMode === 'map' ? (
-                <div style={{ height: '600px', borderRadius: '20px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', zIndex: 0 }}>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card" style={{ height: '700px', borderRadius: '40px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', zIndex: 0 }}>
                     <MapContainer center={[24.7136, 46.6753]} zoom={6} style={{ height: '100%', width: '100%' }} zoomControl={false}>
                         <ZoomControl position="topright" />
                         <TileLayer 
@@ -333,46 +365,51 @@ const ProjectsPage = () => {
                         {projects.filter(p => p.lat && p.lng).map(project => (
                             <Marker key={project.id} position={[project.lat, project.lng]}>
                                 <Popup>
-                                    <div style={{ textAlign: 'right', fontFamily: 'Cairo' }}>
-                                        <strong style={{ color: '#1e3a8a' }}>{project.name}</strong><br />
-                                        <span>الحالة: {getStatusLabel(project.status).label}</span><br />
-                                        <button onClick={() => setSelectedProject(project)} style={{ marginTop: '8px', padding: '4px 8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>فتح التفاصيل</button>
+                                    <div style={{ textAlign: 'right', fontFamily: 'Cairo', padding: '5px' }}>
+                                        <div style={{ fontWeight: '900', color: '#1e3a8a', fontSize: '1.1rem', marginBottom: '5px' }}>{project.name}</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>الحالة: {getStatusLabel(project.status).label}</div>
+                                        <button onClick={() => setSelectedProject(project)} style={{ width: '100%', padding: '8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800' }}>فتح التفاصيل</button>
                                     </div>
                                 </Popup>
                             </Marker>
                         ))}
                     </MapContainer>
-                </div>
+                </motion.div>
             ) : (
-                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '30px' }}>
                     {projects.length === 0 ? (
-                        <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px', color: '#94a3b8' }}>لا توجد مشاريع مضافة حالياً</div>
+                        <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '100px', color: '#52525b' }}>لا يوجد أي مشروع مسجل في النظام حالياً.</div>
                     ) : (
-                        projects.map(project => (
-                            <div key={project.id} onClick={() => setSelectedProject(project)} className="card-hover" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', position: 'relative' }}>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); archiveProjectMutation.mutate(project); }}
-                                    disabled={archiveProjectMutation.isPending}
-                                    style={{ position: 'absolute', left: '15px', top: '15px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px', borderRadius: '8px', color: '#64748b', cursor: 'pointer' }}
-                                    title="أرشفة المشروع"
-                                >
-                                    <Folder size={18} />
-                                </button>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-                                    <div style={{ background: '#eff6ff', padding: '10px', borderRadius: '12px', color: '#3b82f6' }}><Briefcase size={24} /></div>
-                                    <span style={{ fontSize: '0.8rem', background: '#f8fafc', padding: '4px 10px', borderRadius: '20px', color: '#64748b' }}>{getStatusLabel(project.status).label}</span>
+                        projects.map((project, idx) => (
+                            <motion.div 
+                                key={project.id} 
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.05 }}
+                                onClick={() => setSelectedProject(project)} 
+                                className="glass-card" 
+                                style={{ padding: '30px', borderRadius: '32px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+                            >
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, #6366f1, #4ade80)' }} />
+                                
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '25px' }}>
+                                    <div style={{ background: 'rgba(99,102,241,0.1)', padding: '15px', borderRadius: '20px', color: '#6366f1' }}><Briefcase size={28} /></div>
+                                    <span className={`status-pill ${getStatusLabel(project.status).class}`} style={{ fontSize: '0.75rem' }}>{getStatusLabel(project.status).label}</span>
                                 </div>
-                                <h3 style={{ margin: '0 0 10px 0', fontSize: '1.2rem', color: '#1e293b' }}>{project.name}</h3>
-                                <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '0.9rem', height: '40px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.description}</p>
+                                
+                                <h3 style={{ margin: '0 0 10px 0', fontSize: '1.4rem', color: '#fff', fontWeight: '900' }}>{project.name}</h3>
+                                <p style={{ margin: '0 0 25px 0', color: '#71717a', fontSize: '0.95rem', height: '48px', overflow: 'hidden', fontWeight: '500', lineHeight: '1.6' }}>{project.description || 'لا يوجد وصف للعرض.'}</p>
 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '20px', borderTop: '1px solid #f8fafc' }}>
-                                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center', color: '#10b981', fontSize: '0.85rem' }}>
-                                        <CheckSquare size={16} />
-                                        <span>{project._count?.tasks || 0} مهام</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: '#4ade80', fontSize: '0.85rem', fontWeight: '800' }}>
+                                        <CheckSquare size={18} />
+                                        <span>{project._count?.tasks || 0} مهام فنية</span>
                                     </div>
-                                    <div style={{ fontSize: '0.9rem', color: '#2563eb', fontWeight: 'bold' }}>عرض التفاصيل ←</div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6366f1', fontWeight: '900', fontSize: '0.95rem' }}>
+                                        عرض التفاصيل <ChevronLeft size={18} />
+                                    </div>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))
                     )}
                 </div>

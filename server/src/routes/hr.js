@@ -89,7 +89,7 @@ router.post('/employees/:id/pay-salary', async (req, res) => {
                 await tx.transaction.create({
                     data: {
                         date: new Date(), description: `صرف راتب ${employee.name} - ${periodLabel}`,
-                        reference: `SAL-${employee.employeeId}-${Date.now()}`, type: 'JOURNAL',
+                        reference: `SAL-${employee.employeeId}-${Date.now()}`, type: 'PAYROLL',
                         entries: {
                             create: [
                                 { accountId: salaryAccount.id, debit: netSalary, credit: 0, description: `راتب ${employee.name}` },
@@ -144,7 +144,7 @@ router.post('/payroll/run', async (req, res) => {
                             date: new Date(),
                             description: `صرف رواتب جماعي - ${month}/${year}`,
                             reference: `BULK-SAL-${month}-${year}-${Date.now()}`,
-                            type: 'JOURNAL',
+                            type: 'PAYROLL',
                             entries: {
                                 create: [
                                     { accountId: salaryAccount.id, debit: totalPayroll, credit: 0, description: `إجمالي رواتب ${month}/${year}` },

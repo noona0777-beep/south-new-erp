@@ -6,7 +6,7 @@ router.get('/stats', async (req, res) => {
     try {
         const [
             totalInvoices, totalQuotes, totalClients, totalProducts, totalProjects, totalEmployees,
-            recentInvoices, recentQuotes, lowStockItems, invoiceStats, contractStats
+            recentInvoices, recentQuotes, lowStockItems, invoiceStats, contractStats, monthlyRevenue
         ] = await Promise.all([
             prisma.invoice.count(),
             prisma.quote.count(),
@@ -18,7 +18,13 @@ router.get('/stats', async (req, res) => {
             prisma.quote.findMany({ take: 5, orderBy: { createdAt: 'desc' }, include: { partner: true } }),
             prisma.stock.findMany({ where: { quantity: { lt: 10 } }, include: { product: true }, take: 5 }),
             prisma.invoice.aggregate({ _sum: { total: true }, where: { status: { not: 'CANCELLED' } } }),
-            prisma.constructionContract.aggregate({ _sum: { totalValue: true }, _count: { id: true } })
+            prisma.constructionContract.aggregate({ _sum: { totalValue: true }, _count: { id: true } }),
+            prisma.invoice.groupBy({
+                by: ['date'],
+                _sum: { total: true },
+                where: { status: 'PAID' },
+                orderBy: { date: 'asc' }
+            })
         ]);
 
         const pendingQuotes = await prisma.quote.count({ where: { status: 'DRAFT' } });
@@ -36,7 +42,11 @@ router.get('/stats', async (req, res) => {
             recentInvoices: recentInvoices.map(inv => ({ id: inv.id, number: inv.invoiceNumber, client: inv.partner?.name || 'غير محدد', amount: inv.total, status: inv.status, date: inv.date })),
             recentQuotes: recentQuotes.map(qt => ({ id: qt.id, number: qt.quoteNumber, client: qt.partner?.name || 'غير محدد', amount: qt.total, status: qt.status, date: qt.date })),
             lowStock: lowStockItems.map(s => ({ name: s.product.name, quantity: s.quantity })),
-            quickStats: { pendingQuotes, acceptedQuotes, activeProjects, lowStockCount: lowStockItems.length }
+            quickStats: { pendingQuotes, acceptedQuotes, activeProjects, lowStockCount: lowStockItems.length },
+            monthlyRevenue: monthlyRevenue.map(m => ({
+                label: new Date(m.date).toLocaleDateString('ar-SA', { month: 'short' }),
+                value: m._sum.total || 0
+            }))
         });
     } catch (error) {
         res.status(500).json({ error: error.message });

@@ -212,4 +212,54 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 });
 
+// Pay Invoice
+router.put('/:id/pay', authenticate, async (req, res) => {
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            const invoice = await tx.invoice.findUnique({ where: { id: parseInt(req.params.id) } });
+            
+            if (!invoice) throw new Error('Invoice not found');
+            if (invoice.status === 'PAID') throw new Error('Invoice already paid');
+
+            // Find accounting accounts
+            const arAccount = await tx.account.findFirst({ where: { code: '1103' } }); // Accounts Receivable
+            const cashAccount = await tx.account.findFirst({ where: { code: '1101' } }); // Cash / Bank
+
+            if (arAccount && cashAccount) {
+                // Auto Journal Entry for Payment Received
+                const journalEntries = [
+                    { accountId: cashAccount.id, debit: invoice.total, credit: 0, description: 'تحصيل فاتورة - ' + invoice.invoiceNumber },
+                    { accountId: arAccount.id, debit: 0, credit: invoice.total, description: 'سداد فاتورة - ' + invoice.invoiceNumber },
+                ];
+                
+                await tx.transaction.create({
+                    data: {
+                        date: new Date(),
+                        description: `قيد تحصيل فاتورة مبيعات ${invoice.invoiceNumber}`,
+                        reference: invoice.invoiceNumber,
+                        type: 'RECEIPT',
+                        entries: { create: journalEntries }
+                    }
+                });
+                
+                // Update account balances
+                await tx.account.update({ where: { id: cashAccount.id }, data: { balance: { increment: invoice.total } } });
+                await tx.account.update({ where: { id: arAccount.id }, data: { balance: { increment: -invoice.total } } });
+            }
+
+            // Update invoice status
+            return await tx.invoice.update({
+                where: { id: invoice.id },
+                data: { status: 'PAID' }
+            });
+        });
+        
+        await logActivity(req.user.id, 'PAYMENT', 'INVOICE', result.id, `تحصيل فاتورة #${result.invoiceNumber}`);
+        res.json(result);
+    } catch (error) {
+        console.error('Payment Error:', error);
+        res.status(500).json({ error: error.message || 'Failed to pay invoice' });
+    }
+});
+
 module.exports = router;

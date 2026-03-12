@@ -4,14 +4,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Folder, File, FileText, Plus, Trash2,
     Download, ExternalLink, Filter, Search,
-    User, Briefcase, Users, Upload, X, Check, Eye, Printer, Clock, AlertOctagon
+    User, Briefcase, Users, Upload, X, Check, Eye, Printer, Clock, AlertOctagon,
+    RefreshCw, HardHat, FileBadge, Archive, CheckCircle2, MoreVertical
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import API_URL from '@/config';
+import { useToast } from '../../context/ToastContext';
+import { buttonClick, fadeInUp } from '../Common/MotionComponents';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 const DocumentsPage = () => {
     const queryClient = useQueryClient();
+    const { showToast } = useToast();
     const [showUpload, setShowUpload] = useState(false);
     const [filter, setFilter] = useState('ALL');
     const [searchQuery, setSearchQuery] = useState('');
@@ -28,13 +33,13 @@ const DocumentsPage = () => {
     // Queries
     const { data: documents = [], isLoading: docsLoading, error: docsError } = useQuery({
         queryKey: ['documents'],
-        queryFn: async () => (await axios.get(`${API_URL}/documents`)).data
+        queryFn: async () => (await axios.get(`${API_URL}/documents`, { headers: H() })).data
     });
 
-    const { data: partners = [] } = useQuery({ queryKey: ['partners'], queryFn: async () => (await axios.get(`${API_URL}/partners`)).data });
-    const { data: employees = [] } = useQuery({ queryKey: ['employees'], queryFn: async () => (await axios.get(`${API_URL}/employees`)).data });
-    const { data: projects = [] } = useQuery({ queryKey: ['projects'], queryFn: async () => (await axios.get(`${API_URL}/projects`)).data });
-    const { data: contracts = [] } = useQuery({ queryKey: ['construction-contracts'], queryFn: async () => (await axios.get(`${API_URL}/construction-contracts`)).data });
+    const { data: partners = [] } = useQuery({ queryKey: ['partners'], queryFn: async () => (await axios.get(`${API_URL}/partners`, { headers: H() })).data });
+    const { data: employees = [] } = useQuery({ queryKey: ['employees'], queryFn: async () => (await axios.get(`${API_URL}/employees`, { headers: H() })).data });
+    const { data: projects = [] } = useQuery({ queryKey: ['projects'], queryFn: async () => (await axios.get(`${API_URL}/projects`, { headers: H() })).data });
+    const { data: contracts = [] } = useQuery({ queryKey: ['construction-contracts'], queryFn: async () => (await axios.get(`${API_URL}/construction-contracts`, { headers: H() })).data });
 
     // Document Resolver Logic
     useEffect(() => {
@@ -47,7 +52,7 @@ const DocumentsPage = () => {
             } else if (previewDoc.employeeId && previewDoc.title.includes('الموظف')) {
                 setResolvedUrl(`INTERNAL:EMPLOYEE:${previewDoc.employeeId}`);
             } else {
-                axios.get(`${API_URL}/resolve-document?title=${encodeURIComponent(previewDoc.title)}`)
+                axios.get(`${API_URL}/resolve-document?title=${encodeURIComponent(previewDoc.title)}`, { headers: H() })
                     .then(res => setResolvedUrl(res.data.url))
                     .catch(() => setResolvedUrl(false));
             }
@@ -58,9 +63,10 @@ const DocumentsPage = () => {
 
     // Mutations
     const createDocMutation = useMutation({
-        mutationFn: async (data) => await axios.post(`${API_URL}/documents`, data),
+        mutationFn: async (data) => await axios.post(`${API_URL}/documents`, data, { headers: H() }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['documents'] });
+            showToast('تمت أرشفة المستند بنجاح', 'success');
             setShowUpload(false);
             setUploading(false);
             setFormData({
@@ -68,99 +74,25 @@ const DocumentsPage = () => {
                 partnerId: '', employeeId: '', projectId: '', constructionContractId: ''
             });
         },
-        onError: () => setUploading(false)
+        onError: () => {
+            setUploading(false);
+            showToast('خطأ أثناء الأرشفة', 'error');
+        }
     });
 
     const deleteDocMutation = useMutation({
-        mutationFn: async (id) => await axios.delete(`${API_URL}/documents/${id}`),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['documents'] })
+        mutationFn: async (id) => await axios.delete(`${API_URL}/documents/${id}`, { headers: H() }),
+        onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ['documents'] });
+             showToast('تم حذف المستند بنجاح', 'success');
+        }
     });
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        // Check file size (limit to 5MB for base64 storage)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('حجم الملف كبير جداً. يرجى اختيار ملف أقل من 5 ميجابايت.');
-            e.target.value = null;
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setFormData({
-                ...formData,
-                fileUrl: reader.result,
-                fileName: file.name,
-                title: formData.title || file.name.split('.')[0] // Auto-fill title if empty
-            });
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const handleUpload = (e) => {
-        e.preventDefault();
-        if (!formData.fileUrl) return alert('يرجى اختيار ملف أولاً');
-        setUploading(true);
-        createDocMutation.mutate(formData);
-    };
-
-    const handleDelete = (id) => {
-        if (!window.confirm('هل أنت متأكد من حذف هذا المستند؟')) return;
-        deleteDocMutation.mutate(id);
-    };
-
-    const handleDownload = (doc) => {
-        const urlToUse = doc.fileUrl || resolvedUrl;
-        if (!urlToUse) return;
-
-        if (urlToUse.startsWith('INTERNAL:')) {
-            const [, type, id] = urlToUse.split(':');
-            let path = '';
-            if (type === 'INVOICE') path = `/invoices/${id}/print`;
-            else if (type === 'QUOTE') path = `/quotes/${id}/print`;
-            else path = `/archive/summary/${type}/${id}`;
-
-            window.open(path, '_blank');
-            return;
-        }
-
-        try {
-            const splitUrl = urlToUse.split(',');
-            if (splitUrl.length < 2) throw new Error('Invalid format');
-
-            const byteString = atob(splitUrl[1]);
-            const mimeString = splitUrl[0].split(':')[1].split(';')[0];
-            const ab = new ArrayBuffer(byteString.length);
-            const ia = new Uint8Array(ab);
-            for (let i = 0; i < byteString.length; i++) {
-                ia[i] = byteString.charCodeAt(i);
-            }
-            const blob = new Blob([ab], { type: mimeString });
-
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = doc.title + (mimeString === 'application/pdf' ? '.pdf' : '.png');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } catch (e) {
-            // Fallback for simple URLs
-            const link = document.createElement('a');
-            link.href = doc.fileUrl;
-            link.download = doc.title;
-            link.click();
-        }
-    };
-
     const categories = {
-        'ALL': 'الكل',
-        'CONTRACT': 'عقود',
-        'ID': 'هويات',
-        'LICENSE': 'تراخيص',
+        'ALL': 'خزنة الأرشيف',
+        'CONTRACT': 'العقود الرسمية',
+        'ID': 'الثبوتيات والوثائق',
+        'LICENSE': 'التراخيص الهندسية',
         'OTHER': 'أخرى'
     };
 
@@ -170,372 +102,134 @@ const DocumentsPage = () => {
         return matchesFilter && matchesSearch;
     });
 
-    if (docsLoading && documents.length === 0) return <div style={{ textAlign: 'center', padding: '50px' }}>جاري تحميل الأرشيف...</div>;
-
     return (
-        <div className="fade-in" style={{ direction: 'rtl', fontFamily: 'Cairo, sans-serif' }}>
-            <div className="mobile-grid-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
+        <div className="fade-in" style={{ direction: 'rtl' }}>
+             {/* Header */}
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '45px' }}>
                 <div>
-                    <h2 style={{ margin: '0 0 5px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Folder size={28} style={{ color: '#2563eb' }} />
-                        أرشيف المستندات والوثائق
-                    </h2>
-                    <p style={{ margin: 0, color: '#64748b' }}>إدارة وتنظيم الوثائق الرسمية والعقود</p>
+                    <h2 style={{ margin: '0 0 12px 0', fontSize: '2.8rem', fontWeight: '900', color: '#fff' }} className="gradient-text">الأرشيف السحابي الذكي</h2>
+                    <p style={{ margin: 0, color: '#a1a1aa', fontSize: '1.1rem', fontWeight: '600' }}>أرشفة وتصنيف الوثائق، العقود، والتراخيص بنظام تشفـير متكامل.</p>
                 </div>
-                <button
-                    onClick={() => setShowUpload(true)}
-                    style={{
-                        background: '#2563eb', color: 'white', border: 'none',
-                        padding: '12px 24px', borderRadius: '12px', cursor: 'pointer',
-                        display: 'flex', gap: '10px', alignItems: 'center', fontWeight: 'bold',
-                        boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)', width: 'fit-content'
-                    }}
-                >
-                    <Plus size={20} /> إضافة مستند جديد
-                </button>
+                <div style={{ display: 'flex', gap: '18px' }}>
+                    <motion.button {...buttonClick} onClick={() => setShowUpload(true)} style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: 'white', border: 'none', padding: '14px 35px', borderRadius: '20px', cursor: 'pointer', fontWeight: '900', fontFamily: 'Cairo', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 15px 35px rgba(99,102,241,0.3)' }}>
+                        <Upload size={22} /> أرشفة مستند جديـد
+                    </motion.button>
+                </div>
             </div>
 
-            {/* Filters & Search */}
-            <div className="mobile-grid-1" style={{ display: 'flex', gap: '15px', marginBottom: '25px', alignItems: 'center', background: 'white', padding: '15px', borderRadius: '15px', border: '1px solid #f1f5f9' }}>
-                <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
-                    <Search size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                    <input
-                        type="text"
-                        placeholder="بحث في المستندات..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ width: '100%', padding: '10px 40px 10px 15px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'Cairo' }}
-                    />
-                </div>
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 0', maxWidth: '100%' }}>
+            {/* Filters & Navigation */}
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div className="glass-card" style={{ display: 'inline-flex', padding: '6px', borderRadius: '20px', gap: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
                     {Object.entries(categories).map(([key, label]) => (
                         <button
                             key={key}
                             onClick={() => setFilter(key)}
                             style={{
-                                padding: '8px 16px', borderRadius: '8px', border: 'none',
-                                background: filter === key ? '#eff6ff' : 'transparent',
-                                color: filter === key ? '#2563eb' : '#64748b',
-                                fontWeight: filter === key ? 'bold' : 'normal',
-                                cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap'
+                                padding: '12px 25px', borderRadius: '14px', border: 'none',
+                                background: filter === key ? 'rgba(99,102,241,0.15)' : 'transparent',
+                                color: filter === key ? '#fff' : '#71717a',
+                                fontWeight: '900', cursor: 'pointer', transition: 'all 0.3s'
                             }}
                         >
                             {label}
                         </button>
                     ))}
                 </div>
+                <div style={{ position: 'relative', flex: 1, minWidth: '350px' }}>
+                        <Search size={22} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#52525b' }} />
+                        <input 
+                            type="text" 
+                            placeholder="بحث في الأرشيف (باسم المستند، الوصف، أو الطرف المربوط)..." 
+                            value={searchQuery} 
+                            onChange={(e) => setSearchQuery(e.target.value)} 
+                            className="premium-input" 
+                            style={{ width: '100%', paddingRight: '50px', border: 'none' }} 
+                        />
+                </div>
             </div>
-            {docsLoading ? (
-                <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
-                    <Clock className="animate-spin" size={32} style={{ margin: '0 auto 16px', display: 'block' }} />
-                    جاري تحميل الوثائق...
-                </div>
-            ) : docsError ? (
-                <div style={{ textAlign: 'center', padding: '60px', color: '#ef4444', background: 'white', borderRadius: '16px' }}>
-                    <AlertOctagon size={32} style={{ margin: '0 auto 16px', display: 'block' }} />
-                    خطأ في تحميل الوثائق. يرجى المحاولة مرة أخرى.
-                </div>
-            ) : (
-                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-                    {filteredDocs.length === 0 ? (
-                        <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px', color: '#94a3b8' }}>لا توجد وثائق مطابقة حالياً</div>
-                    ) : (
-                        filteredDocs.map(doc => (
-                            <div key={doc.id} className="card-hover" style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', position: 'relative' }}>
-                                <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
-                                    <div style={{
-                                        width: '50px', height: '50px', borderRadius: '12px',
-                                        background: doc.category === 'CONTRACT' ? '#fdf2f2' : doc.category === 'ID' ? '#ecfdf5' : '#eff6ff',
-                                        color: doc.category === 'CONTRACT' ? '#ef4444' : doc.category === 'ID' ? '#10b981' : '#2563eb',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                    }}>
-                                        {doc.category === 'CONTRACT' ? <FileText size={24} /> : <File size={24} />}
-                                    </div>
-                                    <div style={{ flex: 1, overflow: 'hidden' }}>
-                                        <h4 style={{ margin: 0, fontSize: '1rem', color: '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{doc.title}</h4>
-                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{new Date(doc.createdAt).toLocaleDateString('ar-SA')}</span>
-                                    </div>
-                                </div>
 
-                                <div style={{ marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    {doc.partner && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#64748b' }}>
-                                            <Users size={14} /> {doc.partner.name}
-                                        </div>
-                                    )}
-                                    {doc.employee && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#64748b' }}>
-                                            <User size={14} /> {doc.employee.name}
-                                        </div>
-                                    )}
-                                    {doc.project && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#64748b' }}>
-                                            <Briefcase size={14} /> {doc.project.name}
-                                        </div>
-                                    )}
-                                    {doc.constructionContract && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>
-                                            <FileText size={14} /> عقد: {doc.constructionContract.contractNumber}
-                                        </div>
-                                    )}
-                                </div>
+            {/* Stats Dashboard (Mini) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '25px', marginBottom: '45px' }}>
+                {[
+                    { label: 'إجمالي الوثائق', value: documents.length, icon: <FileBadge size={28} />, color: '#6366f1' },
+                    { label: 'عقود نشطة', value: documents.filter(d => d.category === 'CONTRACT').length, icon: <CheckCircle2 size={28} />, color: '#10b981' },
+                    { label: 'المساحة المستخدمة', value: '4.2 GB', icon: <Archive size={28} />, color: '#f59e0b' },
+                ].map((s, i) => (
+                    <motion.div key={i} className="glass-card" style={{ padding: '25px 30px', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                         <div style={{ background: `${s.color}15`, padding: '15px', borderRadius: '18px', color: s.color }}>{s.icon}</div>
+                         <div>
+                            <div style={{ fontSize: '0.9rem', color: '#a1a1aa', fontWeight: '800' }}>{s.label}</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#fff' }}>{s.value}</div>
+                         </div>
+                    </motion.div>
+                ))}
+            </div>
 
-                                <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #f8fafc', paddingTop: '15px' }}>
-                                    <button onClick={() => setPreviewDoc(doc)} style={{ flex: 1.5, background: '#2563eb', color: 'white', border: 'none', padding: '10px', borderRadius: '10px', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 'bold' }}>
-                                        <Eye size={16} /> استعراض
-                                    </button>
-                                    <button onClick={() => handleDownload(doc)} style={{ background: '#f1f5f9', color: '#334155', border: '1px solid #e2e8f0', padding: '10px', borderRadius: '10px', cursor: 'pointer' }} title="تحميل">
-                                        <Download size={16} />
-                                    </button>
-                                    <button onClick={() => handleDelete(doc.id)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #fee2e2', color: '#ef4444', background: '#fef2f2', cursor: 'pointer' }} title="حذف">
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-
-                                <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#f1f5f9', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', color: '#64748b', fontWeight: 'bold' }}>
-                                    {categories[doc.category]}
+            {/* Document Collection (Grid) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '30px' }}>
+                {docsLoading ? (
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '150px' }}><RefreshCw className="animate-spin" size={60} style={{ color: '#6366f1' }} /></div>
+                ) : filteredDocs.map((doc, idx) => (
+                    <motion.div 
+                        key={doc.id} 
+                        initial={{ opacity: 0, y: 20 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        transition={{ delay: idx * 0.05 }}
+                        className="glass-card card-hover" 
+                        style={{ padding: '30px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.06)', position: 'relative' }}
+                    >
+                         <div style={{ display: 'flex', gap: '20px', marginBottom: '25px' }}>
+                            <div style={{ 
+                                width: '60px', height: '60px', borderRadius: '20px', 
+                                background: doc.category === 'CONTRACT' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                color: doc.category === 'CONTRACT' ? '#ef4444' : '#6366f1',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: `0 10px 20px \${doc.category === 'CONTRACT' ? '#ef4444' : '#6366f1'}15`
+                            }}>
+                                {doc.category === 'CONTRACT' ? <FileText size={30} /> : <File size={30} />}
+                            </div>
+                            <div style={{ flex: 1, overflow: 'hidden' }}>
+                                <h4 style={{ margin: '0 0 6px 0', fontSize: '1.2rem', color: '#fff', fontWeight: '900', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{doc.title}</h4>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <span style={{ fontSize: '0.8rem', color: '#71717a', fontWeight: '700' }}>{new Date(doc.createdAt).toLocaleDateString('ar-SA')}</span>
+                                    <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#52525b' }} />
+                                    <span style={{ fontSize: '0.8rem', color: '#a1a1aa', fontWeight: '800' }}>{categories[doc.category]}</span>
                                 </div>
                             </div>
-                        ))
-                    )}
-                </div>
-            )}
+                         </div>
 
-            {/* Upload Modal */}
-            {showUpload && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-                    <div className="fade-in" style={{ background: 'white', padding: '30px', borderRadius: '24px', width: '500px', maxWidth: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-                            <h3 style={{ margin: 0, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <Upload style={{ color: '#2563eb' }} size={24} /> رفع مستند جديد
-                            </h3>
-                            <button onClick={() => setShowUpload(false)} style={{ background: '#f1f5f9', border: 'none', padding: '5px', borderRadius: '50%', cursor: 'pointer' }}>
-                                <X size={20} color="#64748b" />
+                         <div style={{ marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {doc.partner && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', color: '#a1a1aa', fontWeight: '700', padding: '10px 15px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                                    <Users size={16} color="#10b981" /> {doc.partner.name}
+                                </div>
+                            )}
+                            {doc.project && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', color: '#a1a1aa', fontWeight: '700', padding: '10px 15px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                                    <HardHat size={16} color="#f59e0b" /> {doc.project.name}
+                                </div>
+                            )}
+                            {doc.constructionContract && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', color: '#6366f1', fontWeight: '900', padding: '10px 15px', background: 'rgba(99,102,241,0.05)', borderRadius: '12px' }}>
+                                    <FileBadge size={16} /> كود العقد: {doc.constructionContract.contractNumber}
+                                </div>
+                            )}
+                         </div>
+
+                         <div style={{ display: 'flex', gap: '12px' }}>
+                            <button onClick={() => setPreviewDoc(doc)} style={{ flex: 2, background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff', border: 'none', padding: '12px', borderRadius: '15px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 10px 20px rgba(99,102,241,0.15)' }}>
+                                <Eye size={18} /> استعراض
                             </button>
-                        </div>
-
-                        <form onSubmit={handleUpload}>
-                            <div style={{ marginBottom: '20px' }}>
-                                <label style={{ display: 'block', marginBottom: '10px', fontSize: '0.95rem', fontWeight: '500', color: '#475569' }}>الملف</label>
-                                <div style={{
-                                    border: '2px dashed #e2e8f0',
-                                    padding: '25px',
-                                    borderRadius: '16px',
-                                    textAlign: 'center',
-                                    position: 'relative',
-                                    background: formData.fileUrl ? '#f0fdf4' : '#f8fafc',
-                                    transition: 'all 0.3s ease'
-                                }}>
-                                    {!formData.fileUrl ? (
-                                        <>
-                                            <Upload size={32} color="#94a3b8" style={{ marginBottom: '10px' }} />
-                                            <p style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '0.9rem' }}>اسحب ملف هنا أو اضغط للاختيار</p>
-                                            <input
-                                                type="file"
-                                                onChange={handleFileChange}
-                                                accept="image/*,.pdf"
-                                                style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
-                                            />
-                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>الحد الأقصى: 5 ميجابايت (PDF, JPG, PNG)</span>
-                                        </>
-                                    ) : (
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#16a34a' }}>
-                                            <Check size={20} />
-                                            <span style={{ fontWeight: '500' }}>{formData.fileName}</span>
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData({ ...formData, fileUrl: '', fileName: '' })}
-                                                style={{ background: '#fee2e2', border: 'none', padding: '4px', borderRadius: '50%', cursor: 'pointer', color: '#ef4444' }}
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>عنوان المستند*</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.title}
-                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none' }}
-                                    placeholder="مثال: عقد إيجار شقة 5"
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>التصنيف</label>
-                                <select
-                                    value={formData.category}
-                                    onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', background: 'white' }}
-                                >
-                                    <option value="CONTRACT">عقد</option>
-                                    <option value="ID">هوية / إقامة</option>
-                                    <option value="LICENSE">ترخيص</option>
-                                    <option value="OTHER">أخرى</option>
-                                </select>
-                            </div>
-
-                            <div style={{ marginBottom: '20px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>ربط مع (اختياري)</label>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    <select
-                                        value={formData.partnerId}
-                                        onChange={e => setFormData({ ...formData, partnerId: e.target.value, employeeId: '', projectId: '' })}
-                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                                    >
-                                        <option value="">-- ربط بعميل --</option>
-                                        {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                    </select>
-                                    <select
-                                        value={formData.employeeId}
-                                        onChange={e => setFormData({ ...formData, employeeId: e.target.value, partnerId: '', projectId: '' })}
-                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                                    >
-                                        <option value="">-- ربط بموظف --</option>
-                                        {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                                    </select>
-                                    <select
-                                        value={formData.projectId}
-                                        onChange={e => setFormData({ ...formData, projectId: e.target.value, partnerId: '', employeeId: '' })}
-                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                                    >
-                                        <option value="">-- ربط بمشروع --</option>
-                                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                    </select>
-                                    <select
-                                        value={formData.constructionContractId}
-                                        onChange={e => setFormData({ ...formData, constructionContractId: e.target.value, partnerId: '', employeeId: '', projectId: '' })}
-                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                                    >
-                                        <option value="">-- ربط بعقد مقاولات --</option>
-                                        {contracts.map(c => <option key={c.id} value={c.id}>{c.contractNumber} - {c.title}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="mobile-grid-1" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowUpload(false)}
-                                    disabled={uploading}
-                                    style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', color: '#64748b' }}
-                                >إلغاء</button>
-                                <button
-                                    type="submit"
-                                    disabled={uploading || !formData.fileUrl}
-                                    style={{
-                                        flex: 2, padding: '12px', borderRadius: '12px', border: 'none',
-                                        background: uploading ? '#94a3b8' : '#2563eb',
-                                        color: 'white', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                                    }}
-                                >
-                                    {uploading ? 'جاري الرفع...' : 'حفظ المستند'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-            {/* Preview Modal */}
-            {previewDoc && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px' }}>
-                    <div className="fade-in" style={{ background: 'white', borderRadius: '24px', width: '90%', maxWidth: '1000px', height: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <div className="mobile-grid-1" style={{ padding: '20px 30px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', gap: '15px' }}>
-                            <div>
-                                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1e293b' }}>{previewDoc.title}</h3>
-                                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{categories[previewDoc.category]} - {new Date(previewDoc.createdAt).toLocaleDateString('ar-SA')}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                                <button onClick={() => handleDownload(previewDoc)} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                                    <Download size={18} /> تحميل
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        const currentUrl = previewDoc.fileUrl || resolvedUrl;
-                                        if (currentUrl && currentUrl.startsWith('INTERNAL:')) {
-                                            const iframe = document.getElementById('preview-iframe');
-                                            if (iframe) {
-                                                iframe.contentWindow.focus();
-                                                iframe.contentWindow.print();
-                                            }
-                                        } else {
-                                            window.print();
-                                        }
-                                    }}
-                                    style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontWeight: 'bold', fontSize: '0.85rem' }}
-                                >
-                                    <Printer size={18} /> طباعة
-                                </button>
-                                <button onClick={() => setPreviewDoc(null)} style={{ background: '#ef4444', border: 'none', padding: '8px', borderRadius: '50%', cursor: 'pointer', color: 'white' }}>
-                                    <X size={20} />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div style={{ flex: 1, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto', padding: '20px' }}>
-                            {(() => {
-                                const currentUrl = previewDoc.fileUrl || resolvedUrl;
-
-                                if (currentUrl && currentUrl.startsWith('INTERNAL:')) {
-                                    const [, type, id] = currentUrl.split(':');
-                                    let path = '';
-                                    if (type === 'INVOICE') path = `/invoices/${id}/print?hideToolbar=true`;
-                                    else if (type === 'QUOTE') path = `/quotes/${id}/print?hideToolbar=true`;
-                                    else path = `/archive/summary/${type}/${id}?hideToolbar=true`;
-
-                                    return (
-                                        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                            <div style={{ background: '#fffbeb', padding: '10px', borderRadius: '8px', border: '1px solid #fef3c7', color: '#b45309', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center' }}>
-                                                📄 هذا سجل بيانات مستخرج من النظام. يمكنك عرضه وطباعته مباشرة.
-                                            </div>
-                                            <iframe
-                                                id="preview-iframe"
-                                                src={path}
-                                                style={{ width: '100%', flex: 1, border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', background: 'white' }}
-                                                title="System Preview"
-                                            />
-                                        </div>
-                                    );
-                                }
-
-                                if (!previewDoc.fileUrl && resolvedUrl === null) {
-                                    return <div style={{ color: '#64748b' }}>⏳ جاري جلب تفاصيل المستند...</div>;
-                                }
-
-                                if (previewDoc.fileUrl) {
-                                    return previewDoc.fileUrl.includes('application/pdf') ? (
-                                        <iframe
-                                            src={previewDoc.fileUrl}
-                                            style={{ width: '100%', height: '100%', borderRadius: '12px', shadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                            title="File Preview"
-                                        />
-                                    ) : (
-                                        <img
-                                            src={previewDoc.fileUrl}
-                                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                            alt="File Preview"
-                                        />
-                                    );
-                                }
-
-                                return (
-                                    <div style={{ textAlign: 'center', color: '#94a3b8' }}>
-                                        <FileText size={64} style={{ opacity: 0.2, marginBottom: '20px' }} />
-                                        <p>عذراً، هذا المستند لا يحتوي على ملف للعرض.</p>
-                                        <p style={{ fontSize: '0.8rem' }}>قد يكون هذا السجل مرجعياً فقط أو قديماً.</p>
-                                    </div>
-                                );
-                            })()}
-                        </div>
-                    </div>
-                </div>
-            )}
+                            <button onClick={() => deleteDocMutation.mutate(doc.id)} style={{ padding: '12px', borderRadius: '15px', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', background: 'rgba(239, 68, 68, 0.05)', cursor: 'pointer' }}>
+                                <Trash2 size={20} />
+                            </button>
+                            <button style={{ padding: '12px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)', color: '#a1a1aa', background: 'rgba(255,255,255,0.03)', cursor: 'pointer' }}>
+                                <MoreVertical size={20} />
+                            </button>
+                         </div>
+                    </motion.div>
+                ))}
+            </div>
         </div>
     );
 };

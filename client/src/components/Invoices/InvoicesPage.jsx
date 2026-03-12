@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Printer, Trash2, Edit, FileText, AlertOctagon } from 'lucide-react';
+import { Plus, Printer, Trash2, Edit, FileText, AlertOctagon, CheckCircle, ChevronLeft, Search, Filter, Download } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { buttonClick, fadeInUp } from '../Common/MotionComponents';
 import API_URL from '@/config';
 import { useToast } from '../../context/ToastContext';
 
@@ -10,6 +12,7 @@ const InvoicesPage = () => {
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Fetch Invoices
     const { data: invoices = [], isLoading: invoicesLoading, error: invoicesError } = useQuery({
@@ -20,7 +23,7 @@ const InvoicesPage = () => {
         }
     });
 
-    // Fetch Partners (Master Data)
+    // Fetch Partners
     const { data: partners = [] } = useQuery({
         queryKey: ['partners'],
         queryFn: async () => {
@@ -29,7 +32,7 @@ const InvoicesPage = () => {
         }
     });
 
-    // Fetch Products (Master Data)
+    // Fetch Products
     const { data: products = [] } = useQuery({
         queryKey: ['products'],
         queryFn: async () => {
@@ -40,7 +43,7 @@ const InvoicesPage = () => {
 
     const { showToast } = useToast();
 
-    // Mutation for Save/Update
+    // Mutations
     const saveMutation = useMutation({
         mutationFn: async (data) => {
             const token = localStorage.getItem('token');
@@ -62,6 +65,20 @@ const InvoicesPage = () => {
         }
     });
 
+    const payMutation = useMutation({
+        mutationFn: async (id) => {
+            const token = localStorage.getItem('token');
+            return axios.put(`${API_URL}/invoices/${id}/pay`, {}, { headers: { 'Authorization': `Bearer ${token}` } });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['invoices'] });
+            showToast('تم سداد الفاتورة بنجاح', 'success');
+        },
+        onError: (err) => {
+            showToast(`فشل السداد: ${err.message}`, 'error');
+        }
+    });
+
     // Form State
     const [invoiceData, setInvoiceData] = useState({
         partnerId: '',
@@ -71,7 +88,6 @@ const InvoicesPage = () => {
         items: [{ productId: '', description: '', quantity: 1, unitPrice: 0, total: 0 }]
     });
 
-    // --- Form Handlers ---
     const handleResetForm = () => {
         setInvoiceData({
             partnerId: '',
@@ -104,22 +120,9 @@ const InvoicesPage = () => {
         setShowForm(true);
     };
 
-    const handleAddItem = () => {
-        setInvoiceData({
-            ...invoiceData,
-            items: [...invoiceData.items, { productId: '', description: '', quantity: 1, unitPrice: 0, total: 0 }]
-        });
-    };
-
-    const handleRemoveItem = (index) => {
-        const newItems = invoiceData.items.filter((_, i) => i !== index);
-        setInvoiceData({ ...invoiceData, items: newItems });
-    };
-
     const handleItemChange = (index, field, value) => {
         const newItems = [...invoiceData.items];
         let item = { ...newItems[index], [field]: value };
-
         if (field === 'productId') {
             const product = products.find(p => p.id === parseInt(value));
             if (product) {
@@ -127,8 +130,6 @@ const InvoicesPage = () => {
                 item.unitPrice = product.price;
             }
         }
-
-        // Recalculate Line Total
         item.total = item.quantity * item.unitPrice;
         newItems[index] = item;
         setInvoiceData({ ...invoiceData, items: newItems });
@@ -143,228 +144,194 @@ const InvoicesPage = () => {
         return { subtotal, taxable, tax, total };
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        saveMutation.mutate(invoiceData);
-    };
-
-    const openPrint = (id) => {
-        window.open(`/invoices/${id}/print`, '_blank');
-    };
-
-    // --- Render ---
+    const filteredInvoices = invoices.filter(inv => 
+        inv.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inv.partner?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     if (showForm) {
         const totals = calculateTotals();
         return (
-            <div className="fade-in" style={{ paddingBottom: '50px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ margin: 0, color: '#1e293b' }}>{isEditing ? 'تعديل الفاتورة' : 'إنشاء فاتورة جديدة'}</h2>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={handleResetForm} style={{ background: 'white', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', color: '#64748b' }}>إلغاء</button>
-                        <button onClick={handleSubmit} style={{ background: '#2563eb', border: 'none', padding: '10px 30px', borderRadius: '8px', cursor: 'pointer', color: 'white', fontWeight: 'bold' }}>حفظ الفاتورة</button>
+            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="fade-in" style={{ paddingBottom: '100px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <motion.button whileHover={{ scale: 1.1 }} onClick={handleResetForm} className="glass-card" style={{ padding: '12px', borderRadius: '14px', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <ChevronLeft size={24} />
+                        </motion.button>
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '900', color: '#fff' }}>{isEditing ? 'تعديل الفاتورة' : 'فاتورة مبيعات جديدة'}</h2>
+                            <p style={{ margin: '4px 0 0 0', color: '#a1a1aa' }}>أدخل تفاصيل البنود والعميل لإصدار الفاتورة</p>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '15px' }}>
+                        <motion.button whileHover={{ scale: 1.05 }} onClick={handleResetForm} style={{ padding: '12px 30px', borderRadius: '15px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', fontWeight: '700' }}>إلغاء</motion.button>
+                        <motion.button whileHover={{ scale: 1.05 }} onClick={() => saveMutation.mutate(invoiceData)} style={{ padding: '12px 40px', borderRadius: '15px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff', border: 'none', fontWeight: '900', boxShadow: '0 10px 20px -5px rgba(99, 102, 241, 0.4)' }}>حفظ وإصدار</motion.button>
                     </div>
                 </div>
 
-                <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
-                    {/* Main Info */}
-                    <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
-                        <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#334155' }}>بيانات الفاتورة</h3>
-                        <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '30px' }}>
+                    <div className="glass-card" style={{ padding: '35px', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px', marginBottom: '40px' }}>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '8px', color: '#64748b', fontSize: '0.9rem' }}>العميل</label>
-                                <select
-                                    value={invoiceData.partnerId}
-                                    onChange={(e) => setInvoiceData({ ...invoiceData, partnerId: e.target.value })}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
-                                >
-                                    <option value="">اختر العميل...</option>
+                                <label style={{ display: 'block', marginBottom: '12px', color: '#a1a1aa', fontWeight: '700' }}>العميل</label>
+                                <select value={invoiceData.partnerId} onChange={(e) => setInvoiceData({...invoiceData, partnerId: e.target.value})} className="premium-input" style={{ width: '100%', background: 'rgba(255,255,255,0.03)' }}>
+                                    <option value="">اختر عميلاً من القائمة...</option>
                                     {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </select>
                             </div>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '8px', color: '#64748b', fontSize: '0.9rem' }}>التاريخ</label>
-                                <input
-                                    type="date"
-                                    value={invoiceData.date}
-                                    onChange={(e) => setInvoiceData({ ...invoiceData, date: e.target.value })}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
-                                />
+                                <label style={{ display: 'block', marginBottom: '12px', color: '#a1a1aa', fontWeight: '700' }}>تاريخ الفاتورة</label>
+                                <input type="date" value={invoiceData.date} onChange={(e) => setInvoiceData({...invoiceData, date: e.target.value})} className="premium-input" style={{ width: '100%', background: 'rgba(255,255,255,0.03)' }} />
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ margin: 0, color: '#fff', fontSize: '1.2rem', fontWeight: '800' }}>بنود الفاتورة</h3>
+                            <motion.button whileHover={{ scale: 1.05 }} onClick={() => setInvoiceData({...invoiceData, items: [...invoiceData.items, { productId: '', description: '', quantity: 1, unitPrice: 0, total: 0 }]})} style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px dashed #6366f1', padding: '10px 20px', borderRadius: '12px', fontWeight: '800', cursor: 'pointer' }}><Plus size={18} /> إضافة بند</motion.button>
+                        </div>
+
+                        <div className="table-responsive">
+                            <table className="table-glass">
+                                <thead>
+                                    <tr>
+                                        <th style={{ textAlign: 'right' }}>المنتج</th>
+                                        <th style={{ textAlign: 'center' }}>الكمية</th>
+                                        <th style={{ textAlign: 'center' }}>السعر</th>
+                                        <th style={{ textAlign: 'center' }}>الإجمالي</th>
+                                        <th style={{ textAlign: 'center' }}></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {invoiceData.items.map((item, index) => (
+                                        <tr key={index}>
+                                            <td style={{ width: '40%' }}>
+                                                <select value={item.productId} onChange={(e) => handleItemChange(index, 'productId', e.target.value)} className="premium-input" style={{ width: '100%', background: 'transparent', border: 'none' }}>
+                                                    <option value="">اختر منتجاً...</option>
+                                                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                                </select>
+                                            </td>
+                                            <td style={{ width: '15%' }}>
+                                                <input type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} className="premium-input" style={{ width: '100%', textAlign: 'center', background: 'transparent', border: 'none' }} />
+                                            </td>
+                                            <td style={{ width: '20%' }}>
+                                                <input type="number" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)} className="premium-input" style={{ width: '100%', textAlign: 'center', background: 'transparent', border: 'none' }} />
+                                            </td>
+                                            <td style={{ width: '20%', textAlign: 'center', fontWeight: '900', color: '#fff' }}>{item.total.toLocaleString()}</td>
+                                            <td style={{ width: '5%' }}>
+                                                <button onClick={() => setInvoiceData({...invoiceData, items: invoiceData.items.filter((_, i) => i !== index)})} style={{ color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        <div className="glass-card" style={{ padding: '30px', borderRadius: '28px', border: '1px solid rgba(99,102,241,0.1)' }}>
+                            <h3 style={{ margin: '0 0 25px 0', fontSize: '1.2rem', color: '#fff', fontWeight: '800' }}>ملخص الفاتورة</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#a1a1aa', fontWeight: '600' }}>
+                                    <span>المجموع قبل الضريبة</span>
+                                    <span style={{ color: '#fff' }}>{totals.subtotal.toLocaleString()} ر.س</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ color: '#a1a1aa', fontWeight: '600' }}>الخصم</span>
+                                    <input type="number" value={invoiceData.discount} onChange={(e) => setInvoiceData({...invoiceData, discount: e.target.value})} className="premium-input" style={{ width: '100px', textAlign: 'center', padding: '8px' }} />
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#a1a1aa', fontWeight: '600' }}>
+                                    <span>الضريبة (15%)</span>
+                                    <span style={{ color: '#fff' }}>{totals.tax.toLocaleString()} ر.س</span>
+                                </div>
+                                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px', marginTop: '10px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#fff' }}>الإجمالي النهائي</span>
+                                        <span style={{ fontSize: '2rem', fontWeight: '900', color: '#4ade80' }}>{totals.total.toLocaleString()} <span style={{ fontSize: '1rem' }}>ر.س</span></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    {/* Summary */}
-                    <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
-                        <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#334155' }}>ملخص الفاتورة</h3>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', color: '#64748b' }}>
-                            <span>المجموع الفرعي</span>
-                            <span>{totals.subtotal.toFixed(2)}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', color: '#64748b' }}>
-                            <span>الخصم</span>
-                            <input
-                                type="number"
-                                value={invoiceData.discount}
-                                onChange={(e) => setInvoiceData({ ...invoiceData, discount: e.target.value })}
-                                style={{ width: '80px', padding: '2px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '4px' }}
-                            />
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', color: '#64748b' }}>
-                            <span>الضريبة (15%)</span>
-                            <span>{totals.tax.toFixed(2)}</span>
-                        </div>
-                        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '15px', marginTop: '15px', display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.2rem', color: '#0f172a' }}>
-                            <span>الإجمالي</span>
-                            <span>{totals.total.toFixed(2)} ر.س</span>
-                        </div>
-                    </div>
                 </div>
+            </motion.div>
+        );
+    }
 
-                {/* Items Table */}
-                <div style={{ marginTop: '20px', background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
-                    <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#334155' }}>الأصناف</h3>
+    return (
+        <div className="fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
+                <div>
+                    <h2 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: '#fff' }} className="gradient-text">المبيعات والفواتير</h2>
+                    <p style={{ margin: '6px 0 0 0', color: '#a1a1aa', fontSize: '1.1rem', fontWeight: '500' }}>إدارة الفواتير الضريبية، المتابعة المالية، والتحصيل</p>
+                </div>
+                <div style={{ display: 'flex', gap: '15px' }}>
+                    <motion.button whileHover={{ scale: 1.05 }} className="glass-card" style={{ padding: '12px 25px', borderRadius: '16px', color: '#fff', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700' }}>
+                        <Download size={20} /> تصدير التقرير
+                    </motion.button>
+                    <motion.button whileHover={{ scale: 1.05 }} onClick={() => setShowForm(true)} style={{ padding: '12px 30px', borderRadius: '16px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff', border: 'none', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 10px 20px -5px rgba(99, 102, 241, 0.4)' }}>
+                        <Plus size={22} /> فاتورة جديدة
+                    </motion.button>
+                </div>
+            </div>
+
+            <div className="glass-card" style={{ padding: '20px 30px', borderRadius: '24px', marginBottom: '30px', display: 'flex', gap: '20px', alignItems: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                    <Search size={20} style={{ position: 'absolute', right: '15px', top: '12px', color: '#52525b' }} />
+                    <input type="text" placeholder="بحث برقم الفاتورة أو اسم العميل..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="premium-input" style={{ width: '100%', paddingRight: '45px', border: 'none', background: 'transparent' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '10px 20px', borderRadius: '12px', color: '#a1a1aa', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}><Filter size={18} /> تصفية</button>
+                    <button style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '10px', borderRadius: '12px', color: '#a1a1aa', cursor: 'pointer' }}><Printer size={20} /></button>
+                </div>
+            </div>
+
+            <div className="glass-card" style={{ borderRadius: '28px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                {invoicesLoading ? (
+                    <div style={{ padding: '100px', textAlign: 'center' }}><AlertOctagon className="animate-spin" size={40} style={{ color: '#6366f1', marginBottom: '15px' }} /><div style={{ color: '#fff', fontWeight: '700' }}>جاري تحميل البيانات...</div></div>
+                ) : (
                     <div className="table-responsive">
-                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
-                            <thead style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                        <table className="table-glass" style={{ margin: 0 }}>
+                            <thead>
                                 <tr>
-                                    <th style={{ padding: '12px', textAlign: 'right', width: '30%' }}>المنتج</th>
-                                    <th style={{ padding: '12px', textAlign: 'center', width: '15%' }}>الكمية</th>
-                                    <th style={{ padding: '12px', textAlign: 'center', width: '20%' }}>السعر</th>
-                                    <th style={{ padding: '12px', textAlign: 'center', width: '20%' }}>الإجمالي</th>
-                                    <th style={{ padding: '12px', textAlign: 'center', width: '10%' }}>حذف</th>
+                                    <th style={{ textAlign: 'right', padding: '25px' }}>رقم الفاتورة</th>
+                                    <th style={{ textAlign: 'right' }}>العميل</th>
+                                    <th style={{ textAlign: 'center' }}>التاريخ</th>
+                                    <th style={{ textAlign: 'center' }}>الحالة</th>
+                                    <th style={{ textAlign: 'center' }}>الإجمالي</th>
+                                    <th style={{ textAlign: 'center' }}>خيارات</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {invoiceData.items.map((item, index) => (
-                                    <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                        <td style={{ padding: '10px' }}>
-                                            <select
-                                                value={item.productId}
-                                                onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
-                                                style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                                            >
-                                                <option value="">اختر...</option>
-                                                {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                            </select>
+                                {filteredInvoices.map((inv, idx) => (
+                                    <motion.tr key={inv.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
+                                        <td style={{ padding: '20px 25px' }}><span style={{ fontWeight: '900', color: '#fff', fontSize: '1.1rem' }}>{inv.invoiceNumber}</span></td>
+                                        <td>
+                                            <div style={{ fontWeight: '800', color: '#fff' }}>{inv.partner?.name || '—'}</div>
+                                            <div style={{ fontSize: '0.8rem', color: '#71717a' }}>{inv.partner?.phone}</div>
                                         </td>
-                                        <td style={{ padding: '10px' }}>
-                                            <input
-                                                type="number"
-                                                value={item.quantity}
-                                                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                                                style={{ width: '100%', padding: '8px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                                            />
+                                        <td style={{ textAlign: 'center', color: '#a1a1aa', fontWeight: '600' }}>{new Date(inv.date).toLocaleDateString('ar-SA')}</td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <span className={`status-pill ${inv.status === 'PAID' ? 'status-paid' : 'status-pending'}`}>
+                                                {inv.status === 'PAID' ? 'مـدفوعة' : 'مستحقة'}
+                                            </span>
                                         </td>
-                                        <td style={{ padding: '10px' }}>
-                                            <input
-                                                type="number"
-                                                value={item.unitPrice}
-                                                onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
-                                                style={{ width: '100%', padding: '8px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                                            />
+                                        <td style={{ textAlign: 'center' }}><div style={{ fontWeight: '900', color: '#fff', fontSize: '1.2rem' }}>{inv.total.toLocaleString()} <span style={{ fontSize: '0.7rem' }}>ر.س</span></div></td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                                                {inv.status !== 'PAID' && (
+                                                    <motion.button whileHover={{ scale: 1.1 }} onClick={() => payMutation.mutate(inv.id)} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><CheckCircle size={18} /></motion.button>
+                                                )}
+                                                <motion.button whileHover={{ scale: 1.1 }} onClick={() => handleEdit(inv)} style={{ background: 'rgba(255,255,255,0.05)', color: '#a1a1aa', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><Edit size={18} /></motion.button>
+                                                <motion.button whileHover={{ scale: 1.1 }} onClick={() => window.open(`/invoices/${inv.id}/print`, '_blank')} style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><Printer size={18} /></motion.button>
+                                            </div>
                                         </td>
-                                        <td style={{ padding: '10px', textAlign: 'center', fontWeight: 'bold' }}>
-                                            {(item.quantity * item.unitPrice).toFixed(2)}
-                                        </td>
-                                        <td style={{ padding: '10px', textAlign: 'center' }}>
-                                            <button onClick={() => handleRemoveItem(index)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    </motion.tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
-                    <button onClick={handleAddItem} style={{ marginTop: '15px', background: 'transparent', border: '1px dashed #94a3b8', color: '#64748b', width: '100%', padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <Plus size={18} /> إضافة صنف جديد
-                    </button>
-                </div>
+                )}
             </div>
-        );
-    }
-
-    // List View
-    return (
-        <div className="fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                <div>
-                    <h2 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>المبيعات والفواتير</h2>
-                    <p style={{ margin: 0, color: '#64748b' }}>إدارة فواتير المبيعات الضريبية والعملاء</p>
-                </div>
-                <button
-                    onClick={() => setShowForm(true)}
-                    style={{
-                        background: '#2563eb', color: 'white', border: 'none', padding: '12px 24px',
-                        borderRadius: '10px', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 'bold',
-                        display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgb(37 99 235 / 0.3)'
-                    }}
-                    className="card-hover"
-                >
-                    <Plus size={20} /> إضافة فاتورة
-                </button>
-            </div>
-
-            {invoicesLoading ? (
-                <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9' }}>
-                    {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="animate-pulse" style={{ height: '50px', background: '#f8fafc', borderRadius: '8px', marginBottom: '12px' }} />
-                    ))}
-                </div>
-            ) : invoicesError ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444', background: '#fef2f2', borderRadius: '12px' }}>
-                    <AlertOctagon style={{ margin: '0 auto 10px', display: 'block' }} size={32} />
-                    <p>فشل تحميل الفواتير. يرجى التحقق من اتصال الخادم.</p>
-                </div>
-            ) : (
-                <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', border: '1px solid #f1f5f9' }}>
-                    <div className="table-responsive">
-                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
-                            <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                                <tr>
-                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>رقم الفاتورة</th>
-                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>العميل</th>
-                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>التاريخ</th>
-                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الحالة</th>
-                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الإجمالي</th>
-                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {invoices.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="6" style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                                                <FileText size={40} strokeWidth={1.5} color="#cbd5e1" />
-                                                <p>لا توجد فواتير حتى الآن. ابدأ بإنشاء فاتورة جديدة.</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    invoices.map(inv => (
-                                        <tr key={inv.id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.background = 'white'}>
-                                            <td style={{ padding: '16px 24px', fontWeight: 'bold', color: '#0f172a' }}>{inv.invoiceNumber}</td>
-                                            <td style={{ padding: '16px 24px', color: '#334155' }}>{inv.partner?.name || '-'}</td>
-                                            <td style={{ padding: '16px 24px', color: '#64748b', fontSize: '0.9rem' }}>{new Date(inv.date).toLocaleDateString('ar-SA')}</td>
-                                            <td style={{ padding: '16px 24px' }}>
-                                                <span style={{ background: '#ecfdf5', color: '#10b981', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>مدفوعة</span>
-                                            </td>
-                                            <td style={{ padding: '16px 24px', color: '#0f172a', fontWeight: 'bold' }}>{inv.total.toFixed(2)} ر.س</td>
-                                            <td style={{ padding: '16px 24px', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-                                                    <button onClick={() => openPrint(inv.id)} title="طباعة" style={{ background: '#eff6ff', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Printer size={16} /></button>
-                                                    <button onClick={() => handleEdit(inv)} title="تعديل" style={{ background: '#f8fafc', border: 'none', width: '32px', height: '32px', borderRadius: '8px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Edit size={16} /></button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

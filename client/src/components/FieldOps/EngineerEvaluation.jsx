@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Users, TrendingUp, Award, CheckCircle2, Zap, BrainCircuit, Clock, Shield } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { buttonClick } from '../Common/MotionComponents';
 import API_URL from '@/config';
 
 const H = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
@@ -39,46 +41,46 @@ const EngineerEvaluation = ({ projectId }) => {
         }
     };
 
-    if (isLoading) return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b', fontWeight: 'bold' }}>جاري تحميل مصفوفة التقييم...</div>;
+    if (isLoading) return <div style={{ color: '#71717a', padding: '100px', textAlign: 'center' }}><Clock className="animate-spin" size={40} /></div>;
 
     const topEngineer = scores[0];
 
     return (
-        <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '18px', fontFamily: 'Cairo, sans-serif' }}>
-
-            {/* Header Area */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
+        <div style={{ direction: 'rtl' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '35px', flexWrap: 'wrap', gap: '20px' }}>
                 <div>
-                    <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#0f172a', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Award size={28} className="text-amber-500" />
-                        نظام تقييم الأداء الميداني
+                    <h2 style={{ margin: 0, fontSize: '1.6rem', color: '#fff', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{ background: 'rgba(251, 191, 36, 0.1)', padding: '10px', borderRadius: '12px' }}><Award size={28} color="#fbbf24" /></div>
+                        منظومة تقييم الأداء والمكافآت
                     </h2>
-                    <p style={{ margin: '6px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>تحليل ذكي لسرعة التنفيذ وجودة التقارير المدعومة بالذكاء الاصطناعي</p>
+                    <p style={{ margin: '10px 0 0 0', color: '#a1a1aa', fontSize: '1rem', fontWeight: '600' }}>تحليل ذكي لسرعة التنفيذ وجودة التقارير الميدانية.</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', background: 'white', padding: '4px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: 'white', fontWeight: 'bold', cursor: 'pointer', outline: 'none' }}>
-                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => <option key={m} value={m}>شهر {m}</option>)}
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ padding: '8px 15px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#fff', fontWeight: '900', cursor: 'pointer', outline: 'none' }}>
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => <option key={m} value={m} style={{ background: '#09090b' }}>شهر {m}</option>)}
                         </select>
-                        <select value={year} onChange={(e) => setYear(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: 'white', fontWeight: 'bold', cursor: 'pointer', outline: 'none' }}>
-                            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                        <select value={year} onChange={(e) => setYear(e.target.value)} style={{ padding: '8px 15px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#fff', fontWeight: '900', cursor: 'pointer', outline: 'none' }}>
+                            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#09090b' }}>{y}</option>)}
                         </select>
                     </div>
-                    <button
+                    <motion.button
+                        {...buttonClick}
                         onClick={calculateAll}
                         disabled={calcLoading}
                         style={{
-                            padding: '10px 20px', background: '#0f172a', color: 'white', border: 'none',
-                            borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem',
-                            display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                            padding: '12px 25px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: 'white', border: 'none',
+                            borderRadius: '14px', cursor: 'pointer', fontWeight: '900', fontSize: '0.95rem',
+                            display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)'
                         }}
                     >
-                        {calcLoading ? <Clock size={16} className="animate-spin" /> : <TrendingUp size={16} />}
-                        تحديث التقييم (8 معايير)
-                    </button>
+                        {calcLoading ? <Clock size={18} className="animate-spin" /> : <TrendingUp size={18} />}
+                        تحديث التقييم الشامل
+                    </motion.button>
                 </div>
             </div>
+
 
             {msg && (
                 <div style={{ padding: '12px 20px', borderRadius: '12px', background: msg.includes('✅') ? '#ecfdf5' : '#eff6ff', color: msg.includes('✅') ? '#065f46' : '#2563eb', fontWeight: '600', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', border: '1px solid currentColor' }}>
@@ -87,114 +89,108 @@ const EngineerEvaluation = ({ projectId }) => {
             )}
 
             {/* Quick Stats Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-                <div style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '25px', marginBottom: '35px' }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '25px', borderRadius: '25px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}>
                         <Users size={24} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>إجمالي المهندسين</div>
-                        <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#1e293b' }}>{scores.length}</div>
+                        <div style={{ fontSize: '0.85rem', color: '#71717a', fontWeight: '900' }}>المهندسين</div>
+                        <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#fff' }}>{scores.length}</div>
                     </div>
-                </div>
+                </motion.div>
 
-                <div style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', padding: '20px', borderRadius: '16px', color: 'white', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 10px 20px -5px rgba(16,185,129,0.3)' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', padding: '25px', borderRadius: '25px', color: 'white', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 15px 30px -10px rgba(16,185,129,0.3)' }}>
+                    <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
                         <Award size={24} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: '600' }}>أعلى كفاءة ميدانية</div>
-                        <div style={{ fontSize: '1.2rem', fontWeight: '800' }}>{topEngineer?.engineer?.name || '—'}</div>
+                        <div style={{ fontSize: '0.85rem', opacity: 0.9, fontWeight: '900' }}>الأعلى كفاءة</div>
+                        <div style={{ fontSize: '1.3rem', fontWeight: '900' }}>{topEngineer?.engineer?.name || '—'}</div>
                     </div>
-                </div>
+                </motion.div>
 
-                <div style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#fffbeb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '25px', borderRadius: '25px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' }}>
                         <Shield size={24} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>التزام السلامة (HSE)</div>
-                        <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#1e293b' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#71717a', fontWeight: '900' }}>التزام السلامة</div>
+                        <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#fff' }}>
                             {scores.length > 0 ? (scores.reduce((a, b) => a + (b.safetyComplianceScore || 0), 0) / scores.length).toFixed(0) : 0}%
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
-                <div style={{ background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '25px', borderRadius: '25px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
                         <Zap size={24} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>متوسط سرعة الإغلاق</div>
-                        <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#1e293b' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#71717a', fontWeight: '900' }}>سرعة الإغلاق</div>
+                        <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#fff' }}>
                             {scores.length > 0 ? (scores.reduce((a, b) => a + (b.closureSpeedScore || 0), 0) / scores.length).toFixed(0) : 0}%
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
+
             {/* Performance Matrix */}
-            <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
-                <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
-                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#334155' }}>مصفوفة نتائج الأداء (المعايير الثمانية المعتمدة)</h3>
+            <div className="glass-card" style={{ borderRadius: '30px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ padding: '20px 25px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: '#fff' }}>مصفوفة نتائج الأداء (المعايير الثمانية)</h3>
                 </div>
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right', minWidth: '1000px' }}>
+                <div className="table-responsive">
+                    <table className="table-glass" style={{ margin: 0, minWidth: '1200px' }}>
                         <thead>
-                            <tr style={{ background: 'white' }}>
-                                <th style={{ padding: '16px', color: '#64748b', fontSize: '0.8rem', fontWeight: '700' }}>المهندس</th>
-                                <th style={{ padding: '12px', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>المنجز (15%)</th>
-                                <th style={{ padding: '12px', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>السرعة (10%)</th>
-                                <th style={{ padding: '12px', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>الجودة (15%)</th>
-                                <th style={{ padding: '12px', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>AI (10%)</th>
-                                <th style={{ padding: '12px', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>السلامة (15%)</th>
-                                <th style={{ padding: '12px', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>GPS (15%)</th>
-                                <th style={{ padding: '12px', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>الرضا (10%)</th>
-                                <th style={{ padding: '12px', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>الحضور (10%)</th>
-                                <th style={{ padding: '12px', color: '#64748b', fontSize: '0.85rem', textAlign: 'center' }}>النتيجة</th>
-                                <th style={{ padding: '12px', color: '#64748b', fontSize: '0.85rem', textAlign: 'center' }}>التقييم</th>
+                            <tr>
+                                <th style={{ textAlign: 'right', padding: '15px 25px' }}>المهندس</th>
+                                <th style={{ textAlign: 'center' }}>المنجز (15%)</th>
+                                <th style={{ textAlign: 'center' }}>السرعة (10%)</th>
+                                <th style={{ textAlign: 'center' }}>الجودة (15%)</th>
+                                <th style={{ textAlign: 'center' }}>الذكاء (10%)</th>
+                                <th style={{ textAlign: 'center' }}>الميدان (15%)</th>
+                                <th style={{ textAlign: 'center' }}>GPS (15%)</th>
+                                <th style={{ textAlign: 'center' }}>الرضا (10%)</th>
+                                <th style={{ textAlign: 'center' }}>الالتزام (10%)</th>
+                                <th style={{ textAlign: 'center' }}>المجموع</th>
+                                <th style={{ textAlign: 'center' }}>المستوى</th>
                             </tr>
                         </thead>
                         <tbody>
                             {scores.map((score, index) => {
-                                const rankColor = index === 0 ? '#fbbf24' : index === 1 ? '#94a3b8' : index === 2 ? '#d97706' : '#cbd5e1';
-                                const performanceLabel = score.finalScore >= 90 ? 'ممتاز' : score.finalScore >= 80 ? 'جيد جداً' : score.finalScore >= 70 ? 'جيد' : 'يحتاج تطوير';
-                                const perfColor = score.finalScore >= 90 ? '#059669' : score.finalScore >= 80 ? '#2563eb' : score.finalScore >= 70 ? '#d97706' : '#dc2626';
+                                const performanceLabel = score.finalScore >= 90 ? 'استثنائي' : score.finalScore >= 80 ? 'متميز' : score.finalScore >= 70 ? 'جيد جداً' : 'تطوير';
+                                const perfColor = score.finalScore >= 90 ? '#10b981' : score.finalScore >= 80 ? '#6366f1' : score.finalScore >= 70 ? '#f59e0b' : '#ef4444';
+
 
                                 return (
-                                    <tr key={score.id} style={{ borderTop: '1px solid #f8fafc', transition: 'background 0.2s' }}>
-                                        <td style={{ padding: '16px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <div style={{
-                                                    width: '28px', height: '28px', borderRadius: '50%', background: rankColor,
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.7rem'
-                                                }}>
-                                                    {index + 1}
-                                                </div>
-                                                <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '0.85rem' }}>{score.engineer?.name}</div>
+                                    <motion.tr key={score.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.05 }}>
+                                        <td style={{ padding: '15px 25px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '900', fontSize: '0.8rem' }}>{index + 1}</div>
+                                                <div style={{ fontWeight: '900', color: '#fff', fontSize: '1rem' }}>{score.engineer?.name}</div>
                                             </div>
                                         </td>
-                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#334155', fontSize: '0.85rem' }}>{Math.round(score.tasksCompletedScore)}%</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#334155', fontSize: '0.85rem' }}>{Math.round(score.closureSpeedScore)}%</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#334155', fontSize: '0.85rem' }}>{Math.round(score.technicalDepthScore)}%</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#334155', fontSize: '0.85rem' }}>{Math.round(score.aiAccuracyScore)}%</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#059669', fontSize: '0.85rem' }}>{Math.round(score.safetyComplianceScore)}%</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#2563eb', fontSize: '0.85rem' }}>{Math.round(score.gpsAccuracyScore)}%</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#d97706', fontSize: '0.85rem' }}>{Math.round(score.feedbackScore)}%</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#334155', fontSize: '0.85rem' }}>{Math.round(score.attendanceScore)}%</td>
-                                        <td style={{ padding: '12px', textAlign: 'center' }}>
-                                            <div style={{ fontSize: '1.1rem', fontWeight: '900', color: perfColor }}>{Math.round(score.finalScore)}</div>
+                                        <td style={{ textAlign: 'center', fontWeight: '700', color: '#a1a1aa' }}>{Math.round(score.tasksCompletedScore)}%</td>
+                                        <td style={{ textAlign: 'center', fontWeight: '700', color: '#a1a1aa' }}>{Math.round(score.closureSpeedScore)}%</td>
+                                        <td style={{ textAlign: 'center', fontWeight: '700', color: '#a1a1aa' }}>{Math.round(score.technicalDepthScore)}%</td>
+                                        <td style={{ textAlign: 'center', fontWeight: '700', color: '#a1a1aa' }}>{Math.round(score.aiAccuracyScore)}%</td>
+                                        <td style={{ textAlign: 'center', fontWeight: '700', color: '#10b981' }}>{Math.round(score.safetyComplianceScore)}%</td>
+                                        <td style={{ textAlign: 'center', fontWeight: '700', color: '#6366f1' }}>{Math.round(score.gpsAccuracyScore)}%</td>
+                                        <td style={{ textAlign: 'center', fontWeight: '700', color: '#f59e0b' }}>{Math.round(score.feedbackScore)}%</td>
+                                        <td style={{ textAlign: 'center', fontWeight: '700', color: '#a1a1aa' }}>{Math.round(score.attendanceScore)}%</td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <div style={{ fontSize: '1.4rem', fontWeight: '900', color: perfColor }}>{Math.round(score.finalScore)}</div>
                                         </td>
-                                        <td style={{ padding: '12px', textAlign: 'center' }}>
-                                            <span style={{
-                                                padding: '4px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '800',
-                                                background: `${perfColor}15`, color: perfColor, border: `1px solid ${perfColor}30`
-                                            }}>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <span style={{ padding: '6px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '900', background: `${perfColor}15`, color: perfColor, border: `1px solid ${perfColor}30` }}>
                                                 {performanceLabel}
                                             </span>
                                         </td>
-                                    </tr>
+                                    </motion.tr>
                                 );
+
                             })}
                         </tbody>
                     </table>

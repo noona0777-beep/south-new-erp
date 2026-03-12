@@ -202,13 +202,28 @@ router.get('/stats', async (req, res) => {
             where: { stage: { not: 'LOST' } }
         });
 
+        // Stage breakdown
+        const stageStats = await prisma.opportunity.groupBy({
+            by: ['stage'],
+            _count: { _all: true },
+            _sum: { value: true }
+        });
+
+        // Source breakdown for leads
+        const sourceStats = await prisma.lead.groupBy({
+            by: ['source'],
+            _count: { _all: true }
+        });
+
         res.json({
             totalLeads,
             convertedLeads,
             conversionRate: totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : 0,
             totalOpps,
             wonOpps,
-            pipelineValue: oppsSum._sum.value || 0
+            pipelineValue: oppsSum._sum.value || 0,
+            stageStats: stageStats.map(s => ({ stage: s.stage, count: s._count._all, value: s._sum.value || 0 })),
+            sourceStats: sourceStats.map(s => ({ source: s.source, count: s._count._all }))
         });
 
     } catch (error) {

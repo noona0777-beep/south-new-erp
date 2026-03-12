@@ -69,29 +69,34 @@ const NavLink = ({ to, icon, label, active, onClick, i18n }) => {
     const isRtl = i18n.language === 'ar';
     return (
         <motion.div {...buttonClick}>
-            <Link to={to} onClick={onClick} className="card-hover" style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '14px 18px',
+            <Link to={to} onClick={onClick} className="nav-link-premium" style={{
+                display: 'flex', alignItems: 'center', gap: '14px',
+                padding: '12px 20px',
                 color: active ? '#fff' : '#94a3b8',
-                background: active ? '#2563eb' : 'transparent',
+                background: active ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
                 textDecoration: 'none',
-                borderRadius: '10px',
-                marginBottom: '6px',
-                transition: 'all 0.3s ease',
-                fontSize: '1rem',
-                fontWeight: active ? '600' : '400',
+                borderRadius: '16px',
+                marginBottom: '4px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                fontSize: '0.95rem',
+                fontWeight: active ? '700' : '500',
+                border: active ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid transparent',
                 flexDirection: isRtl ? 'row' : 'row-reverse',
-                textAlign: isRtl ? 'right' : 'left'
+                textAlign: isRtl ? 'right' : 'left',
+                position: 'relative',
+                overflow: 'hidden'
             }}>
-                {React.cloneElement(icon, { size: 20 })}
+                {active && <motion.div layoutId="activeNav" style={{ position: 'absolute', left: isRtl ? 0 : 'auto', right: isRtl ? 'auto' : 0, width: '4px', height: '60%', background: '#6366f1', borderRadius: '4px' }} />}
+                <div style={{ color: active ? '#818cf8' : 'inherit' }}>
+                    {React.cloneElement(icon, { size: 20 })}
+                </div>
                 <span style={{ flex: 1 }}>{label}</span>
                 {active && (
                     <motion.div
-                        initial={{ x: isRtl ? 10 : -10, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        style={{ marginLeft: isRtl ? 'auto' : '0', marginRight: isRtl ? '0' : 'auto' }}
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
                     >
-                        {isRtl ? <ChevronLeft size={16} /> : <div style={{ transform: 'rotate(180deg)' }}><ChevronLeft size={16} /></div>}
+                        <ChevronLeft size={16} style={{ transform: isRtl ? 'none' : 'rotate(180deg)', opacity: 0.5 }} />
                     </motion.div>
                 )}
             </Link>
@@ -102,21 +107,42 @@ const NavLink = ({ to, icon, label, active, onClick, i18n }) => {
 const HeaderStat = ({ title, value, subtext, icon, color }) => (
     <motion.div
         {...buttonClick}
-        className="glass-card premium-shadow card-hover fade-in"
+        className="glass-card card-hover fade-in"
         style={{
-            padding: '24px', borderRadius: '16px',
-            display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+            padding: '28px', borderRadius: '24px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            position: 'relative', overflow: 'hidden'
         }}
     >
-        <div>
-            <h4 style={{ margin: '0 0 8px 0', color: '#64748b', fontSize: '0.9rem', fontWeight: '500' }}>{title}</h4>
-            <p style={{ margin: '0 0 5px 0', fontSize: '1.8rem', fontWeight: 'bold', color: '#0f172a', fontFamily: 'Cairo' }}>{value}</p>
-            <span style={{ fontSize: '0.85rem', color: subtext?.includes('+') ? '#10b981' : '#ef4444', fontWeight: 'bold', background: subtext?.includes('+') ? '#ecfdf5' : '#fef2f2', padding: '2px 8px', borderRadius: '12px' }}>
-                {subtext}
-            </span>
+        <div style={{ position: 'absolute', top: '-20px', left: '-20px', width: '100px', height: '100px', background: `${color}10`, borderRadius: '50%', filter: 'blur(40px)' }} />
+        <div style={{ position: 'relative', zIndex: 2 }}>
+            <h4 style={{ margin: '0 0 10px 0', color: '#a1a1aa', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</h4>
+            <p style={{ margin: '0 0 8px 0', fontSize: '2.2rem', fontWeight: '800', color: '#fff', fontFamily: 'Outfit, Cairo' }}>{value}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ 
+                    fontSize: '0.8rem', 
+                    color: subtext?.includes('+') ? '#10b981' : '#ef4444', 
+                    fontWeight: '800', 
+                    background: subtext?.includes('+') ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                    padding: '4px 10px', 
+                    borderRadius: '20px',
+                    border: `1px solid ${subtext?.includes('+') ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
+                }}>
+                    {subtext}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: '#71717a' }}>vs الشهر الماضي</span>
+            </div>
         </div>
-        <div style={{ padding: '12px', background: `${color}20`, borderRadius: '12px', color: color }}>
-            {React.cloneElement(icon, { size: 24 })}
+        <div style={{ 
+            padding: '16px', 
+            background: `linear-gradient(135deg, ${color}20 0%, ${color}40 100%)`, 
+            borderRadius: '20px', 
+            color: color, 
+            boxShadow: `0 8px 20px ${color}20`,
+            position: 'relative',
+            zIndex: 2
+        }}>
+            {React.cloneElement(icon, { size: 28 })}
         </div>
     </motion.div>
 );
@@ -138,9 +164,10 @@ const Dashboard = () => {
 
     const getGreeting = () => {
         const hour = new Date().getHours();
-        if (hour < 12) return { text: t('welcome') + ' ' + (t('welcome_morning') || 'صباح الخير'), icon: '☀️' };
-        if (hour < 18) return { text: t('welcome') + ' ' + (t('welcome_day') || 'طاب يومك'), icon: '🌤️' };
-        return { text: t('welcome') + ' ' + (t('welcome_evening') || 'مساء الخير'), icon: '🌙' };
+        const userName = user?.name || 'المستخدم';
+        if (hour < 12) return { text: `صباح الخير، ${userName}`, icon: '☀️' };
+        if (hour < 18) return { text: `طابت أوقاتك، ${userName}`, icon: '🌤️' };
+        return { text: `مساء الخير، ${userName}`, icon: '🌙' };
     };
     const greeting = getGreeting();
 
@@ -148,16 +175,16 @@ const Dashboard = () => {
         if (!val) return '0';
         if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
         if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
-        return typeof val === 'number' ? val.toFixed(0) : val;
+        return typeof val === 'number' ? val.toLocaleString() : val;
     };
 
     if (statsLoading) {
         return (
             <div style={{ marginTop: '10px' }}>
-                <div className="glass-card premium-shadow animate-pulse" style={{ height: '200px', borderRadius: '24px', background: '#f1f5f9', marginBottom: '35px' }} />
+                <div className="glass-card animate-pulse" style={{ height: '200px', borderRadius: '30px', marginBottom: '35px', background: 'rgba(255,255,255,0.02)' }} />
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '30px' }}>
                     {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="glass-card premium-shadow animate-pulse" style={{ height: '140px', borderRadius: '16px', background: '#f1f5f9' }} />
+                        <div key={i} className="glass-card animate-pulse" style={{ height: '140px', borderRadius: '24px', background: 'rgba(255,255,255,0.02)' }} />
                     ))}
                 </div>
             </div>
@@ -165,166 +192,212 @@ const Dashboard = () => {
     }
 
     const chartData = stats?.monthlyRevenue || [];
-    const maxVal = Math.max(...chartData.map(d => d.value), 1);
     const statusLabel = (s) => ({ DRAFT: 'مسودة', POSTED: 'مرسلة', PAID: 'مدفوعة', ACCEPTED: 'مقبول', REJECTED: 'مرفوض', SENT: 'تم الإرسال' }[s] || s);
-    const statusColor = (s) => ({ DRAFT: '#94a3b8', POSTED: '#3b82f6', PAID: '#10b981', ACCEPTED: '#10b981', REJECTED: '#ef4444', SENT: '#f59e0b' }[s] || '#94a3b8');
+    const statusColor = (s) => ({ DRAFT: '#94a3b8', POSTED: '#6366f1', PAID: '#10b981', ACCEPTED: '#10b981', REJECTED: '#ef4444', SENT: '#f59e0b' }[s] || '#94a3b8');
 
     return (
         <div style={{ marginTop: '10px' }}>
             <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="aurora-bg pulse-glow"
-                style={{ marginBottom: '35px', padding: '32px', borderRadius: '24px', color: 'white', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px -15px rgba(0,0,0,0.2)' }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                style={{ 
+                    marginBottom: '35px', 
+                    padding: '40px', 
+                    borderRadius: '35px', 
+                    color: 'white', 
+                    position: 'relative', 
+                    overflow: 'hidden', 
+                    background: 'linear-gradient(225deg, #4f46e5 0%, #06b6d4 100%)',
+                    boxShadow: '0 25px 50px -12px rgba(79, 70, 229, 0.3)'
+                }}
             >
+                <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, background: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")', opacity: 0.05 }} />
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
-                        <span style={{ fontSize: '2.5rem' }}>{greeting.icon}</span>
-                        <h2 style={{ margin: 0, fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-0.5px' }}>{greeting.text}، {user.name}</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '15px' }}>
+                        <span style={{ fontSize: '3rem' }}>{greeting.icon}</span>
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-1px' }}>{greeting.text}</h2>
+                            <p style={{ margin: '5px 0 0 0', opacity: 0.8, fontSize: '1.1rem', fontWeight: '500' }}>
+                                {t('welcome_desc', 'نظام إدارة موارد')} {companyInfo.name || 'مؤسسة الجنوب الجديد'} • {new Date().toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </p>
+                        </div>
                     </div>
-                    <p style={{ margin: 0, opacity: 0.9, fontSize: '1.1rem', fontWeight: '500', maxWidth: '600px', lineHeight: '1.5' }}>
-                        {t('welcome_desc', 'أهلاً بك في نظام إدارة موارد')} {companyInfo.name || 'مؤسسة الجنوب الجديد'}. {t('welcome_sub', 'إليك نظرة سريعة على أداء المؤسسة.')}
-                    </p>
                 </div>
             </motion.div>
 
-            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-                <HeaderStat title="إجمالي الإيرادات" value={`${formatMoney(stats?.totals?.revenue)} ر.س`} subtext={`${stats?.totals?.invoices || 0} فاتورة`} icon={<DollarSign />} color="#2563eb" />
-                <HeaderStat title="العملاء المسجلون" value={stats?.totals?.clients || 0} subtext={`+${stats?.quickStats?.activeProjects || 0} مشروع نشط`} icon={<UserPlus />} color="#10b981" />
-                <HeaderStat title="عروض الأسعار" value={stats?.totals?.quotes || 0} subtext={`${stats?.quickStats?.pendingQuotes || 0} معلقة`} icon={<FileText />} color="#8b5cf6" />
-                <HeaderStat title="المنتجات في المخزن" value={stats?.totals?.products || 0} subtext={stats?.quickStats?.lowStockCount > 0 ? `⚠️ ${stats.quickStats.lowStockCount} نقص` : '✅ مخزون جيد'} icon={<Package />} color="#f59e0b" />
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '35px' }}>
+                <HeaderStat title="إجمالي الإيرادات" value={`${formatMoney(stats?.totals?.revenue)} ر.س`} subtext={`${stats?.totals?.invoices || 0} فاتورة`} icon={<DollarSign />} color="#818cf8" />
+                <HeaderStat title="العملاء المسجلون" value={stats?.totals?.clients || 0} subtext={`+${stats?.quickStats?.activeProjects || 0} مشروع نشط`} icon={<UserPlus />} color="#4fd1c5" />
+                <HeaderStat title="عروض الأسعار" value={stats?.totals?.quotes || 0} subtext={`${stats?.quickStats?.pendingQuotes || 0} معلقة`} icon={<FileText />} color="#c084fc" />
+                <HeaderStat title="المنتجات في المخزن" value={stats?.totals?.products || 0} subtext={stats?.quickStats?.lowStockCount > 0 ? `⚠️ ${stats.quickStats.lowStockCount} نقص` : '✅ مخزون جيد'} icon={<Package />} color="#fbbf24" />
             </div>
 
-            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '24px' }}>
-                <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', alignItems: 'center' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '24px', marginBottom: '30px' }}>
+                <div className="glass-card card-hover" style={{ padding: '30px', borderRadius: '30px', minHeight: '450px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '35px', alignItems: 'center' }}>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b', fontWeight: 'bold' }}>تحليل الإيرادات والنمو</h3>
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>مقارنة أداء المبيعات الشهور الأخيرة</span>
+                            <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#fff', fontWeight: '800' }}>تحليل الإيرادات والنمو</h3>
+                            <p style={{ margin: '5px 0 0 0', fontSize: '0.85rem', color: '#a1a1aa' }}>تطور المبيعات خلال الـ 12 شهراً الماضية</p>
                         </div>
-                        <div style={{ background: '#eff6ff', padding: '8px 16px', borderRadius: '20px', color: '#2563eb', fontSize: '0.85rem', fontWeight: 'bold', border: '1px solid rgba(37,99,235,0.1)' }}>
-                            {formatMoney(stats?.totals?.revenue)} ر.س إجمالي
+                        <div style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '10px 20px', borderRadius: '15px', color: '#818cf8', fontSize: '0.9rem', fontWeight: '800', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                            النمو السنوي +12.5%
                         </div>
                     </div>
 
-                    <div style={{ flex: 1, width: '100%', minHeight: '280px' }}>
+                    <div style={{ flex: 1, width: '100%', minHeight: '300px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
+                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                                 <XAxis
                                     dataKey="label"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }}
-                                    dy={10}
+                                    tick={{ fill: '#71717a', fontSize: 12, fontWeight: 600 }}
+                                    dy={15}
                                 />
                                 <YAxis
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                                    tick={{ fill: '#71717a', fontSize: 12, fontWeight: 600 }}
                                     tickFormatter={(val) => formatMoney(val)}
                                 />
                                 <Tooltip
                                     contentStyle={{
-                                        borderRadius: '12px',
-                                        border: 'none',
-                                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                                        fontFamily: 'Cairo',
+                                        background: 'rgba(9, 9, 11, 0.9)',
+                                        backdropFilter: 'blur(10px)',
+                                        borderRadius: '16px',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        fontFamily: 'Cairo, Outfit',
                                         direction: 'rtl',
-                                        padding: '12px'
+                                        padding: '12px',
+                                        boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
                                     }}
+                                    itemStyle={{ color: '#fff' }}
                                     formatter={(value) => [`${value?.toLocaleString()} ر.س`, 'الإيرادات']}
-                                    labelStyle={{ fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}
                                 />
                                 <Area
                                     type="monotone"
                                     dataKey="value"
-                                    stroke="#2563eb"
-                                    strokeWidth={3}
+                                    stroke="#6366f1"
+                                    strokeWidth={4}
                                     fillOpacity={1}
                                     fill="url(#colorValue)"
-                                    animationDuration={1500}
+                                    animationDuration={2000}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {stats?.lowStock?.length > 0 && (
-                        <div className="card-hover fade-in" style={{ background: '#fff7ed', padding: '16px', borderRadius: '14px', border: '1px solid #fed7aa' }}>
-                            <h4 style={{ margin: '0 0 12px 0', color: '#c2410c', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <AlertOctagon size={16} /> تنبيه نقص المخزون
-                            </h4>
-                            {stats.lowStock.map((item, i) => (
-                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < stats.lowStock.length - 1 ? '1px solid #fed7aa' : 'none', fontSize: '0.85rem' }}>
-                                    <span style={{ color: '#7c2d12', fontWeight: '500' }}>{item.name}</span>
-                                    <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{item.quantity} ق</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div className="glass-card card-hover" style={{ padding: '25px', borderRadius: '25px', flex: 1 }}>
+                        <h4 style={{ margin: '0 0 20px 0', color: '#fff', fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Activity size={20} color="#818cf8" /> مؤشرات الأداء
+                        </h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            {[
+                                { label: 'المشاريع المنفذة', value: stats?.quickStats?.activeProjects || 0, color: '#6366f1', total: 50 },
+                                { label: 'نسبة التحصيل', value: 85, color: '#10b981', total: 100, suffix: '%' },
+                                { label: 'رضا العملاء', value: 92, color: '#f59e0b', total: 100, suffix: '%' },
+                            ].map((item, i) => (
+                                <div key={i}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
+                                        <span style={{ color: '#a1a1aa', fontWeight: '600' }}>{item.label}</span>
+                                        <span style={{ color: '#fff', fontWeight: '800' }}>{item.value}{item.suffix || ''}</span>
+                                    </div>
+                                    <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${(item.value / item.total) * 100}%` }}
+                                            transition={{ duration: 1.5, delay: 0.5 + i * 0.2 }}
+                                            style={{ height: '100%', background: item.color, borderRadius: '10px' }} 
+                                        />
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                    )}
-
-                    <div className="card-hover fade-in" style={{ background: 'white', padding: '20px', borderRadius: '14px', border: '1px solid #f1f5f9', flex: 1 }}>
-                        <h4 style={{ margin: '0 0 16px 0', color: '#1e293b', fontSize: '0.95rem' }}>ملخص سريع</h4>
-                        {[
-                            { label: 'المشاريع النشطة', value: stats?.quickStats?.activeProjects || 0, color: '#2563eb', bg: '#eff6ff' },
-                            { label: 'عروض مقبولة', value: stats?.quickStats?.acceptedQuotes || 0, color: '#10b981', bg: '#ecfdf5' },
-                            { label: 'عروض معلقة', value: stats?.quickStats?.pendingQuotes || 0, color: '#f59e0b', bg: '#fffbeb' },
-                            { label: 'الموظفون', value: stats?.totals?.employees || 0, color: '#8b5cf6', bg: '#f5f3ff' },
-                        ].map((item, i) => (
-                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 3 ? '1px solid #f8fafc' : 'none' }}>
-                                <span style={{ color: '#64748b', fontSize: '0.875rem' }}>{item.label}</span>
-                                <span style={{ background: item.bg, color: item.color, padding: '3px 12px', borderRadius: '12px', fontWeight: 'bold', fontSize: '0.9rem' }}>{item.value}</span>
-                            </div>
-                        ))}
                     </div>
+
+                    {stats?.lowStock?.length > 0 && (
+                        <div className="glass-card card-hover" style={{ padding: '20px', borderRadius: '25px', border: '1px solid rgba(249, 115, 22, 0.2)', background: 'rgba(249, 115, 22, 0.05)' }}>
+                            <h4 style={{ margin: '0 0 15px 0', color: '#fb923c', fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <AlertOctagon size={20} /> تنبيهات المخزون
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {stats.lowStock.slice(0, 3).map((item, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
+                                        <span style={{ color: '#fff', fontSize: '0.9rem', fontWeight: '600' }}>{item.name}</span>
+                                        <span style={{ color: '#ef4444', fontWeight: '800', fontSize: '0.85rem' }}>{item.quantity} متبقي</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h3 style={{ margin: 0, fontSize: '1rem', color: '#1e293b' }}>آخر الفواتير</h3>
-                        <Link to="/invoices" style={{ fontSize: '0.8rem', color: '#2563eb', textDecoration: 'none' }}>عرض الكل ←</Link>
+
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+                <div className="glass-card card-hover" style={{ padding: '30px', borderRadius: '30px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '800' }}>أحدث العمليات المالية</h3>
+                        <Link to="/invoices" style={{ fontSize: '0.85rem', color: '#818cf8', textDecoration: 'none', fontWeight: '700' }}>السجل الكامل</Link>
                     </div>
-                    {stats?.recentInvoices?.map((inv, i) => (
-                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < stats.recentInvoices.length - 1 ? '1px solid #f8fafc' : 'none' }}>
-                            <div>
-                                <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#1e293b' }}>{inv.number}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{inv.client}</div>
-                            </div>
-                            <div style={{ textAlign: 'left' }}>
-                                <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '0.875rem' }}>{formatMoney(inv.amount)} ر.س</div>
-                                <span style={{ fontSize: '0.7rem', color: statusColor(inv.status), fontWeight: 'bold' }}>{statusLabel(inv.status)}</span>
-                            </div>
-                        </div>
-                    ))}
+                    <table className="table-glass">
+                        <tbody>
+                            {stats?.recentInvoices?.slice(0, 5).map((inv, i) => (
+                                <tr key={i}>
+                                    <td>
+                                        <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#fff' }}>#{inv.number}</div>
+                                        <div style={{ fontSize: '0.75rem', color: '#71717a', marginTop: '2px' }}>{inv.client}</div>
+                                    </td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <span className="status-pill" style={{ background: `${statusColor(inv.status)}20`, color: statusColor(inv.status), border: `1px solid ${statusColor(inv.status)}30` }}>
+                                            {statusLabel(inv.status)}
+                                        </span>
+                                    </td>
+                                    <td style={{ textAlign: 'left' }}>
+                                        <div style={{ fontWeight: '900', color: '#fff', fontSize: '1.1rem' }}>{formatMoney(inv.amount)}</div>
+                                        <div style={{ fontSize: '0.7rem', color: '#52525b' }}>ريال سعودي</div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
 
-                <div className="card-hover fade-in" style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h3 style={{ margin: 0, fontSize: '1rem', color: '#1e293b' }}>آخر عروض الأسعار</h3>
-                        <Link to="/quotes" style={{ fontSize: '0.8rem', color: '#2563eb', textDecoration: 'none' }}>عرض الكل ←</Link>
+                <div className="glass-card card-hover" style={{ padding: '30px', borderRadius: '30px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '800' }}>عروض الأسعار الأخيرة</h3>
+                        <Link to="/quotes" style={{ fontSize: '0.85rem', color: '#818cf8', textDecoration: 'none', fontWeight: '700' }}>كل العروض</Link>
                     </div>
-                    {stats?.recentQuotes?.map((qt, i) => (
-                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < stats.recentQuotes.length - 1 ? '1px solid #f8fafc' : 'none' }}>
-                            <div>
-                                <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#1e293b' }}>{qt.number}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{qt.client}</div>
-                            </div>
-                            <div style={{ textAlign: 'left' }}>
-                                <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '0.875rem' }}>{formatMoney(qt.amount)} ر.س</div>
-                                <span style={{ fontSize: '0.7rem', color: statusColor(qt.status), fontWeight: 'bold' }}>{statusLabel(qt.status)}</span>
-                            </div>
-                        </div>
-                    ))}
+                    <table className="table-glass">
+                        <tbody>
+                            {stats?.recentQuotes?.slice(0, 5).map((qt, i) => (
+                                <tr key={i}>
+                                    <td>
+                                        <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#fff' }}>#{qt.number}</div>
+                                        <div style={{ fontSize: '0.75rem', color: '#71717a', marginTop: '2px' }}>{qt.client}</div>
+                                    </td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <span className="status-pill" style={{ background: `${statusColor(qt.status)}20`, color: statusColor(qt.status), border: `1px solid ${statusColor(qt.status)}30` }}>
+                                            {statusLabel(qt.status)}
+                                        </span>
+                                    </td>
+                                    <td style={{ textAlign: 'left' }}>
+                                        <div style={{ fontWeight: '900', color: '#fff', fontSize: '1.1rem' }}>{formatMoney(qt.amount)}</div>
+                                        <div style={{ fontSize: '0.7rem', color: '#52525b' }}>ريال سعودي</div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -412,105 +485,163 @@ const Layout = ({ user, onLogout }) => {
     };
 
     return (
-        <div style={{ display: 'flex', height: '100vh', direction: isRtl ? 'rtl' : 'ltr', fontFamily: 'Cairo, sans-serif', background: '#f8fafc', position: 'relative' }}>
-            {isSidebarOpen && <div className="sidebar-overlay show-mobile" onClick={closeSidebar} />}
+        <div style={{ 
+            display: 'flex', 
+            height: '100vh', 
+            direction: isRtl ? 'rtl' : 'ltr', 
+            fontFamily: 'Cairo, Outfit, sans-serif', 
+            background: '#09090b', 
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
+            {/* Background Decorative Elements */}
+            <div style={{ position: 'absolute', top: '10%', right: '5%', width: '400px', height: '400px', background: 'rgba(99, 102, 241, 0.05)', filter: 'blur(100px)', borderRadius: '50%', zIndex: 0 }} />
+            <div style={{ position: 'absolute', bottom: '10%', left: '5%', width: '300px', height: '300px', background: 'rgba(14, 165, 233, 0.05)', filter: 'blur(100px)', borderRadius: '50%', zIndex: 0 }} />
 
-            <div className={`sidebar-scroll no-print ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} style={{
-                width: '280px', background: '#0f172a', color: 'white', padding: '24px',
-                display: 'flex', flexDirection: 'column', overflowY: 'auto',
-                boxShadow: isRtl ? '4px 0 20px rgb(0 0 0 / 0.05)' : '-4px 0 20px rgb(0 0 0 / 0.05)',
-                zIndex: 50,
-                position: window.innerWidth > 768 ? 'sticky' : 'fixed',
-                top: 0,
-                right: isRtl ? 0 : 'auto',
-                left: isRtl ? 'auto' : 0,
-                bottom: 0, height: '100vh',
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}>
-                <div style={{ marginBottom: '40px', textAlign: 'center', paddingBottom: '24px', borderBottom: '1px solid #1e293b', position: 'relative' }}>
-                    <button className="show-mobile" onClick={closeSidebar} style={{ position: 'absolute', left: '-10px', top: '-10px', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
-                        <X size={24} />
+            {isSidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
+
+            {/* Premium Sidebar */}
+            <motion.div 
+                initial={false}
+                animate={{ width: isSidebarOpen || window.innerWidth > 768 ? '280px' : '0px' }}
+                className={`no-print ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} 
+                style={{
+                    background: 'rgba(9, 9, 11, 0.8)',
+                    backdropFilter: 'blur(20px)',
+                    borderLeft: isRtl ? '1px solid rgba(255, 255, 255, 0.05)' : 'none',
+                    borderRight: isRtl ? 'none' : '1px solid rgba(255, 255, 255, 0.05)',
+                    color: 'white', padding: '30px 20px',
+                    display: 'flex', flexDirection: 'column',
+                    zIndex: 50,
+                    position: window.innerWidth > 768 ? 'relative' : 'fixed',
+                    top: 0, right: isRtl ? 0 : 'auto', left: isRtl ? 'auto' : 0,
+                    bottom: 0, height: '100vh',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    overflow: 'hidden'
+                }}
+            >
+                <div style={{ marginBottom: '40px', textAlign: 'center', position: 'relative' }}>
+                    <button className="show-mobile" onClick={closeSidebar} style={{ position: 'absolute', left: isRtl ? 'auto' : '0', right: isRtl ? '0' : 'auto', top: '0', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#94a3b8', cursor: 'pointer', borderRadius: '50%', padding: '8px' }}>
+                        <X size={20} />
                     </button>
-                    <div className="logo-emblem" style={{ marginBottom: '20px' }}>
-                        <img src="/logo.png" alt="Logo" style={{ width: '150px', height: 'auto', display: 'block', margin: '0 auto' }} />
-                    </div>
-                    <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700', color: '#fff' }}>{companyInfo.name || 'مؤسسة الجنوب الجديد'}</h2>
+                    <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        style={{ marginBottom: '15px', color: '#6366f1', display: 'flex', justifyContent: 'center' }}
+                    >
+                        <img src="/logo.png" alt="Logo" style={{ height: '50px', filter: 'drop-shadow(0 0 10px rgba(99, 102, 241, 0.3))' }} />
+                    </motion.div>
+                    <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', letterSpacing: '0.5px' }} className="gradient-text">
+                        {companyInfo.name || 'مؤسسة الجنوب الجديد'}
+                    </h2>
                 </div>
 
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <nav className="main-scroll" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
                     {hasPermission('dashboard') && <NavLink to="/" icon={<LayoutDashboard />} label={t('dashboard')} active={isActive('/')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('invoices') && <NavLink to="/invoices" icon={<ShoppingCart />} label={t('sales_invoices')} active={isActive('/invoices')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('quotes') && <NavLink to="/quotes" icon={<FileText />} label={t('quotes')} active={isActive('/quotes')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('inventory') && <NavLink to="/inventory" icon={<Package />} label={t('inventory')} active={isActive('/inventory')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('clients') && <NavLink to="/clients" icon={<Users />} label={t('clients')} active={isActive('/clients')} onClick={closeSidebar} i18n={i18n} />}
-                    {hasPermission('projects') && <NavLink to="/projects" icon={<Briefcase />} label={t('projects')} active={isActive('/projects')} onClick={closeSidebar} i18n={i18n} />}
-                    {hasPermission('contracts') && <NavLink to="/contracts" icon={<FileText />} label={t('contracts')} active={isActive('/contracts')} onClick={closeSidebar} i18n={i18n} />}
+                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '15px 10px' }} />
                     {hasPermission('accounting') && <NavLink to="/accounting" icon={<DollarSign />} label={t('accounting')} active={isActive('/accounting')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('hr') && <NavLink to="/hr" icon={<Users />} label={t('hr')} active={isActive('/hr')} onClick={closeSidebar} i18n={i18n} />}
+                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '15px 10px' }} />
+                    {hasPermission('projects') && <NavLink to="/projects" icon={<Briefcase />} label={t('projects')} active={isActive('/projects')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('contracts') && <NavLink to="/contracts" icon={<FileText />} label={t('contracts')} active={isActive('/contracts')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('real_estate') && <NavLink to="/real-estate" icon={<Building2 />} label={t('real_estate')} active={isActive('/real-estate')} i18n={i18n} onClick={closeSidebar} />}
                     {hasPermission('archive') && <NavLink to="/archive" icon={<Folder />} label={t('archive')} active={isActive('/archive')} i18n={i18n} onClick={closeSidebar} />}
                     {hasPermission('reports') && <NavLink to="/reports" icon={<FileBarChart2 />} label={t('reports')} active={isActive('/reports')} i18n={i18n} onClick={closeSidebar} />}
                     {hasPermission('all') && <NavLink to="/field-ops" icon={<HardHat />} label={t('field_ops', 'الإشراف الميداني')} active={isActive('/field-ops')} i18n={i18n} onClick={closeSidebar} />}
+                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '15px 10px' }} />
                     {hasPermission('all') && <NavLink to="/crm" icon={<TrendingUp />} label={t('crm_dashboard', 'لوحة المبيعات')} active={isActive('/crm')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('all') && <NavLink to="/crm/leads" icon={<Target />} label={t('crm_leads', 'العملاء المحتملين')} active={isActive('/crm/leads')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('all') && <NavLink to="/crm/pipeline" icon={<Activity />} label={t('crm_pipeline', 'مسار المبيعات')} active={isActive('/crm/pipeline')} onClick={closeSidebar} i18n={i18n} />}
-                    {hasPermission('all') && <NavLink to="/ai" icon={<Brain />} label={'مركز الذكاء الاصطناعي'} active={isActive('/ai')} onClick={closeSidebar} i18n={i18n} />}
+                    {hasPermission('all') && <NavLink to="/ai" icon={<Brain />} label={'AI Advisor مركز الرؤى'} active={isActive('/ai')} onClick={closeSidebar} i18n={i18n} />}
                     {hasPermission('all') && <NavLink to="/zatca" icon={<ShieldCheck />} label={t('zatca_dashboard', 'مراقبة زاتكا')} active={isActive('/zatca')} i18n={i18n} onClick={closeSidebar} />}
-                    {hasPermission('settings') && <NavLink to="/settings" icon={<Settings />} label={t('settings', 'الإعدادات ومعلومات المنشأة')} active={isActive('/settings')} i18n={i18n} onClick={closeSidebar} />}
-                    {hasPermission('all') && <NavLink to="/support" icon={<MessageSquare />} label={'دعم العملاء (التذاكر)'} active={isActive('/support')} i18n={i18n} onClick={closeSidebar} />}
+                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '15px 10px' }} />
+                    {hasPermission('settings') && <NavLink to="/settings" icon={<Settings />} label={t('settings')} active={isActive('/settings')} i18n={i18n} onClick={closeSidebar} />}
+                    {hasPermission('all') && <NavLink to="/support" icon={<MessageSquare />} label={'Tickets الدعم الفني'} active={isActive('/support')} i18n={i18n} onClick={closeSidebar} />}
+
                 </nav>
 
-                <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #1e293b' }}>
-                    <div style={{ background: '#1e293b', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
-                        <div style={{ width: '42px', height: '42px', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <img src="/naif.png" alt="Naif" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ width: '45px', height: '45px', borderRadius: '14px', overflow: 'hidden', border: '2px solid rgba(99, 102, 241, 0.4)' }}>
+                            <img src={user.profileImage || "/naif.png"} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#fff' }}>{user.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#3b82f6', fontWeight: '700' }}>Naif</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#818cf8', fontWeight: '700' }}>{user.role}</div>
                         </div>
-                        <button onClick={onLogout} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '8px', borderRadius: '8px' }}>
+                        <motion.button 
+                            whileHover={{ scale: 1.1, color: '#ef4444' }}
+                            onClick={onLogout} 
+                            style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '8px' }}
+                        >
                             <LogOut size={20} />
-                        </button>
+                        </motion.button>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
-            <div className={window.innerWidth > 768 ? 'main-content-fluid' : ''} style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-                <header className="fade-in no-print" style={{
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    backdropFilter: 'blur(10px)',
-                    padding: '12px 30px',
+            {/* Main Content Area */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', zIndex: 10, background: 'transparent' }}>
+                <header className="fade-in no-print glass-header" style={{
+                    padding: '15px 40px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    borderBottom: '1px solid #f1f5f9',
                     zIndex: 20
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1, justifyContent: 'center' }}>
-                        <button className="show-mobile" onClick={toggleSidebar} style={{ position: 'absolute', right: '20px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+                        <button className="show-mobile" onClick={toggleSidebar} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '10px', borderRadius: '14px', color: '#fff' }}>
                             <Menu size={20} />
                         </button>
-                        <div style={{ position: 'relative', width: '100%', maxWidth: '450px' }}>
-                            <Search size={18} style={{ position: isRtl ? 'absolute' : 'none', right: isRtl ? '14px' : 'auto', left: isRtl ? 'auto' : '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <div style={{ position: 'relative', width: '100%', maxWidth: '500px' }}>
+                            <Search size={18} style={{ 
+                                position: 'absolute', 
+                                right: isRtl ? '16px' : 'auto', 
+                                left: isRtl ? 'auto' : '16px', 
+                                top: '50%', 
+                                transform: 'translateY(-50%)', 
+                                color: '#71717a' 
+                            }} />
                             <input
                                 type="text"
                                 placeholder={t('search_placeholder')}
                                 value={searchQuery}
                                 onChange={handleSearch}
-                                style={{ width: '100%', padding: isRtl ? '12px 45px 12px 15px' : '12px 15px 12px 45px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'rgba(248, 250, 252, 0.8)', outline: 'none', fontFamily: 'Cairo' }}
+                                style={{ 
+                                    width: '100%', 
+                                    padding: isRtl ? '12px 50px 12px 20px' : '12px 20px 12px 50px', 
+                                    borderRadius: '16px', 
+                                    border: '1px solid rgba(255, 255, 255, 0.08)', 
+                                    background: 'rgba(255, 255, 255, 0.03)', 
+                                    outline: 'none', 
+                                    fontFamily: 'Cairo', 
+                                    color: '#fff',
+                                    fontSize: '0.95rem',
+                                    transition: 'all 0.3s ease'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.4)'}
+                                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'}
                             />
                             <AnimatePresence>
-                                {showSearchResults && (
-                                    <motion.div {...fadeInUp} style={{ ...glassStyle, position: 'absolute', top: '45px', right: 0, left: 0, borderRadius: '16px', zIndex: 1000, maxHeight: '400px', overflowY: 'auto', padding: '10px' }}>
+                                {showSearchResults && searchResults.length > 0 && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="glass-card" 
+                                        style={{ position: 'absolute', top: '55px', right: 0, left: 0, borderRadius: '20px', zIndex: 1000, maxHeight: '400px', overflowY: 'auto', padding: '12px' }}
+                                    >
                                         {searchResults.map((res, i) => (
-                                            <Link key={i} to={res.link} onClick={() => setShowSearchResults(false)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '8px', textDecoration: 'none', color: 'inherit' }}>
-                                                <div style={{ padding: '8px', background: '#eff6ff', color: '#2563eb', borderRadius: '8px' }}>
-                                                    {res.type === 'client' && <Users size={16} />}
+                                            <Link key={i} to={res.link} onClick={() => setShowSearchResults(false)} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px', borderRadius: '12px', textDecoration: 'none', color: '#fff', transition: 'background 0.2s' }} className="hover-item">
+                                                <div style={{ padding: '10px', background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', borderRadius: '12px' }}>
+                                                    {res.type === 'client' ? <Users size={18} /> : <FileText size={18} />}
                                                 </div>
                                                 <div style={{ flex: 1 }}>
-                                                    <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{res.title}</div>
-                                                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{res.subtitle}</div>
+                                                    <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{res.title}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: '#71717a' }}>{res.subtitle}</div>
                                                 </div>
                                             </Link>
                                         ))}
@@ -519,51 +650,91 @@ const Layout = ({ user, onLogout }) => {
                             </AnimatePresence>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        {/* Time Widget */}
+                        <div className="hide-mobile" style={{ marginRight: '20px', textAlign: 'left', direction: 'ltr' }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#fff', fontFamily: 'Outfit' }}>
+                                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            <div style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: '600' }}>
+                                {currentTime.toLocaleDateString(isRtl ? 'ar-SA' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short' })}
+                            </div>
+                        </div>
+
                         {/* Language Switcher */}
                         <motion.button
-                            {...buttonClick}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => i18n.changeLanguage(isRtl ? 'en' : 'ar')}
                             style={{
-                                padding: '8px 12px',
-                                background: 'rgba(248, 250, 252, 0.8)',
-                                borderRadius: '10px',
-                                border: '1px solid #e2e8f0',
-                                color: '#64748b',
+                                padding: '10px 16px',
+                                background: 'rgba(255, 255, 255, 0.03)',
+                                borderRadius: '14px',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                color: '#fff',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px',
-                                fontWeight: 'bold'
+                                fontSize: '0.85rem',
+                                fontWeight: '700'
                             }}
                         >
-                            <Languages size={18} />
-                            <span>{isRtl ? 'English' : 'عربي'}</span>
+                            <Languages size={18} color="#818cf8" />
+                            <span className="hide-mobile">{isRtl ? 'English' : 'عربي'}</span>
                         </motion.button>
 
+                        {/* Notifications */}
                         <div style={{ position: 'relative' }}>
-                            <motion.div {...buttonClick} onClick={() => setShowNotifications(!showNotifications)} style={{ cursor: 'pointer', padding: '8px', background: 'rgba(248, 250, 252, 0.8)', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                                <Bell size={20} color={notifications.some(n => !n.isRead) ? '#2563eb' : '#64748b'} />
+                            <motion.button 
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowNotifications(!showNotifications)} 
+                                style={{ 
+                                    cursor: 'pointer', padding: '10px', 
+                                    background: 'rgba(255, 255, 255, 0.03)', 
+                                    borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)',
+                                    color: '#fff', position: 'relative'
+                                }}
+                            >
+                                <Bell size={20} color={notifications.some(n => !n.isRead) ? '#818cf8' : '#fff'} />
                                 {notifications.some(n => !n.isRead) && (
-                                    <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} style={{ position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }} />
+                                    <span style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid #09090b' }} />
                                 )}
-                            </motion.div>
+                            </motion.button>
                             <AnimatePresence>
                                 {showNotifications && (
-                                    <motion.div {...fadeInUp} style={{ ...glassStyle, position: 'absolute', top: '50px', left: isRtl ? '0' : 'auto', right: isRtl ? 'auto' : '0', width: '320px', borderRadius: '16px', zIndex: 100, padding: '16px', direction: isRtl ? 'rtl' : 'ltr' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
-                                            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '700' }}>{t('notifications')}</h4>
-                                            <button onClick={markAllAsRead} style={{ color: '#2563eb', border: 'none', background: 'none', fontSize: '0.8rem', cursor: 'pointer' }}>{t('mark_read')}</button>
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 15, x: isRtl ? 0 : 0 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 15 }}
+                                        className="glass-card" 
+                                        style={{ position: 'absolute', top: '60px', left: isRtl ? '0' : 'auto', right: isRtl ? 'auto' : '0', width: '350px', borderRadius: '24px', zIndex: 100, padding: '20px', direction: isRtl ? 'rtl' : 'ltr' }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+                                            <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800' }}>{t('notifications')}</h4>
+                                            <button onClick={markAllAsRead} style={{ color: '#818cf8', border: 'none', background: 'none', fontSize: '0.85rem', cursor: 'pointer', fontWeight: '700' }}>{t('mark_read')}</button>
                                         </div>
-                                        <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
-                                            {notifications.map(n => (
+                                        <div className="main-scroll" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                            {notifications.length === 0 ? (
+                                                <div style={{ textAlign: 'center', padding: '30px', color: '#71717a' }}>لا توجد تنبيهات جديدة</div>
+                                            ) : notifications.map(n => (
                                                 <div 
                                                     key={n.id} 
                                                     onClick={() => handleNotificationClick(n)}
-                                                    style={{ cursor: n.link ? 'pointer' : 'default', padding: '10px', borderRadius: '8px', background: n.isRead ? 'transparent' : 'rgba(37, 99, 235, 0.05)', marginBottom: '8px', border: '1px solid rgba(0,0,0,0.05)' }}
+                                                    style={{ 
+                                                        cursor: n.link ? 'pointer' : 'default', 
+                                                        padding: '12px', borderRadius: '16px', 
+                                                        background: n.isRead ? 'transparent' : 'rgba(99, 102, 241, 0.05)', 
+                                                        marginBottom: '10px', border: '1px solid rgba(255,255,255,0.03)',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    className="hover-item"
                                                 >
-                                                    <div style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{n.title}</div>
-                                                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{n.message}</div>
+                                                    <div style={{ fontWeight: '800', fontSize: '0.9rem', color: n.isRead ? '#a1a1aa' : '#fff' }}>{n.title}</div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#71717a', marginTop: '4px' }}>{n.message}</div>
+                                                    <div style={{ fontSize: '0.65rem', color: '#52525b', marginTop: '8px' }}>منذ قليل</div>
                                                 </div>
                                             ))}
                                         </div>
@@ -573,9 +744,16 @@ const Layout = ({ user, onLogout }) => {
                         </div>
                     </div>
                 </header>
-                <main style={{ flex: 1, padding: '24px 40px', overflowY: 'auto' }}>
+                
+                <main className="main-scroll" style={{ flex: 1, padding: '30px 40px', background: 'transparent' }}>
                     <AnimatePresence mode="wait">
-                        <motion.div key={location.pathname} initial="initial" animate="animate" exit="exit" variants={fadeInUp}>
+                        <motion.div 
+                            key={location.pathname} 
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -15 }}
+                            transition={{ duration: 0.3, cubicBezier: [0.23, 1, 0.32, 1] }}
+                        >
                             <Routes location={location}>
                                 <Route path="/" element={<Dashboard />} />
                                 <Route path="/invoices" element={<InvoicesPage />} />
