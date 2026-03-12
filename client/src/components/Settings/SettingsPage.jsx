@@ -666,12 +666,164 @@ const WhatsAppTab = () => {
     );
 };
 
+// ======= TAB: System Preferences =======
+const PreferencesTab = () => {
+    const queryClient = useQueryClient();
+    const [preferences, setPreferences] = useState({
+        currency: 'SAR',
+        vatRate: '15',
+        lowStockAlert: true,
+        quoteExpirationAlert: true,
+        pendingInvoiceAlert: true
+    });
+    const [saved, setSaved] = useState(false);
+
+    const { data: qData, isLoading } = useQuery({
+        queryKey: ['systemPreferences'],
+        queryFn: async () => (await axios.get(`${API_URL}/settings/preferences`, { headers: H() })).data
+    });
+
+    useEffect(() => {
+        if (qData && Object.keys(qData).length > 0) {
+            setPreferences(qData);
+        }
+    }, [qData]);
+
+    const saveMutation = useMutation({
+        mutationFn: async (data) => await axios.post(`${API_URL}/settings/preferences`, { value: data }, { headers: H() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['systemPreferences'] });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
+        }
+    });
+
+    const togglePref = (key) => {
+        setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    if (isLoading) return <div style={{ color: '#6366f1', padding: '100px', textAlign: 'center' }}><RefreshCw className="animate-spin" size={40} /></div>;
+
+    return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card" style={{ padding: '40px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(15, 23, 42, 0.4)' }}>
+            {/* Same UI structure below, but with connected state and saveMutation.mutate(preferences) */}
+            <div style={{ marginBottom: '35px' }}>
+                <h3 className="gradient-text" style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0 }}>تفضيلات النظام</h3>
+                <p style={{ color: '#a1a1aa', fontWeight: '600', margin: '5px 0 0 0' }}>تخصيص الخيارات المالية والتنبيهات الذكية لتناسب بيئة عملك.</p>
+            </div>
+
+            {saved && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ padding: '15px 25px', borderRadius: '15px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', marginBottom: '25px', fontWeight: '800', border: '1px solid currentColor' }}>✅ تم حفظ التفضيلات بنجاح</motion.div>}
+
+            <div style={{ display: 'grid', gap: '25px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' }}><DollarSign size={22} /></div>
+                        <h4 style={{ color: '#fff', margin: 0, fontSize: '1.2rem', fontWeight: '900' }}>العملة والضريبة</h4>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <label style={{ color: '#a1a1aa', fontWeight: '800', fontSize: '0.9rem' }}>العملة الافتراضية</label>
+                            <select className="premium-input-select" value={preferences.currency} onChange={e => setPreferences({...preferences, currency: e.target.value})}>
+                                <option value="SAR">ريال سعودي (ر.س)</option>
+                                <option value="USD">دولار أمريكي ($)</option>
+                                <option value="AED">درهم إماراتي (د.إ)</option>
+                            </select>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <label style={{ color: '#a1a1aa', fontWeight: '800', fontSize: '0.9rem' }}>نسبة ضريبة القيمة المضافة (VAT)</label>
+                            <select className="premium-input-select" value={preferences.vatRate} onChange={e => setPreferences({...preferences, vatRate: e.target.value})}>
+                                <option value="15">15%</option>
+                                <option value="5">5%</option>
+                                <option value="0">0%</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(129, 140, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}><BellRing size={22} /></div>
+                        <h4 style={{ color: '#fff', margin: 0, fontSize: '1.2rem', fontWeight: '900' }}>نظام التنبيهات</h4>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {[
+                            { key: 'lowStockAlert', label: 'تنبيه عند نقص المخزون', desc: 'إشعار فوري عند وصول كمية المنتجات للحد الأدنى.' },
+                            { key: 'quoteExpirationAlert', label: 'تنبيه انتهاء صلاحية عروض الأسعار', desc: 'تذكر قبل انتهاء صلاحية العروض المقدمة للعملاء.' },
+                            { key: 'pendingInvoiceAlert', label: 'تنبيه الفواتير المعلقة', desc: 'متابعة الفواتير التي لم يتم تحصيل قيمتها بعد.' }
+                        ].map(item => (
+                            <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 25px', borderRadius: '22px', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                <div>
+                                    <div style={{ color: '#fff', fontWeight: '800', fontSize: '1.05rem' }}>{item.label}</div>
+                                    <div style={{ color: '#71717a', fontSize: '0.85rem', fontWeight: '600' }}>{item.desc}</div>
+                                </div>
+                                <div 
+                                    onClick={() => togglePref(item.key)}
+                                    style={{ 
+                                        width: '54px', height: '28px', borderRadius: '30px', cursor: 'pointer',
+                                        background: preferences[item.key] ? '#6366f1' : 'rgba(255,255,255,0.1)',
+                                        position: 'relative', transition: 'all 0.3s', border: '1px solid rgba(255,255,255,0.05)'
+                                    }}
+                                >
+                                    <motion.div 
+                                        animate={{ x: preferences[item.key] ? 28 : 3 }}
+                                        style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: 0, boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div style={{ background: 'rgba(99, 102, 241, 0.05)', padding: '30px', borderRadius: '30px', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <Info color="#6366f1" size={24} />
+                        <div>
+                            <div style={{ color: '#a1a1aa', fontSize: '0.75rem', fontWeight: '800' }}>اسم النظام</div>
+                            <div style={{ color: '#fff', fontWeight: '900' }}>مؤسسة الجنوب الجديد - ERP</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style={{ color: '#a1a1aa', fontSize: '0.75rem', fontWeight: '800' }}>الإصدار</div>
+                        <div style={{ color: '#fff', fontWeight: '900' }}>v2.0.0</div>
+                    </div>
+                    <div>
+                        <div style={{ color: '#a1a1aa', fontSize: '0.75rem', fontWeight: '800' }}>قاعدة البيانات</div>
+                        <div style={{ color: '#fff', fontWeight: '900' }}>PostgreSQL (Cloud)</div>
+                    </div>
+                    <div>
+                        <div style={{ color: '#a1a1aa', fontSize: '0.75rem', fontWeight: '800' }}>بيئة التشغيل</div>
+                        <div style={{ color: '#fff', fontWeight: '900' }}>Production</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '40px' }}>
+                <motion.button 
+                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => saveMutation.mutate(preferences)}
+                    disabled={saveMutation.isPending}
+                    style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff', border: 'none', padding: '16px 50px', borderRadius: '20px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 10px 30px rgba(99,102,241,0.2)' }}
+                >
+                    {saveMutation.isPending ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
+                    حفظ الإعدادات
+                </motion.button>
+            </div>
+        </motion.div>
+    );
+};
+
 const SettingsPage = () => {
     const [tab, setTab] = useState('company');
 
-    // System Health Status Indicators (Simulated or fetched)
+    // System Health Status Indicators (Simulated but reactive)
+    const [connStatus, setConnStatus] = useState('Checking...');
+    
+    useEffect(() => {
+        axios.get(`${API_URL}/health`).then(() => setConnStatus('مثالي')).catch(() => setConnStatus('خطأ في الاتصال'));
+    }, []);
+
     const systemStatus = [
-        { label: 'اتصال السيرفر', value: 'مثالي', color: '#10b981', icon: <Cpu size={14} /> },
+        { label: 'اتصال السيرفر', value: connStatus, color: connStatus === 'مثالي' ? '#10b981' : '#f43f5e', icon: <Cpu size={14} /> },
         { label: 'تشفير البيانات', value: 'AES-256', color: '#6366f1', icon: <ShieldCheck size={14} /> },
         { label: 'النسخ السحابي', value: 'مؤمن', color: '#06b6d4', icon: <Database size={14} /> },
     ];
@@ -679,22 +831,27 @@ const SettingsPage = () => {
     return (
         <div style={{ direction: 'rtl', padding: '10px' }} className="fade-in">
              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '50px' }}>
-                <div>
+                <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
                     <h2 style={{ margin: '0 0 10px 0', color: '#fff', fontSize: '3.2rem', fontWeight: '900', letterSpacing: '-1.5px' }} className="gradient-text">مركز القيادة والإعدادات</h2>
                     <p style={{ margin: 0, color: '#a1a1aa', fontSize: '1.2rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Zap size={18} color="#f59e0b" fill="#f59e0b" /> تحكم كامل في هوية النظام، الأمان، وتكامل الذكاء الاصطناعي.
+                        <Zap size={18} color="#f59e0b" fill="#f59e0b" className="animate-pulse" /> إدارة التفضيلات الذكية، الربط السحابي، وبروتوكولات الأمان.
                     </p>
-                </div>
+                </motion.div>
                 
                 <div style={{ display: 'flex', gap: '15px' }}>
                     {systemStatus.map((s, idx) => (
-                        <div key={idx} className="glass-card" style={{ padding: '10px 20px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(15, 23, 42, 0.3)' }}>
-                            <div style={{ color: s.color }}>{s.icon}</div>
+                        <motion.div 
+                            key={idx} 
+                            whileHover={{ scale: 1.05, y: -2 }}
+                            className="glass-card" 
+                            style={{ padding: '12px 22px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(15, 23, 42, 0.4)' }}
+                        >
+                            <div style={{ color: s.color, background: `${s.color}15`, padding: '8px', borderRadius: '10px' }}>{s.icon}</div>
                             <div>
-                                <div style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: '800' }}>{s.label}</div>
-                                <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: '900' }}>{s.value}</div>
+                                <div style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: '800', textTransform: 'uppercase' }}>{s.label}</div>
+                                <div style={{ fontSize: '0.9rem', color: '#fff', fontWeight: '900' }}>{s.value}</div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             </div>
@@ -705,6 +862,7 @@ const SettingsPage = () => {
                         <div style={{ fontSize: '0.75rem', color: '#52525b', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>القوائم الإدارية</div>
                     </div>
                     <TabButton active={tab === 'company'} onClick={() => setTab('company')} icon={Building2} color="#6366f1">هوية المنشأة والبراند</TabButton>
+                    <TabButton active={tab === 'preferences'} onClick={() => setTab('preferences')} icon={Settings} color="#f59e0b">تفضيلات النظام</TabButton>
                     <TabButton active={tab === 'users'} onClick={() => setTab('users')} icon={Users} color="#8b5cf6">فريق العمل والصلاحيات</TabButton>
                     <TabButton active={tab === 'portal'} onClick={() => setTab('portal')} icon={LayoutGrid} color="#06b6d4">بوابة العملاء (Portal)</TabButton>
                     <TabButton active={tab === 'audit'} onClick={() => setTab('audit')} icon={Activity} color="#f43f5e">سجل العمليات (Audit)</TabButton>
@@ -722,6 +880,7 @@ const SettingsPage = () => {
                             transition={{ duration: 0.3, cubicBezier: [0.4, 0, 0.2, 1] }}
                         >
                             {tab === 'company' && <CompanyTab />}
+                            {tab === 'preferences' && <PreferencesTab />}
                             {tab === 'users' && <UsersTab />}
                             {tab === 'portal' && <ClientPortalTab />}
                             {tab === 'whatsapp' && <WhatsAppTab />}

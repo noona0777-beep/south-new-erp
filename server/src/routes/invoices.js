@@ -41,25 +41,29 @@ router.get('/:id', async (req, res) => {
 router.post('/', authenticate, async (req, res) => {
     const { partnerId, date, type, items, discount, constructionContractId } = req.body;
 
-    let subtotal = 0;
-    const invoiceItemsData = items.map(item => {
-        const lineTotal = Number(item.quantity) * Number(item.unitPrice);
-        subtotal += lineTotal;
-        return {
-            productId: item.productId ? Number(item.productId) : null,
-            description: item.description,
-            quantity: Number(item.quantity),
-            unitPrice: Number(item.unitPrice),
-            taxRate: 0.15,
-            total: lineTotal
-        };
-    });
-
-    const totalBeforeTax = subtotal - (Number(discount) || 0);
-    const taxAmount = totalBeforeTax * 0.15;
-    const total = totalBeforeTax + taxAmount;
-
     try {
+        const prefSetting = await prisma.settings.findUnique({ where: { key: 'preferences' } });
+        const prefs = prefSetting ? JSON.parse(prefSetting.value) : { vatRate: '15' };
+        const vatRate = Number(prefs.vatRate) / 100;
+
+        let subtotal = 0;
+        const invoiceItemsData = items.map(item => {
+            const lineTotal = Number(item.quantity) * Number(item.unitPrice);
+            subtotal += lineTotal;
+            return {
+                productId: item.productId ? Number(item.productId) : null,
+                description: item.description,
+                quantity: Number(item.quantity),
+                unitPrice: Number(item.unitPrice),
+                taxRate: vatRate,
+                total: lineTotal
+            };
+        });
+
+        const totalBeforeTax = subtotal - (Number(discount) || 0);
+        const taxAmount = totalBeforeTax * vatRate;
+        const total = totalBeforeTax + taxAmount;
+
         const companySetting = await prisma.settings.findUnique({ where: { key: 'companyInfo' } });
         const companyInfo = companySetting ? JSON.parse(companySetting.value) : { name: 'مؤسسة الجنوب الجديد', vatNumber: '310123456700003' };
 
@@ -98,7 +102,7 @@ router.post('/', authenticate, async (req, res) => {
                     const journalEntries = [
                         { accountId: arAccount.id, debit: total, credit: 0, description: 'عميل - ' + invoice.invoiceNumber },
                         { accountId: revAccount.id, debit: 0, credit: totalBeforeTax, description: 'إيراد مبيعات - ' + invoice.invoiceNumber },
-                        { accountId: vatAccount.id, debit: 0, credit: taxAmount, description: 'ضريبة القيمة المضافة 15% - ' + invoice.invoiceNumber },
+                        { accountId: vatAccount.id, debit: 0, credit: taxAmount, description: `ضريبة القيمة المضافة ${prefs.vatRate}% - ` + invoice.invoiceNumber },
                     ];
                     await tx.transaction.create({
                         data: {
@@ -123,7 +127,7 @@ router.post('/', authenticate, async (req, res) => {
                     if (stock) {
                         const newQty = stock.quantity - item.quantity;
                         await tx.stock.update({ where: { id: stock.id }, data: { quantity: newQty } });
-                        if (newQty < 10) {
+                        if (newQty < 10 && prefs.lowStockAlert) {
                             const p = await tx.product.findUnique({ where: { id: item.productId } });
                             await tx.notification.create({
                                 data: { type: 'LOW_STOCK', title: 'نقص مخزون', message: `المنتج "${p.name}" وصل لـ ${newQty}` }
